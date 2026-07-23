@@ -49,3 +49,6 @@ backend/__pycache__/
 backend/.venv/
 backend/venv/
 *.egg-info/
+
+# Environment variables
+.env
