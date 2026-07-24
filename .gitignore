@@ -52,7 +52,6 @@ backend/venv/
 
 # Environment variables
 .env
-env
 
 # Testing related
 .claude/

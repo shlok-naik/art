@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/providers.dart';
-import 'features/home/presentation/home_screen.dart';
 import 'features/profile/presentation/profile_setup_screen.dart';
+import 'features/profile/presentation/profile_view_screen.dart';
 import 'features/profile/providers.dart';
 
 class App extends StatelessWidget {
@@ -56,7 +56,7 @@ class _ProfileGate extends ConsumerWidget {
         if (profile == null) {
           return const ProfileSetupScreen();
         }
-        return const HomeScreen();
+        return const ProfileViewScreen();
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
