@@ -23,7 +23,36 @@ cd art
 flutter pub get
 ```
 
-### 4. Run the app
+### 4. Configure Supabase
+
+Copy `.env.example` to `.env`, then fill in the values for your Supabase
+project. The `.env` file is intentionally ignored by Git and must not be
+committed.
+
+```bash
+cp .env.example .env
+```
+
+### 5. Run the backend
+
+The Projects feature calls a small FastAPI backend (`backend/`) that proxies
+requests to Supabase. It needs to be running locally for that feature to work.
+
+```bash
+cd backend
+python -m venv .venv
+.venv/Scripts/activate   # .venv/bin/activate on macOS/Linux
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Leave this running in its own terminal. `.env`'s `BACKEND_URL` points the
+Flutter app at it (`http://localhost:8000` by default). If you're running on
+a physical phone over USB rather than an emulator, `localhost` on the phone
+isn't your computer — first run `adb reverse tcp:8000 tcp:8000` so the
+phone's `localhost:8000` tunnels back to your machine.
+
+### 6. Run the app
 
 You can run on a physical Android phone or on a virtual device (emulator) created in Android Studio.
 
@@ -53,6 +82,6 @@ You can run on a physical Android phone or on a virtual device (emulator) create
 
 Flutter will detect the running emulator or connected phone automatically. If more than one device is available, `flutter run` will let you pick which one to launch on.
 
-### 5. Making changes
+### 7. Making changes
 
 Hot reload is enabled by default while `flutter run` is active — save a file and press `r` in the terminal to see changes instantly, or `R` for a full hot restart.

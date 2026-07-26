@@ -50,6 +50,8 @@ async def update_row(table: str, id: str, body: dict, token: str = Depends(get_a
     url = f"{SUPABASE_URL}/rest/v1/{table}?id=eq.{id}"
     async with httpx.AsyncClient() as client:
         response = await client.patch(url, json=body, headers=build_headers(token))
+    if not response.text:
+        return {"status": "success"}
     return response.json()
 
 
@@ -58,5 +60,10 @@ async def delete_row(table: str, id: str, token: str = Depends(get_authorization
     check_table(table)
     url = f"{SUPABASE_URL}/rest/v1/{table}?id=eq.{id}"
     async with httpx.AsyncClient() as client:
-        response = await client.delete(url, headers=build_headers(token))
-    return response.json()
+        response = await client.delete(url, headers=build_headers(token, return_representation=True))
+    if response.status_code >= 400:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    deleted_rows = response.json() if response.text else []
+    if not deleted_rows:
+        raise HTTPException(status_code=404, detail="No row was deleted (not found, or not permitted by RLS)")
+    return {"status": "success"}

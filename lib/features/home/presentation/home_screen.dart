@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../profile/presentation/profile_view_screen.dart';
 import '../../profile/providers.dart';
+import '../../projects/presentation/projects_screen.dart';
 
 const _borderColor = Colors.black;
 const _borderWidth = 2.0;
@@ -54,7 +55,14 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Expanded(child: _PillButton(label: 'My Posts')),
                       const SizedBox(width: 4),
-                      Expanded(child: _PillButton(label: 'Projects')),
+                      Expanded(
+                        child: _PillButton(
+                          label: 'Projects',
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ProjectsScreen()),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -246,15 +254,16 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _PillButton extends StatelessWidget {
-  const _PillButton({required this.label});
+  const _PillButton({required this.label, this.onPressed});
 
   final String label;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return _OutlinedPillButton(
       label: label,
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       fontSize: 15,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     );
