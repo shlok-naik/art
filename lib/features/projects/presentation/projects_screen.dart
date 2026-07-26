@@ -143,9 +143,15 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       final leagueId = project['league_id']?.toString() ?? '—';
 
                       return InkWell(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
-                        ),
+                        onTap: () async {
+                          final projectId = project['id'].toString();
+                          await ref.read(recentProjectStoreProvider).setLastOpenedProjectId(projectId);
+                          ref.invalidate(lastOpenedProjectProvider);
+                          if (!context.mounted) return;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
+                          );
+                        },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           child: Row(

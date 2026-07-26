@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/providers.dart';
 import 'data/projects_repository.dart';
+import 'data/recent_project_store.dart';
 import 'data/sessions_repository.dart';
 
 final projectsRepositoryProvider = Provider<ProjectsRepository>((ref) {
@@ -12,6 +13,19 @@ final projectsRepositoryProvider = Provider<ProjectsRepository>((ref) {
 
 final projectsListProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   return ref.watch(projectsRepositoryProvider).fetchProjects();
+});
+
+final recentProjectStoreProvider = Provider<RecentProjectStore>((ref) => RecentProjectStore());
+
+final lastOpenedProjectProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
+  final lastId = await ref.watch(recentProjectStoreProvider).getLastOpenedProjectId();
+  if (lastId == null) return null;
+
+  final projects = await ref.watch(projectsListProvider.future);
+  for (final project in projects) {
+    if (project['id'].toString() == lastId) return project;
+  }
+  return null;
 });
 
 final sessionsRepositoryProvider = Provider<SessionsRepository>((ref) {

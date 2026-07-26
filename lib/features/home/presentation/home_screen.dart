@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../profile/presentation/profile_view_screen.dart';
 import '../../profile/providers.dart';
+import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
+import '../../projects/providers.dart';
 
 const _borderColor = Colors.black;
 const _borderWidth = 2.0;
@@ -17,6 +19,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
     final username = profileAsync.value?.username ?? 'user';
+    final lastProject = ref.watch(lastOpenedProjectProvider).value;
 
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
@@ -107,36 +110,49 @@ class HomeScreen extends ConsumerWidget {
                   offset: const Offset(-10, 0),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: _borderColor, width: _borderWidth),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.play_circle_outline, color: Colors.deepOrange, size: 44),
-                          const SizedBox(width: 14),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Continue Last Project',
-                                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 26),
-                                  overflow: TextOverflow.ellipsis,
+                    child: InkWell(
+                      onTap: lastProject == null
+                          ? null
+                          : () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProjectDetailScreen(project: lastProject),
                                 ),
-                                Text(
-                                  'Name    Stage [stage]',
-                                  style: GoogleFonts.chewy(fontSize: 18),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                              ),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: _borderColor, width: _borderWidth),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.play_circle_outline, color: Colors.deepOrange, size: 44),
+                            const SizedBox(width: 14),
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Continue Last Project',
+                                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 26),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    lastProject == null
+                                        ? 'Start a project to see it here'
+                                        : (lastProject['title']?.toString() ??
+                                            lastProject['id'].toString()),
+                                    style: GoogleFonts.chewy(fontSize: 18),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
