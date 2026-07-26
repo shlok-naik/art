@@ -145,7 +145,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       return InkWell(
                         onTap: () async {
                           final projectId = project['id'].toString();
-                          await ref.read(recentProjectStoreProvider).setLastOpenedProjectId(projectId);
+                          await ref.read(recentProjectStoreProvider).recordOpened(projectId);
+                          ref.invalidate(projectsListProvider);
                           ref.invalidate(lastOpenedProjectProvider);
                           if (!context.mounted) return;
                           Navigator.of(context).push(
