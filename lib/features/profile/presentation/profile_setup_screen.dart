@@ -39,14 +39,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             username: _usernameController.text.trim(),
             displayName: _displayNameController.text.trim(),
           );
+      if (!mounted) return;
       ref.invalidate(currentProfileProvider);
     } on PostgrestException catch (e) {
+      if (!mounted) return;
       if (e.code == '23505') {
         setState(() => _errorText = 'That username is already taken.');
       } else {
         setState(() => _errorText = e.message);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _errorText = 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -35,9 +35,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+      if (!mounted) return;
     } on AuthException catch (e) {
+      if (!mounted) return;
       setState(() => _errorText = e.message);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _errorText = 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
