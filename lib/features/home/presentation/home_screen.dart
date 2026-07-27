@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../league/presentation/league_screen.dart';
 import '../../profile/presentation/profile_view_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
@@ -52,7 +53,14 @@ class HomeScreen extends ConsumerWidget {
                   padding: _sidePadding,
                   child: Row(
                     children: [
-                      Expanded(child: _PillButton(label: 'League')),
+                      Expanded(
+                        child: _PillButton(
+                          label: 'League',
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const LeagueScreen()),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 4),
                       Expanded(child: _PillButton(label: 'Analytics')),
                       const SizedBox(width: 4),
