@@ -85,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'WELCOME',
-                          style: GoogleFonts.sedgwickAveDisplay(
+                          style: GoogleFonts.gochiHand(
                             fontSize: 84,
                             height: 1.0,
                             color: Colors.deepOrange,
