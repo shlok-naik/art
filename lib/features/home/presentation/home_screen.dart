@@ -83,12 +83,17 @@ class HomeScreen extends ConsumerWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        Text(
-                          'WELCOME',
-                          style: GoogleFonts.sedgwickAveDisplay(
-                            fontSize: 84,
-                            height: 1.0,
-                            color: Colors.deepOrange,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'WELCOME',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: GoogleFonts.gochiHand(
+                              fontSize: 84,
+                              height: 1.0,
+                              color: Colors.deepOrange,
+                            ),
                           ),
                         ),
                         Transform.translate(
@@ -226,7 +231,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
               ],
             ),
           ),

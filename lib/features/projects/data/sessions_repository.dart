@@ -54,7 +54,7 @@ class SessionsRepository {
       headers: _headers,
       body: jsonEncode({
         'project_id': projectId,
-        'duration_seconds': durationSeconds,
+        'duration': durationSeconds,
         'photo_url': photoUrl,
       }),
     );
