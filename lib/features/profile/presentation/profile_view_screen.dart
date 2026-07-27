@@ -28,17 +28,20 @@ class ProfileViewScreen extends ConsumerWidget {
           ],
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: profileAsync.when(
-              data: (profile) {
-                if (profile == null) {
-                  return Text(
+          child: profileAsync.when(
+            data: (profile) {
+              if (profile == null) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
                     'No profile found.',
                     style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
-                  );
-                }
-                return Container(
+                  ),
+                );
+              }
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: appCardDecoration(),
@@ -57,10 +60,15 @@ class ProfileViewScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => AppErrorText('Error: $error'),
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: AppErrorText('Error: $error'),
+              ),
             ),
           ),
         ),
