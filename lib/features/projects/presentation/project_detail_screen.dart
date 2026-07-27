@@ -170,7 +170,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   final session = sessions[index];
                   final photoUrl = session['photo_url']?.toString();
                   final durationSeconds =
-                      int.tryParse(session['duration_seconds']?.toString() ?? '') ?? 0;
+                      int.tryParse(session['duration']?.toString() ?? '') ?? 0;
                   return ListTile(
                     leading: (photoUrl == null || photoUrl.isEmpty)
                         ? const CircleAvatar(child: Icon(Icons.image_not_supported))
