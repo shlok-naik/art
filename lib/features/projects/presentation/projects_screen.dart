@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_styles.dart';
 import '../providers.dart';
 import 'project_detail_screen.dart';
 
@@ -60,16 +62,21 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete project?'),
-        content: Text('This will permanently delete "$title".'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('Delete project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+        content: Text('This will permanently delete "$title".', style: GoogleFonts.chewy(fontSize: 15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
           ),
         ],
       ),
@@ -92,104 +99,124 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Widget build(BuildContext context) {
     final projectsAsync = ref.watch(projectsListProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Projects')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'New project name'),
-                  ),
+    return DefaultTextStyle(
+      style: GoogleFonts.chewy(color: Colors.black),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: appThemedAppBar(context, 'Projects'),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nameController,
+                        decoration: appInputDecoration('New project name'),
+                        style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: _isCreating
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: kAccentColor),
+                            )
+                          : const Icon(Icons.add_circle, color: kAccentColor, size: 32),
+                      onPressed: _isCreating ? null : _createProject,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: _isCreating
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add),
-                  onPressed: _isCreating ? null : _createProject,
+              ),
+              if (_errorText != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AppErrorText(_errorText!),
                 ),
-              ],
-            ),
-          ),
-          if (_errorText != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(_errorText!, style: const TextStyle(color: Colors.red)),
-            ),
-          Expanded(
-            child: projectsAsync.when(
-              data: (projects) {
-                if (projects.isEmpty) {
-                  return const Center(child: Text('No projects yet.'));
-                }
-                return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(projectsListProvider),
-                  child: ListView.separated(
-                    itemCount: projects.length,
-                    itemBuilder: (context, index) {
-                      final project = projects[index];
-                      final title = project['title']?.toString() ?? project['id'].toString();
-                      final createdAt = _formatCreatedAt(project['created_at']);
-                      final finishedStatus = project['finished_status']?.toString() ?? '—';
-                      final leagueId = project['league_id']?.toString() ?? '—';
-
-                      return InkWell(
-                        onTap: () async {
-                          final projectId = project['id'].toString();
-                          await ref.read(recentProjectStoreProvider).recordOpened(projectId);
-                          ref.invalidate(projectsListProvider);
-                          ref.invalidate(lastOpenedProjectProvider);
-                          if (!context.mounted) return;
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(title, style: Theme.of(context).textTheme.titleMedium),
-                                    const SizedBox(height: 4),
-                                    Text('Date created: $createdAt'),
-                                    const Text('Time spent so far: 0'),
-                                    const Text('Number of sessions: 0'),
-                                    Text('Finished status: $finishedStatus'),
-                                    Text('League: $leagueId'),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () => _deleteProject(project),
-                              ),
-                            ],
-                          ),
+              Expanded(
+                child: projectsAsync.when(
+                  data: (projects) {
+                    if (projects.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No projects yet.',
+                          style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
                         ),
                       );
-                    },
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () async => ref.invalidate(projectsListProvider),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: projects.length,
+                        itemBuilder: (context, index) {
+                          final project = projects[index];
+                          final title = project['title']?.toString() ?? project['id'].toString();
+                          final createdAt = _formatCreatedAt(project['created_at']);
+                          final finishedStatus = project['finished_status']?.toString() ?? '—';
+                          final leagueId = project['league_id']?.toString() ?? '—';
+
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () async {
+                              final projectId = project['id'].toString();
+                              await ref.read(recentProjectStoreProvider).recordOpened(projectId);
+                              ref.invalidate(projectsListProvider);
+                              ref.invalidate(lastOpenedProjectProvider);
+                              if (!context.mounted) return;
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: appCardDecoration(),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text('Date created: $createdAt', style: GoogleFonts.chewy(fontSize: 14)),
+                                        Text('Time spent so far: 0', style: GoogleFonts.chewy(fontSize: 14)),
+                                        Text('Number of sessions: 0', style: GoogleFonts.chewy(fontSize: 14)),
+                                        Text('Finished status: $finishedStatus', style: GoogleFonts.chewy(fontSize: 14)),
+                                        Text('League: $leagueId', style: GoogleFonts.chewy(fontSize: 14)),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.black),
+                                    onPressed: () => _deleteProject(project),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        separatorBuilder: (context, index) => const SizedBox(height: 10),
+                      ),
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Center(
+                    child: AppErrorText('Failed to load projects: $error'),
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Failed to load projects: $error')),
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

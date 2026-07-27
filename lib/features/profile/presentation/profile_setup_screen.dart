@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
 
@@ -58,29 +60,46 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Set up your profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _displayNameController,
-              decoration: const InputDecoration(labelText: 'Display name'),
+    return DefaultTextStyle(
+      style: GoogleFonts.chewy(color: Colors.black),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/branding/logo.png', height: 72),
+                  const SizedBox(height: 12),
+                  Text('SET UP', style: appHeadlineStyle(fontSize: 48)),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _displayNameController,
+                    decoration: appInputDecoration('Display name'),
+                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: appInputDecoration('Username'),
+                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                  ),
+                  const SizedBox(height: 20),
+                  if (_errorText != null) ...[
+                    AppErrorText(_errorText!),
+                    const SizedBox(height: 12),
+                  ],
+                  AppPrimaryButton(
+                    label: 'Save',
+                    isLoading: _isLoading,
+                    onPressed: _submit,
+                  ),
+                ],
+              ),
             ),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username'),
-            ),
-            const SizedBox(height: 16),
-            if (_isLoading) const CircularProgressIndicator(),
-            if (_errorText != null)
-              Text(_errorText!, style: const TextStyle(color: Colors.red)),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _submit,
-              child: const Text('Save'),
-            ),
-          ],
+          ),
         ),
       ),
     );
