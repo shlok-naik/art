@@ -8,6 +8,7 @@ import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
 import '../../projects/providers.dart';
+import '../../pro/presentation/pro_screen.dart';
 
 const _borderColor = Colors.black;
 const _borderWidth = 2.0;
@@ -41,7 +42,9 @@ class HomeScreen extends ConsumerWidget {
                       Image.asset('assets/branding/logo.png', height: 60),
                       _OutlinedPillButton(
                         label: 'Buy Pro',
-                        onPressed: () {},
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ProScreen()),
+                        ),
                         fontSize: 16,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
