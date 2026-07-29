@@ -33,9 +33,9 @@ class HomeScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: Center(
+          child: SingleChildScrollView(
             child: FittedBox(
-              fit: BoxFit.contain,
+              fit: BoxFit.fitWidth,
               child: SizedBox(
                 width: _designWidth,
                 child: Padding(
