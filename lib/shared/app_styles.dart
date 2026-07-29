@@ -8,7 +8,7 @@ const kBorderWidth = 2.0;
 const kAccentColor = Colors.deepOrange;
 
 TextStyle appHeadlineStyle({double fontSize = 56, Color color = kAccentColor}) {
-  return GoogleFonts.gochiHand(fontSize: fontSize, height: 1.0, color: color);
+  return GoogleFonts.sedgwickAveDisplay(fontSize: fontSize, height: 1.0, color: color);
 }
 
 AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? actions}) {
