@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../feed/presentation/feed_screen.dart';
 import '../../league/presentation/league_screen.dart';
 import '../../profile/presentation/profile_view_screen.dart';
 import '../../profile/providers.dart';
@@ -253,7 +254,14 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _NavItem(icon: Icons.home, label: 'Home', onTap: () {}),
-                    _NavItem(icon: Icons.article_outlined, label: 'Feed', onTap: () {}),
+                    _NavItem(icon: Icons.article_outlined, 
+                    label: 'Feed', 
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder:(_) => const FeedScreen()),
+                      );
+
+                    }),
                     const SizedBox(width: 70),
                     _NavItem(icon: Icons.groups_outlined, label: 'Followed', onTap: () {}),
                     _NavItem(
