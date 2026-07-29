@@ -22,7 +22,6 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   _DetailStage _stage = _DetailStage.viewing;
   String? _photoUrl;
   Uint8List? _newPhotoBytes;
-  String? _errorText;
 
   String get _sessionId => widget.session['id'].toString();
 
@@ -35,13 +34,22 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   Future<void> _submitNewPhoto() async {
     final bytes = _newPhotoBytes;
     if (bytes == null) return;
-    setState(() {
-      _stage = _DetailStage.submitting;
-      _errorText = null;
-    });
+    setState(() => _stage = _DetailStage.submitting);
+    final repo = ref.read(sessionsRepositoryProvider);
+
+    final String photoUrl;
     try {
-      final repo = ref.read(sessionsRepositoryProvider);
-      final photoUrl = await repo.uploadPhoto(bytes, widget.projectId);
+      photoUrl = await repo.uploadPhoto(bytes, widget.projectId);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _stage = _DetailStage.review);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload photo: $e')),
+      );
+      return;
+    }
+
+    try {
       await repo.updateSessionPhoto(_sessionId, photoUrl);
       if (!mounted) return;
       ref.invalidate(sessionsListProvider(widget.projectId));
@@ -52,21 +60,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _stage = _DetailStage.review;
-        _errorText = e.toString();
-      });
+      setState(() => _stage = _DetailStage.review);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save session: $e')),
+      );
     }
   }
 
   Widget _buildViewingBody() {
     return Column(
       children: [
-        if (_errorText != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(_errorText!, style: const TextStyle(color: Colors.red)),
-          ),
         Expanded(
           child: Center(
             child: Padding(

@@ -99,8 +99,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.pickFiles(type: FileType.image, withData: true);
-      final bytes = result?.files.single.bytes;
+      final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+      if (result == null || result.files.isEmpty) return;
+      final bytes = result.files.single.bytes;
       if (bytes == null) return;
       if (!mounted) return;
       setState(() {
@@ -119,9 +120,25 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final photo = _capturedPhoto;
     if (photo == null) return;
     setState(() => _stage = _SessionStage.submitting);
+    final repo = ref.read(sessionsRepositoryProvider);
+
+    final String photoUrl;
     try {
-      final repo = ref.read(sessionsRepositoryProvider);
-      final photoUrl = await repo.uploadPhoto(photo, _projectId);
+      photoUrl = await repo.uploadPhoto(photo, _projectId);
+    } catch (e) {
+      debugPrint('Photo upload failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _stage = _SessionStage.review;
+        _errorText = 'Failed to upload photo: $e';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload photo: $e')),
+      );
+      return;
+    }
+
+    try {
       await repo.createSession(
         projectId: _projectId,
         durationSeconds: _elapsed.inSeconds,
@@ -133,13 +150,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         _stage = _SessionStage.idle;
         _elapsed = Duration.zero;
         _capturedPhoto = null;
+        _errorText = null;
       });
     } catch (e) {
-      debugPrint('Session submit failed: $e');
+      debugPrint('Session save failed: $e');
       if (!mounted) return;
       setState(() {
         _stage = _SessionStage.review;
-        _errorText = e.toString();
+        _errorText = 'Failed to save session: $e';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to save session: $e')),

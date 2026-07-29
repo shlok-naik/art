@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
@@ -138,7 +139,10 @@ class _SessionCameraViewState extends State<SessionCameraView> {
     if (controller == null || !controller.value.isInitialized || _capturing) return;
     setState(() => _capturing = true);
     try {
-      final file = await controller.takePicture();
+      final file = await controller.takePicture().timeout(
+            const Duration(seconds: 12),
+            onTimeout: () => throw TimeoutException('Camera did not respond in time'),
+          );
       final bytes = await file.readAsBytes();
       widget.onCaptured(bytes);
     } catch (e) {

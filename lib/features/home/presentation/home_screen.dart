@@ -40,7 +40,15 @@ class HomeScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset('assets/branding/logo.png', height: 60),
+                      Flexible(
+                        child: Image.asset(
+                          'assets/branding/logo.png',
+                          height: 60,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       _OutlinedPillButton(
                         label: 'Buy Pro',
                         onPressed: () => Navigator.of(context).push(
@@ -253,36 +261,45 @@ class HomeScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _NavItem(icon: Icons.home, label: 'Home', onTap: () {}),
-                    _NavItem(icon: Icons.article_outlined, 
-                    label: 'Feed', 
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder:(_) => const FeedScreen()),
-                      );
-
-                    }),
+                    Expanded(child: _NavItem(icon: Icons.home, label: 'Home', onTap: () {})),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.article_outlined,
+                        label: 'Feed',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const FeedScreen()),
+                          );
+                        },
+                      ),
+                    ),
                     const SizedBox(width: 70),
-                    _NavItem(icon: Icons.groups_outlined, label: 'Followed', onTap: () {}),
-                    _NavItem(
-                      icon: Icons.person_outline,
-                      label: 'Profile',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
-                        );
-                      },
+                    Expanded(
+                      child: _NavItem(icon: Icons.groups_outlined, label: 'Followed', onTap: () {}),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.person_outline,
+                        label: 'Profile',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
               // Sized and positioned to intentionally overflow past the bottom of the
-              // screen, so the mascot's legs/feet run off the edge.
+              // screen, so the mascot's legs/feet run off the edge. Height is kept
+              // low enough that the top of the mascot doesn't creep above this bar
+              // and paint over the scrollable body content sitting above it.
               Positioned(
                 bottom: -32,
                 child: GestureDetector(
                   onTap: () {},
-                  child: Image.asset('assets/branding/mascot.png', height: 150),
+                  child: Image.asset('assets/branding/mascot.png', height: 128),
                 ),
               ),
             ],
@@ -364,7 +381,13 @@ class _NavItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           child,
-          if (label.isNotEmpty) Text(label, style: GoogleFonts.chewy(fontSize: 12)),
+          if (label.isNotEmpty)
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.chewy(fontSize: 12),
+            ),
         ],
       ),
     );
