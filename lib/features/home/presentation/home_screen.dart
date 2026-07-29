@@ -92,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                             'WELCOME',
                             maxLines: 1,
                             softWrap: false,
-                            style: GoogleFonts.gochiHand(
+                            style: GoogleFonts.sedgwickAveDisplay(
                               fontSize: 84,
                               height: 1.0,
                               color: Colors.deepOrange,
