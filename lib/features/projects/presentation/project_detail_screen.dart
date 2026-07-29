@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'session_capture.dart';
 import 'session_details_form.dart';
@@ -280,6 +282,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                           builder: (_) => SessionDetailScreen(
                             session: session,
                             projectId: _projectId,
+                            project: widget.project,
                           ),
                         ),
                       );
@@ -384,6 +387,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, title),
         body: SafeArea(child: body),
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: -1,
+          onTap: (i) => goToMainTab(context, ref, i),
+        ),
       ),
     );
   }

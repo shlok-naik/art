@@ -1,7 +1,8 @@
-import 'package:art/features/home/presentation/home_screen.dart';
+import 'package:art/features/feed/providers.dart';
 import 'package:art/features/profile/data/profile_model.dart';
 import 'package:art/features/profile/providers.dart';
 import 'package:art/features/projects/providers.dart';
+import 'package:art/features/shell/main_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,8 +21,16 @@ void main() {
             (ref) async => const Profile(id: 'u1', username: 'testuser', displayName: 'Test User'),
           ),
           lastOpenedProjectProvider.overrideWith((ref) async => null),
+          // The IndexedStack in MainShell builds all four tabs up front,
+          // including Feed, so its provider needs overriding too or it'll
+          // try to reach Supabase, which isn't initialized in tests.
+          feedPostsProvider.overrideWith((ref) async => []),
         ],
-        child: const MaterialApp(home: HomeScreen()),
+        // MainShell (not HomeScreen alone) so the test reflects the real
+        // available height: the shared bottom nav reserves 104px, which
+        // HomeScreen no longer accounts for itself now that it's owned by
+        // MainShell instead of each tab's own Scaffold.
+        child: const MaterialApp(home: MainShell()),
       ),
     );
     await tester.pumpAndSettle();
@@ -35,7 +44,7 @@ void main() {
   };
 
   for (final entry in sizes.entries) {
-    testWidgets('HomeScreen lays out without overflow on a ${entry.key}', (tester) async {
+    testWidgets('MainShell lays out without overflow on a ${entry.key}', (tester) async {
       await pumpAt(tester, entry.value);
       expect(tester.takeException(), isNull);
     });

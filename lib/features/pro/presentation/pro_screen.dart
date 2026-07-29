@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../shell/main_shell.dart';
 
 class ProScreen extends StatelessWidget {
   const ProScreen({super.key});
@@ -65,6 +68,12 @@ class ProScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+        bottomNavigationBar: Consumer(
+          builder: (context, ref, _) => AppBottomNav(
+            currentIndex: -1,
+            onTap: (i) => goToMainTab(context, ref, i),
           ),
         ),
       ),

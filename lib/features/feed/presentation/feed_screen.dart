@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
-import '../domain/feed_post.dart';
 import '../../home/presentation/home_screen.dart';
+import '../domain/feed_post.dart';
+import '../providers.dart';
 
 enum _EmojiReaction { heart, laugh, wow, sad, angry }
 
@@ -42,18 +44,40 @@ String _formatCount(int count) {
 /// Full-screen scrollable feed of posted slideshows and sessions, styled
 /// like YT Shorts / Instagram Reels: vertical swipe between posts, and
 /// (for slideshows) horizontal swipe through a project's session photos.
-class FeedScreen extends StatelessWidget {
+class FeedScreen extends ConsumerWidget {
   const FeedScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(feedPostsProvider);
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: PageView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: dummyFeedPosts.length,
-        itemBuilder: (context, index) =>
-            _FeedPostCard(post: dummyFeedPosts[index]),
+      body: postsAsync.when(
+        data: (posts) {
+          if (posts.isEmpty) {
+            return Center(
+              child: Text(
+                'No posts yet — finish a session to see it here.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
+              ),
+            );
+          }
+          return PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: posts.length,
+            itemBuilder: (context, index) => _FeedPostCard(post: posts[index]),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+        error: (error, _) => Center(
+          child: Text(
+            'Failed to load feed: $error',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
+          ),
+        ),
       ),
     );
   }
@@ -249,18 +273,32 @@ class _FeedPostCardState extends State<_FeedPostCard> {
           scrollDirection: Axis.horizontal,
           itemCount: post.slideCount,
           onPageChanged: (index) => setState(() => _slideIndex = index),
-          itemBuilder: (context, index) => Container(
-            color: Colors.grey.shade200,
-            alignment: Alignment.center,
-            child: Text(
-              'Image',
-              style: GoogleFonts.chewy(
-                fontSize: 54,
-                fontWeight: FontWeight.bold,
-                color: Colors.black38,
+          itemBuilder: (context, index) {
+            final photoUrl = post.photoUrl;
+            if (photoUrl == null || photoUrl.isEmpty) {
+              return Container(
+                color: Colors.grey.shade200,
+                alignment: Alignment.center,
+                child: Text(
+                  'Image',
+                  style: GoogleFonts.chewy(
+                    fontSize: 54,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black38,
+                  ),
+                ),
+              );
+            }
+            return Image.network(
+              photoUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey.shade200,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported, size: 54, color: Colors.black38),
               ),
-            ),
-          ),
+            );
+          },
         ),
         SafeArea(
           child: Padding(

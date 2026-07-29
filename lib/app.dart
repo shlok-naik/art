@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/providers.dart';
-import 'features/home/presentation/home_screen.dart';
 import 'features/profile/presentation/profile_setup_screen.dart';
 import 'features/profile/providers.dart';
+import 'features/shell/main_shell.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -56,7 +56,7 @@ class _ProfileGate extends ConsumerWidget {
         if (profile == null) {
           return const ProfileSetupScreen();
         }
-        return const HomeScreen();
+        return const MainShell();
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
