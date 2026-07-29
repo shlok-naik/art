@@ -48,6 +48,9 @@ class SessionsRepository {
     required String projectId,
     required int durationSeconds,
     required String photoUrl,
+    required String stage,
+    required List<String> toolsUsed,
+    required int difficulty,
   }) async {
     final response = await http.post(
       Uri.parse('$_backendUrl/api/sessions'),
@@ -56,6 +59,9 @@ class SessionsRepository {
         'project_id': projectId,
         'duration': durationSeconds,
         'photo_url': photoUrl,
+        'stage': stage,
+        'tools_used': toolsUsed,
+        'difficulty': difficulty,
       }),
     );
     if (response.statusCode >= 400) {

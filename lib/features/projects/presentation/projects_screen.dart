@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'project_detail_screen.dart';
 
@@ -216,6 +218,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               ),
             ],
           ),
+        ),
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: -1,
+          onTap: (i) => goToMainTab(context, ref, i),
         ),
       ),
     );

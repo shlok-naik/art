@@ -7,9 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'session_capture.dart';
+import 'session_details_form.dart';
 import 'session_detail_screen.dart';
 
 const _monthNames = [
@@ -31,7 +34,7 @@ String _formatDuration(Duration duration) {
   return '$hours:$minutes:$seconds';
 }
 
-enum _SessionStage { idle, running, paused, photoSource, camera, review, submitting }
+enum _SessionStage { idle, running, paused, photoSource, camera, review, details, submitting }
 
 class ProjectDetailScreen extends ConsumerStatefulWidget {
   const ProjectDetailScreen({super.key, required this.project});
@@ -99,8 +102,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.pickFiles(type: FileType.image, withData: true);
-      final bytes = result?.files.single.bytes;
+      final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+      if (result == null || result.files.isEmpty) return;
+      final bytes = result.files.single.bytes;
       if (bytes == null) return;
       if (!mounted) return;
       setState(() {
@@ -115,17 +119,40 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({
+    required String stage,
+    required List<String> toolsUsed,
+    required int difficulty,
+  }) async {
     final photo = _capturedPhoto;
     if (photo == null) return;
     setState(() => _stage = _SessionStage.submitting);
+    final repo = ref.read(sessionsRepositoryProvider);
+
+    final String photoUrl;
     try {
-      final repo = ref.read(sessionsRepositoryProvider);
-      final photoUrl = await repo.uploadPhoto(photo, _projectId);
+      photoUrl = await repo.uploadPhoto(photo, _projectId);
+    } catch (e) {
+      debugPrint('Photo upload failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _stage = _SessionStage.details;
+        _errorText = 'Failed to upload photo: $e';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload photo: $e')),
+      );
+      return;
+    }
+
+    try {
       await repo.createSession(
         projectId: _projectId,
         durationSeconds: _elapsed.inSeconds,
         photoUrl: photoUrl,
+        stage: stage,
+        toolsUsed: toolsUsed,
+        difficulty: difficulty,
       );
       if (!mounted) return;
       ref.invalidate(sessionsListProvider(_projectId));
@@ -133,13 +160,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         _stage = _SessionStage.idle;
         _elapsed = Duration.zero;
         _capturedPhoto = null;
+        _errorText = null;
       });
     } catch (e) {
-      debugPrint('Session submit failed: $e');
+      debugPrint('Session save failed: $e');
       if (!mounted) return;
       setState(() {
-        _stage = _SessionStage.review;
-        _errorText = e.toString();
+        _stage = _SessionStage.details;
+        _errorText = 'Failed to save session: $e';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to save session: $e')),
@@ -254,6 +282,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                           builder: (_) => SessionDetailScreen(
                             session: session,
                             projectId: _projectId,
+                            project: widget.project,
                           ),
                         ),
                       );
@@ -328,15 +357,22 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           }),
         );
       case _SessionStage.review:
-      case _SessionStage.submitting:
         body = SessionPhotoReview(
           photoBytes: _capturedPhoto!,
-          isSubmitting: _stage == _SessionStage.submitting,
+          isSubmitting: false,
           onRetake: () => setState(() {
             _capturedPhoto = null;
-            _stage = _SessionStage.photoSource;
+            _stage = _SessionStage.camera;
           }),
-          onSubmit: _submit,
+          onSubmit: () => setState(() => _stage = _SessionStage.details),
+        );
+      case _SessionStage.details:
+      case _SessionStage.submitting:
+        body = SessionDetailsFillOutScreen(
+          isSubmitting: _stage == _SessionStage.submitting,
+          onBack: () => setState(() => _stage = _SessionStage.review),
+          onSubmit: (stage, toolsUsed, difficulty) =>
+              _submit(stage: stage, toolsUsed: toolsUsed, difficulty: difficulty),
         );
       case _SessionStage.running:
       case _SessionStage.paused:
@@ -351,6 +387,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, title),
         body: SafeArea(child: body),
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: -1,
+          onTap: (i) => goToMainTab(context, ref, i),
+        ),
       ),
     );
   }
