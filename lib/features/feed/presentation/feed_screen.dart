@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
-import '../../home/presentation/home_screen.dart';
+import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../providers.dart';
 
@@ -83,16 +83,16 @@ class FeedScreen extends ConsumerWidget {
   }
 }
 
-class _FeedPostCard extends StatefulWidget {
+class _FeedPostCard extends ConsumerStatefulWidget {
   const _FeedPostCard({required this.post});
 
   final FeedPost post;
 
   @override
-  State<_FeedPostCard> createState() => _FeedPostCardState();
+  ConsumerState<_FeedPostCard> createState() => _FeedPostCardState();
 }
 
-class _FeedPostCardState extends State<_FeedPostCard> {
+class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
   bool? _thumbsUp;
   _EmojiReaction? _selectedEmoji;
@@ -319,11 +319,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
                   top: post.slideCount > 1 ? 14 : 0,
                   left: 0,
                   child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
-                      );
-                    },
+                    onTap: () => goToMainTab(context, ref, 0),
                     child: Container(
                       width: 40,
                       height: 40,
