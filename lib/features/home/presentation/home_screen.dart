@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../feed/presentation/feed_screen.dart';
 import '../../league/presentation/league_screen.dart';
-import '../../profile/presentation/profile_view_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
@@ -15,11 +13,11 @@ const _borderColor = Colors.black;
 const _borderWidth = 2.0;
 const _sidePadding = EdgeInsets.symmetric(horizontal: 16);
 
-// Reference size the body content below is designed against. FittedBox scales
-// this whole block up or down to fit whatever height/width is actually
-// available, so every element grows/shrinks together instead of scrolling.
+// Reference width the body content below is designed against. Height is left
+// to the Column's own natural size (via mainAxisSize.min) rather than a
+// guessed constant, so FittedBox scales a box that exactly matches the
+// content instead of leaving dead space below it.
 const _designWidth = 390.0;
-const _designHeight = 1000.0;
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -40,10 +38,10 @@ class HomeScreen extends ConsumerWidget {
               fit: BoxFit.contain,
               child: SizedBox(
                 width: _designWidth,
-                height: _designHeight,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -77,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Padding(
                         padding: _sidePadding,
                         child: Row(
@@ -110,7 +108,7 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       Padding(
                         padding: _sidePadding,
                         child: Center(
@@ -151,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       // Transform (not negative padding, which Flutter's Padding widget
                       // rejects at runtime) shifts this card to bleed past the screen's left
                       // edge; it's sized to fit its content rather than stretching full width.
@@ -226,7 +224,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Padding(
                         padding: _sidePadding,
                         child: Center(
@@ -239,7 +237,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Padding(
                         padding: _sidePadding,
                         child: Container(
@@ -258,7 +256,7 @@ class HomeScreen extends ConsumerWidget {
                               Stack(
                                 children: [
                                   Container(
-                                    height: 165,
+                                    height: 130,
                                     width: double.infinity,
                                     color: Colors.grey.shade200,
                                     child: Center(
@@ -313,83 +311,12 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        bottomNavigationBar: SizedBox(
-          height: 104,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.bottomCenter,
-            children: [
-              BottomAppBar(
-                color: Colors.white,
-                height: 104,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.home,
-                        label: 'Home',
-                        onTap: () {},
-                      ),
-                    ),
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.article_outlined,
-                        label: 'Feed',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const FeedScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 70),
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.groups_outlined,
-                        label: 'Followed',
-                        onTap: () {},
-                      ),
-                    ),
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.person_outline,
-                        label: 'Profile',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const ProfileViewScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Sized and positioned to intentionally overflow past the bottom of the
-              // screen, so the mascot's legs/feet run off the edge. Height is kept
-              // low enough that the top of the mascot doesn't creep above this bar
-              // and paint over the scrollable body content sitting above it.
-              Positioned(
-                bottom: -32,
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Image.asset('assets/branding/mascot.png', height: 128),
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -446,40 +373,3 @@ class _OutlinedPillButton extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final child = CircleAvatar(
-      radius: 16,
-      backgroundColor: Colors.transparent,
-      child: Icon(icon, color: Colors.black),
-    );
-
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          child,
-          if (label.isNotEmpty)
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.chewy(fontSize: 12),
-            ),
-        ],
-      ),
-    );
-  }
-}
