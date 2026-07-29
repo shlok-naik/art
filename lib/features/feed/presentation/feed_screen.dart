@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../domain/feed_post.dart';
+import '../../home/presentation/home_screen.dart';
 
 enum _EmojiReaction { heart, laugh, wow, sad, angry }
 
@@ -276,6 +277,35 @@ class _FeedPostCardState extends State<_FeedPostCard> {
                       current: _slideIndex,
                     ),
                   ),
+                Positioned(
+                  top: post.slideCount > 1 ? 14 : 0,
+                  left: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                      );
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: kAccentColor,
+                        border: Border.all(
+                          color: kBorderColor,
+                          width: kBorderWidth,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned(
                   left: 4,
                   right: 76,
