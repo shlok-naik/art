@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   camera_windows
+  file_selector_windows
   url_launcher_windows
 )
 

@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../../shared/app_styles.dart';
 import '../providers.dart';
 import 'session_capture.dart';
 import 'session_detail_screen.dart';
@@ -27,7 +31,7 @@ String _formatDuration(Duration duration) {
   return '$hours:$minutes:$seconds';
 }
 
-enum _SessionStage { idle, running, paused, camera, review, submitting }
+enum _SessionStage { idle, running, paused, photoSource, camera, review, submitting }
 
 class ProjectDetailScreen extends ConsumerStatefulWidget {
   const ProjectDetailScreen({super.key, required this.project});
@@ -72,7 +76,43 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   void _endSession() {
     _ticker?.cancel();
-    setState(() => _stage = _SessionStage.camera);
+    setState(() => _stage = _SessionStage.photoSource);
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 90);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _capturedPhoto = bytes;
+        _stage = _SessionStage.review;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load photo: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.pickFiles(type: FileType.image, withData: true);
+      final bytes = result?.files.single.bytes;
+      if (bytes == null) return;
+      if (!mounted) return;
+      setState(() {
+        _capturedPhoto = bytes;
+        _stage = _SessionStage.review;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load file: $e')),
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -114,23 +154,46 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   Widget _buildTimerBody() {
+    final isPaused = _stage == _SessionStage.paused;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_formatDuration(_elapsed), style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 24),
+          Text(
+            isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16, color: kAccentColor),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _formatDuration(_elapsed),
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: Colors.black),
+          ),
+          const SizedBox(height: 32),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               OutlinedButton.icon(
                 onPressed: _togglePause,
-                icon: Icon(_stage == _SessionStage.running ? Icons.pause : Icons.play_arrow),
-                label: Text(_stage == _SessionStage.running ? 'Pause' : 'Resume'),
+                style: OutlinedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
+                label: Text(isPaused ? 'Resume' : 'Pause'),
               ),
               const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: _endSession,
+                style: ElevatedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  backgroundColor: kAccentColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 icon: const Icon(Icons.stop),
                 label: const Text('End'),
               ),
@@ -146,38 +209,45 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: _startSession,
-            child: const Text('Start New Session'),
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: AppPrimaryButton(label: 'Start New Session', onPressed: _startSession),
         ),
         if (_errorText != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(_errorText!, style: const TextStyle(color: Colors.red)),
+            child: AppErrorText(_errorText!),
           ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Past Sessions', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+          ),
+        ),
+        const SizedBox(height: 8),
         Expanded(
           child: sessionsAsync.when(
             data: (sessions) {
               if (sessions.isEmpty) {
-                return const Center(child: Text('No sessions logged yet.'));
+                return Center(
+                  child: Text(
+                    'No sessions logged yet.',
+                    style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                  ),
+                );
               }
               return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 itemCount: sessions.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final session = sessions[index];
                   final photoUrl = session['photo_url']?.toString();
                   final durationSeconds =
                       int.tryParse(session['duration']?.toString() ?? '') ?? 0;
-                  return ListTile(
-                    leading: (photoUrl == null || photoUrl.isEmpty)
-                        ? const CircleAvatar(child: Icon(Icons.image_not_supported))
-                        : CircleAvatar(backgroundImage: NetworkImage(photoUrl)),
-                    title: Text(_formatDuration(Duration(seconds: durationSeconds))),
-                    subtitle: Text('Logged: ${_formatLoggedAt(session['created_at'])}'),
-                    trailing: const Icon(Icons.chevron_right),
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -188,12 +258,50 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                         ),
                       );
                     },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: appCardDecoration(),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: (photoUrl == null || photoUrl.isEmpty)
+                                ? Container(
+                                    width: 52,
+                                    height: 52,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.image_not_supported, color: Colors.black38),
+                                  )
+                                : Image.network(photoUrl, width: 52, height: 52, fit: BoxFit.cover),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _formatDuration(Duration(seconds: durationSeconds)),
+                                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                Text(
+                                  'Logged: ${_formatLoggedAt(session['created_at'])}',
+                                  style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: Colors.black38),
+                        ],
+                      ),
+                    ),
                   );
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(child: Text('Failed to load sessions: $error')),
+            loading: () => const Center(child: CircularProgressIndicator(color: kAccentColor)),
+            error: (error, _) => Center(
+              child: Text('Failed to load sessions: $error', style: GoogleFonts.chewy()),
+            ),
           ),
         ),
       ],
@@ -206,6 +314,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
     late final Widget body;
     switch (_stage) {
+      case _SessionStage.photoSource:
+        body = PhotoSourcePicker(
+          onTakePhoto: () => setState(() => _stage = _SessionStage.camera),
+          onChooseFromGallery: _pickFromGallery,
+          onUploadFile: _pickFile,
+        );
       case _SessionStage.camera:
         body = SessionCameraView(
           onCaptured: (bytes) => setState(() {
@@ -220,7 +334,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           isSubmitting: _stage == _SessionStage.submitting,
           onRetake: () => setState(() {
             _capturedPhoto = null;
-            _stage = _SessionStage.camera;
+            _stage = _SessionStage.photoSource;
           }),
           onSubmit: _submit,
         );
@@ -231,9 +345,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         body = _buildIdleBody();
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: body,
+    return DefaultTextStyle(
+      style: GoogleFonts.chewy(color: Colors.black),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: appThemedAppBar(context, title),
+        body: SafeArea(child: body),
+      ),
     );
   }
 }

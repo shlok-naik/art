@@ -30,5 +30,7 @@
 	<string>NSApplication</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to capture a photo when you finish a session.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app accesses your photo library so you can upload a photo for a session.</string>
 </dict>
 </plist>
