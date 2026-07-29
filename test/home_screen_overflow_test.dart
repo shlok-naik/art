@@ -27,13 +27,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('HomeScreen lays out without overflow at a typical phone size', (tester) async {
-    await pumpAt(tester, const Size(390, 844));
-    expect(tester.takeException(), isNull);
-  });
+  final sizes = {
+    'typical phone (iPhone 14)': const Size(390, 844),
+    'narrow phone (iPhone SE width)': const Size(320, 568),
+    'short phone (compact Android)': const Size(360, 640),
+    'tall phone (Pro Max height)': const Size(390, 932),
+  };
 
-  testWidgets('HomeScreen lays out without overflow on a narrow phone (iPhone SE width)', (tester) async {
-    await pumpAt(tester, const Size(320, 568));
-    expect(tester.takeException(), isNull);
-  });
+  for (final entry in sizes.entries) {
+    testWidgets('HomeScreen lays out without overflow on a ${entry.key}', (tester) async {
+      await pumpAt(tester, entry.value);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

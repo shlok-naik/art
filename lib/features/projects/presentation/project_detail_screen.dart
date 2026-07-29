@@ -352,7 +352,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           isSubmitting: _stage == _SessionStage.submitting,
           onRetake: () => setState(() {
             _capturedPhoto = null;
-            _stage = _SessionStage.photoSource;
+            _stage = _SessionStage.camera;
           }),
           onSubmit: _submit,
         );

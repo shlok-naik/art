@@ -1,12 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../providers.dart';
 import 'session_capture.dart';
 
-enum _DetailStage { viewing, camera, review, submitting }
+enum _DetailStage { viewing, photoSource, camera, review, submitting }
 
 class SessionDetailScreen extends ConsumerStatefulWidget {
   const SessionDetailScreen({super.key, required this.session, required this.projectId});
@@ -29,6 +31,43 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   void initState() {
     super.initState();
     _photoUrl = widget.session['photo_url']?.toString();
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 90);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _newPhotoBytes = bytes;
+        _stage = _DetailStage.review;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load photo: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+      if (result == null || result.files.isEmpty) return;
+      final bytes = result.files.single.bytes;
+      if (bytes == null) return;
+      if (!mounted) return;
+      setState(() {
+        _newPhotoBytes = bytes;
+        _stage = _DetailStage.review;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load file: $e')),
+      );
+    }
   }
 
   Future<void> _submitNewPhoto() async {
@@ -90,7 +129,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 32, top: 8),
           child: ElevatedButton.icon(
-            onPressed: () => setState(() => _stage = _DetailStage.camera),
+            onPressed: () => setState(() => _stage = _DetailStage.photoSource),
             icon: const Icon(Icons.edit),
             label: const Text('Edit Photo'),
           ),
@@ -103,6 +142,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   Widget build(BuildContext context) {
     late final Widget body;
     switch (_stage) {
+      case _DetailStage.photoSource:
+        body = PhotoSourcePicker(
+          onTakePhoto: () => setState(() => _stage = _DetailStage.camera),
+          onChooseFromGallery: _pickFromGallery,
+          onUploadFile: _pickFile,
+        );
       case _DetailStage.camera:
         body = SessionCameraView(
           onCaptured: (bytes) => setState(() {
