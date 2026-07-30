@@ -1,7 +1,3 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/providers.dart';
@@ -9,20 +5,8 @@ import 'data/projects_repository.dart';
 import 'data/recent_project_store.dart';
 import 'data/sessions_repository.dart';
 
-String _resolveBackendUrl() {
-  final url = dotenv.env['BACKEND_URL'] ?? 'http://localhost:8000';
-  // The Android emulator can't reach the host machine via localhost; it
-  // needs the special 10.0.2.2 alias instead.
-  if (!kIsWeb && Platform.isAndroid) {
-    return url
-        .replaceFirst('localhost', '10.0.2.2')
-        .replaceFirst('127.0.0.1', '10.0.2.2');
-  }
-  return url;
-}
-
 final projectsRepositoryProvider = Provider<ProjectsRepository>((ref) {
-  return ProjectsRepository(ref.watch(supabaseClientProvider), _resolveBackendUrl());
+  return ProjectsRepository(ref.watch(supabaseClientProvider));
 });
 
 final recentProjectStoreProvider = Provider<RecentProjectStore>((ref) => RecentProjectStore());
@@ -55,7 +39,7 @@ final lastOpenedProjectProvider = FutureProvider.autoDispose<Map<String, dynamic
 });
 
 final sessionsRepositoryProvider = Provider<SessionsRepository>((ref) {
-  return SessionsRepository(ref.watch(supabaseClientProvider), _resolveBackendUrl());
+  return SessionsRepository(ref.watch(supabaseClientProvider));
 });
 
 final sessionsListProvider =

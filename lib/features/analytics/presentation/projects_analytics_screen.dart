@@ -1,13 +1,16 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../pro/presentation/pro_screen.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
-import 'stage_radar_screen.dart';
+import 'tool_bar_row.dart';
 
 String _formatMinutes(double minutes) {
   if (minutes <= 0) return '0m';
@@ -76,6 +79,30 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    if (overview.fastestFinish != null) ...[
+                      const SizedBox(height: 12),
+                      _FastestFinishCard(fastestFinish: overview.fastestFinish!),
+                    ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Completion',
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: appCardDecoration(),
+                      child: Column(
+                        children: [
+                          for (final project in [...overview.perProject]
+                            ..sort((a, b) => b.completionPercent.compareTo(a.completionPercent))) ...[
+                            _CompletionRow(stats: project),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Time invested per project',
@@ -94,9 +121,9 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                     ],
                     const SizedBox(height: 10),
-                    _ProInsightsTeaser(
+                    _TopToolsTeaser(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const StageRadarScreen()),
+                        MaterialPageRoute(builder: (_) => const ProScreen()),
                       ),
                     ),
                   ],
@@ -177,6 +204,110 @@ class _StatusRow extends StatelessWidget {
   }
 }
 
+class _FastestFinishCard extends StatelessWidget {
+  const _FastestFinishCard({required this.fastestFinish});
+
+  final FastestFinish fastestFinish;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: kAccentTintColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorderColor, width: kBorderWidth),
+      ),
+      child: Row(
+        children: [
+          const Text('🏎️', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Fastest finish',
+                  style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+                ),
+                Text(
+                  '${fastestFinish.title} · ${fastestFinish.days} day${fastestFinish.days == 1 ? '' : 's'}',
+                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionRow extends StatelessWidget {
+  const _CompletionRow({required this.stats});
+
+  final ProjectStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFinished = stats.completionPercent >= 100;
+    return Row(
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            stats.title,
+            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth * (stats.completionPercent / 100).clamp(0.0, 1.0),
+                    decoration: BoxDecoration(
+                      color: isFinished ? kSuccessTextColor : kAccentColor,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 44,
+          child: Text(
+            isFinished ? '🏁' : '${stats.completionPercent}%',
+            textAlign: TextAlign.right,
+            style: GoogleFonts.chewy(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isFinished ? kSuccessTextColor : kAccentColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProjectStatsRow extends StatelessWidget {
   const _ProjectStatsRow({required this.stats, required this.onTap});
 
@@ -226,8 +357,20 @@ class _ProjectStatsRow extends StatelessWidget {
   }
 }
 
-class _ProInsightsTeaser extends StatelessWidget {
-  const _ProInsightsTeaser({required this.onTap});
+/// Sample values (not the user's real data) with a deliberately wide spread
+/// so the bar chart's shape reads clearly through the blur.
+const _sampleTools = [
+  ToolUsage(tool: 'Procreate', count: 24),
+  ToolUsage(tool: 'Ibis Paint', count: 18),
+  ToolUsage(tool: 'Copic Markers', count: 11),
+  ToolUsage(tool: 'Watercolor', count: 6),
+];
+
+/// Blurred preview of the Pro-only "Top tools" list, with a lock-and-CTA
+/// overlay. Uses sample data (not the user's real numbers) so the shape is
+/// legible without giving away real analytics for free.
+class _TopToolsTeaser extends StatelessWidget {
+  const _TopToolsTeaser({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -238,36 +381,61 @@ class _ProInsightsTeaser extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
-          borderRadius: BorderRadius.circular(12),
-          color: kAccentColor.withValues(alpha: 0.06),
-        ),
-        child: Row(
+        decoration: appCardDecoration(),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
           children: [
-            const Icon(Icons.lock, color: kAccentColor, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'See your top tools & practice streak',
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                child: IgnorePointer(
+                  child: Column(
+                    children: [
+                      for (final tool in _sampleTools) ...[
+                        ToolBarRow(tool: tool, maxCount: _sampleTools.first.count),
+                        const SizedBox(height: 12),
+                      ],
+                    ],
                   ),
-                  Text(
-                    'Unlock with Pro',
-                    style: GoogleFonts.chewy(fontSize: 13, color: kAccentColor, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: kAccentColor),
+            Positioned.fill(
+              child: Container(color: Colors.white.withValues(alpha: 0.35)),
+            ),
+            Positioned.fill(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.lock, color: kAccentColor, size: 28),
+                      const SizedBox(height: 8),
+                      Text(
+                        'See your top tools and practice streak.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Go Pro',
+                        style: GoogleFonts.chewy(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: kAccentColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+

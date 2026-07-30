@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,9 +51,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   Uint8List? _newPhotoBytes;
 
   late String? _photoUrl = widget.post.photoUrl;
+  late String? _sessionName = widget.post.sessionName;
   late String _stageName = widget.post.stage ?? kSessionStages.first;
   late List<String> _toolsUsed = List.of(widget.post.toolsUsed);
   late int _difficulty = widget.post.difficulty ?? 5;
+
+  String get _title {
+    final name = _sessionName;
+    return (name != null && name.isNotEmpty) ? name : widget.post.projectTitle;
+  }
 
   String get _description =>
       'Working on: $_stageName';
@@ -116,6 +123,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       await repo.updateSessionPhoto(widget.post.id, photoUrl);
       if (!mounted) return;
       ref.invalidate(feedPostsProvider);
+      ref.invalidate(myPostsProvider);
       setState(() {
         _photoUrl = photoUrl;
         _newPhotoBytes = null;
@@ -130,7 +138,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
   }
 
-  Future<void> _submitDetails(String stage, List<String> toolsUsed, int difficulty) async {
+  Future<void> _submitDetails(
+    String name,
+    String stage,
+    List<String> toolsUsed,
+    int difficulty,
+    int _,
+  ) async {
     setState(() => _stage = _Stage.savingDetails);
     final repo = ref.read(sessionsRepositoryProvider);
     try {
@@ -139,10 +153,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         stage: stage,
         toolsUsed: toolsUsed,
         difficulty: difficulty,
+        name: name,
       );
       if (!mounted) return;
       ref.invalidate(feedPostsProvider);
+      ref.invalidate(myPostsProvider);
+      ref.invalidate(sessionsListProvider(widget.post.projectId));
       setState(() {
+        _sessionName = name;
         _stageName = stage;
         _toolsUsed = toolsUsed;
         _difficulty = difficulty;
@@ -159,7 +177,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   Widget _buildViewingBody() {
     final post = widget.post;
-    final counts = baseReactionCounts(post.id);
+    final countsMap =
+        ref.watch(sessionReactionsProvider(post.id)).value?.counts ?? const <String, int>{};
+    final counts = ReactionCounts.fromCountsMap(countsMap);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -176,7 +196,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     alignment: Alignment.center,
                     child: const Icon(Icons.image_not_supported, size: 64, color: Colors.black38),
                   )
-                : Image.network(_photoUrl!, width: double.infinity, height: 260, fit: BoxFit.cover),
+                : CachedNetworkImage(
+                    imageUrl: _photoUrl!,
+                    width: double.infinity,
+                    height: 260,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -212,9 +237,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            post.projectTitle,
+            _title,
             style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 26),
           ),
+          if (_title != post.projectTitle) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Part of ${post.projectTitle}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -305,6 +337,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         body = SessionDetailsFillOutScreen(
           title: 'Edit Details',
           submitLabel: 'Save Changes',
+          initialName: _sessionName,
           initialStage: _stageName,
           initialTools: _toolsUsed,
           initialDifficulty: _difficulty,

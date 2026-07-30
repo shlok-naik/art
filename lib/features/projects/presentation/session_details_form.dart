@@ -6,13 +6,18 @@ import '../../../shared/app_styles.dart';
 const kSessionStages = [
   'Sketching',
   'Outlining',
-  'Drawing',
   'Coloring',
-  'Inking',
   'Rendering',
-  'Editing',
   'Finishing Touches',
 ];
+
+const kStageCompletionRecommendations = {
+  'Sketching': 10,
+  'Outlining': 25,
+  'Coloring': 50,
+  'Rendering': 75,
+  'Finishing Touches': 90,
+};
 
 /// Collects stage/tools/difficulty metadata for a session before it's
 /// submitted. Shown after the photo has been captured and confirmed.
@@ -22,31 +27,52 @@ class SessionDetailsFillOutScreen extends StatefulWidget {
     required this.onSubmit,
     required this.onBack,
     this.isSubmitting = false,
+    this.title = 'Session Details',
+    this.submitLabel = 'Save Session',
+    this.initialName,
     this.initialStage,
     this.initialTools,
     this.initialDifficulty,
-    this.title = 'Session Details',
-    this.submitLabel = 'Save Session',
+    this.initialProjectCompletion,
+    this.showProjectCompletion = false,
   });
 
-  final void Function(String stage, List<String> toolsUsed, int difficulty) onSubmit;
+  final void Function(String name, String stage, List<String> toolsUsed, int difficulty, int projectCompletion)
+      onSubmit;
   final VoidCallback onBack;
   final bool isSubmitting;
+  final String title;
+  final String submitLabel;
+  final String? initialName;
   final String? initialStage;
   final List<String>? initialTools;
   final int? initialDifficulty;
-  final String title;
-  final String submitLabel;
+  final int? initialProjectCompletion;
+  final bool showProjectCompletion;
 
   @override
   State<SessionDetailsFillOutScreen> createState() => _SessionDetailsFillOutScreenState();
 }
 
 class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScreen> {
+  late final _nameController = TextEditingController(text: widget.initialName ?? '');
+  String? _nameError;
   late String _stage = widget.initialStage ?? kSessionStages.first;
   late final List<String> _tools = List.of(widget.initialTools ?? const []);
   final _toolController = TextEditingController();
   late int _difficulty = widget.initialDifficulty ?? 5;
+  late int _projectCompletion = widget.initialProjectCompletion ?? 0;
+
+  int get _recommendedCompletion => kStageCompletionRecommendations[_stage] ?? 0;
+
+  void _handleSubmit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _nameError = 'Give this session a name');
+      return;
+    }
+    widget.onSubmit(name, _stage, List.of(_tools), _difficulty, _projectCompletion);
+  }
 
   void _addTool() {
     final value = _toolController.text.trim();
@@ -66,6 +92,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
 
   @override
   void dispose() {
+    _nameController.dispose();
     _toolController.dispose();
     super.dispose();
   }
@@ -82,6 +109,20 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
             Text(
               widget.title,
               style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24),
+            ),
+            const SizedBox(height: 20),
+            Text('Session Name', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _nameController,
+              enabled: !widget.isSubmitting,
+              decoration: appInputDecoration('e.g. Sunset Mountains — Session 3').copyWith(
+                errorText: _nameError,
+              ),
+              style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+              onChanged: (_) {
+                if (_nameError != null) setState(() => _nameError = null);
+              },
             ),
             const SizedBox(height: 20),
             Text('Stage', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -164,11 +205,68 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                 ),
               ],
             ),
+            if (widget.showProjectCompletion) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Project Completion',
+                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: kAccentTintColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Recommended for $_stage: $_recommendedCompletion%',
+                        style: GoogleFonts.chewy(fontSize: 13, color: kAccentColor),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: widget.isSubmitting
+                          ? null
+                          : () => setState(() => _projectCompletion = _recommendedCompletion),
+                      child: Text('Use this', style: GoogleFonts.chewy(color: kAccentColor)),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Slider(
+                      value: _projectCompletion.toDouble(),
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      activeColor: kAccentColor,
+                      label: '$_projectCompletion%',
+                      onChanged: widget.isSubmitting
+                          ? null
+                          : (value) => setState(() => _projectCompletion = value.round()),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 42,
+                    child: Text(
+                      '$_projectCompletion%',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             AppPrimaryButton(
               label: widget.submitLabel,
               isLoading: widget.isSubmitting,
-              onPressed: () => widget.onSubmit(_stage, List.of(_tools), _difficulty),
+              onPressed: widget.isSubmitting ? null : _handleSubmit,
             ),
             const SizedBox(height: 12),
             TextButton(

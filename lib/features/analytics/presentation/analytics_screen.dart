@@ -8,6 +8,7 @@ import '../../shell/main_shell.dart';
 import 'difficulty_analytics_screen.dart';
 import 'projects_analytics_screen.dart';
 import 'stage_radar_screen.dart';
+import 'time_analytics_screen.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
@@ -42,7 +43,14 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const _AnalyticsBox(),
+                _AnalyticsBox(
+                  label: 'Time Spent',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const TimeAnalyticsScreen(),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 const _AnalyticsBox(locked: true),
               ],

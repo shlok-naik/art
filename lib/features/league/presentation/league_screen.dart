@@ -27,58 +27,52 @@ class LeagueScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: appThemedAppBar(context, 'League'),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ThemeBanner(),
-                const SizedBox(height: 24),
-                _PastChampionCard(),
-                const SizedBox(height: 24),
-                Text(
-                  'Submissions',
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: appThemedAppBar(context, 'League'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _ThemeBanner(),
+              const SizedBox(height: 16),
+              const _PastChampionCard(),
+              const SizedBox(height: 20),
+              Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+              const SizedBox(height: 2),
+              Text(
+                'Vote for your favorite — no self-voting!',
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              ),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _submissions.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.82,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Vote for your favorite — no self-voting!',
-                  style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
-                ),
-                const SizedBox(height: 12),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _submissions.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.82,
-                  ),
-                  itemBuilder: (context, index) {
-                    final submission = _submissions[index];
-                    return _SubmissionCard(
-                      artist: submission['artist'] as String,
-                      votes: submission['votes'] as int,
-                    );
-                  },
-                ),
-              ],
-            ),
+                itemBuilder: (context, index) {
+                  final submission = _submissions[index];
+                  return _SubmissionCard(
+                    artist: submission['artist'] as String,
+                    votes: submission['votes'] as int,
+                  );
+                },
+              ),
+            ],
           ),
         ),
-        bottomNavigationBar: Consumer(
-          builder: (context, ref, _) => AppBottomNav(
-            currentIndex: -1,
-            onTap: (i) => goToMainTab(context, ref, i),
-          ),
+      ),
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, _) => AppBottomNav(
+          currentIndex: -1,
+          onTap: (i) => goToMainTab(context, ref, i),
         ),
       ),
     );
@@ -93,29 +87,28 @@ class _ThemeBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: appCardDecoration(),
+      decoration: appHardCardDecoration(radius: 18, color: kAccentTintColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "THIS SESSION'S THEME",
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14, color: kAccentColor),
+            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor),
           ),
           const SizedBox(height: 4),
-          Text(_themeTitle, style: appHeadlineStyle(fontSize: 44)),
-          Transform.translate(
-            offset: const Offset(0, -10),
-            child: Text(
-              _themeDescription,
-              style: GoogleFonts.chewy(fontSize: 16),
-            ),
+          Text(_themeTitle, style: appHeadlineStyle(fontSize: 38)),
+          const SizedBox(height: 2),
+          Text(
+            _themeDescription,
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.timer_outlined, color: Colors.black, size: 20),
+              const Icon(Icons.timer_outlined, color: Colors.black, size: 18),
               const SizedBox(width: 6),
-              Text(_timeRemaining, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(_timeRemaining, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black)),
             ],
           ),
         ],
@@ -132,23 +125,20 @@ class _PastChampionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: appCardDecoration(),
+      decoration: appHardCardDecoration(radius: 18),
       child: Row(
         children: [
-          const Icon(Icons.emoji_events, color: kAccentColor, size: 40),
+          const Text('🏆', style: TextStyle(fontSize: 32)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Last Season\'s Champion',
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+                Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
                 Text(
                   '@lunar_art — "Underwater Ruins"',
-                  style: GoogleFonts.chewy(fontSize: 15),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -170,7 +160,7 @@ class _SubmissionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: appCardDecoration(),
+      decoration: appHardCardDecoration(radius: 14, shadowOffset: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -179,12 +169,12 @@ class _SubmissionCard extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
                 child: Text(
                   'Image',
-                  style: GoogleFonts.chewy(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black38),
+                  style: GoogleFonts.chewy(fontSize: 20, color: Colors.black38),
                 ),
               ),
             ),
@@ -192,29 +182,29 @@ class _SubmissionCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '@$artist',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+            style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    shape: const StadiumBorder(),
-                    side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  ),
-                  icon: const Icon(Icons.favorite_border, size: 16),
-                  label: Text(
-                    '$votes',
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
+          InkWell(
+            onTap: () {},
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: kBorderColor, width: kBorderWidth),
+                borderRadius: BorderRadius.circular(20),
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('❤️', style: TextStyle(fontSize: 15)),
+                  const SizedBox(width: 5),
+                  Text('$votes', style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black)),
+                ],
+              ),
+            ),
           ),
         ],
       ),

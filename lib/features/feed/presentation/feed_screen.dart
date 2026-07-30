@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,7 +35,8 @@ String _formatCount(int count) {
 
 /// Full-screen scrollable feed of posted slideshows and sessions, styled
 /// like YT Shorts / Instagram Reels: vertical swipe between posts, and
-/// (for slideshows) horizontal swipe through a project's session photos.
+/// (for slideshows) horizontal swipe through a post's slide photos. The
+/// vertical feed loops — swiping past the last post wraps back to the first.
 class FeedScreen extends ConsumerWidget {
   const FeedScreen({super.key});
 
@@ -55,10 +57,12 @@ class FeedScreen extends ConsumerWidget {
               ),
             );
           }
+          // No itemCount: the builder is unbounded, so the feed never
+          // dead-ends — indexes wrap back onto the post list.
           return PageView.builder(
             scrollDirection: Axis.vertical,
-            itemCount: posts.length,
-            itemBuilder: (context, index) => _FeedPostCard(post: posts[index]),
+            itemBuilder: (context, index) =>
+                _FeedPostCard(post: posts[index % posts.length]),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -85,49 +89,21 @@ class _FeedPostCard extends ConsumerStatefulWidget {
 
 class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
-  bool? _thumbsUp;
-  EmojiReaction? _selectedEmoji;
 
-  late final _baseCounts = baseReactionCounts(widget.post.id);
-  late int _upCount = _baseCounts.upCount;
-  late int _downCount = _baseCounts.downCount;
-  late final Map<EmojiReaction, int> _emojiCounts = Map.of(_baseCounts.emojiCounts);
+  String get _sessionId => widget.post.id;
 
-  void _toggleThumb(bool up) {
-    setState(() {
-      if (_thumbsUp == up) {
-        // Tapping the active thumb again clears it.
-        if (up) {
-          _upCount--;
-        } else {
-          _downCount--;
-        }
-        _thumbsUp = null;
-        return;
-      }
-      if (_thumbsUp == true) _upCount--;
-      if (_thumbsUp == false) _downCount--;
-      if (up) {
-        _upCount++;
-      } else {
-        _downCount++;
-      }
-      _thumbsUp = up;
-    });
-  }
-
-  void _toggleEmoji(EmojiReaction reaction) {
-    setState(() {
-      if (_selectedEmoji == reaction) {
-        _emojiCounts[reaction] = _emojiCounts[reaction]! - 1;
-        _selectedEmoji = null;
-        return;
-      }
-      if (_selectedEmoji != null) {
-        _emojiCounts[_selectedEmoji!] = _emojiCounts[_selectedEmoji!]! - 1;
-      }
-      _emojiCounts[reaction] = _emojiCounts[reaction]! + 1;
-      _selectedEmoji = reaction;
+  /// Fires the optimistic reaction and returns immediately — the provider
+  /// updates state synchronously, so the UI reflects the tap before the
+  /// network write completes. Failures revert the state and surface here.
+  void _react(String reactionType) {
+    ref
+        .read(sessionReactionsProvider(_sessionId).notifier)
+        .react(reactionType)
+        .catchError((Object e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to react: $e')),
+      );
     });
   }
 
@@ -164,7 +140,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
                 ),
                 Text(
-                  post.projectTitle,
+                  post.displayTitle,
                   style: GoogleFonts.chewy(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
@@ -253,6 +229,10 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
+    final reactions =
+        ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
+    final counts = reactions.counts;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -276,16 +256,36 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                 ),
               );
             }
-            return Image.network(
-              photoUrl,
+            return CachedNetworkImage(
+              imageUrl: photoUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
+              placeholder: (context, url) => Container(color: Colors.grey.shade900),
+              errorWidget: (context, url, error) => Container(
                 color: Colors.grey.shade200,
                 alignment: Alignment.center,
                 child: const Icon(Icons.image_not_supported, size: 54, color: Colors.black38),
               ),
             );
           },
+        ),
+        // Bottom gradient scrim so the caption/actions stay legible over any
+        // photo, instead of relying on plain text-shadows alone.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 280,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withValues(alpha: 0), Colors.black.withValues(alpha: 0.78)],
+                ),
+              ),
+            ),
+          ),
         ),
         SafeArea(
           child: Padding(
@@ -337,11 +337,10 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 4,
                   bottom: 78,
                   child: _RightActionColumn(
-                    thumbsUp: _thumbsUp,
-                    upCount: _upCount,
-                    downCount: _downCount,
-                    onThumbUp: () => _toggleThumb(true),
-                    onThumbDown: () => _toggleThumb(false),
+                    upCount: counts['up'] ?? 0,
+                    downCount: counts['down'] ?? 0,
+                    onThumbUp: () => _react('up'),
+                    onThumbDown: () => _react('down'),
                     onMore: _showDetails,
                   ),
                 ),
@@ -350,9 +349,11 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 0,
                   bottom: 0,
                   child: _EmojiReactionRow(
-                    counts: _emojiCounts,
-                    selected: _selectedEmoji,
-                    onSelect: _toggleEmoji,
+                    counts: {
+                      for (final reaction in EmojiReaction.values)
+                        reaction: counts[reaction.name] ?? 0,
+                    },
+                    onSelect: (reaction) => _react(reaction.name),
                   ),
                 ),
               ],
@@ -378,32 +379,27 @@ class _PostCaption extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
             decoration: BoxDecoration(
               color: kAccentColor,
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               post.type == FeedPostType.slideshow ? 'SLIDESHOW' : 'SESSION',
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.white,
-              ),
+              style: GoogleFonts.chewy(fontSize: 12, color: Colors.white),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '@${post.artist}',
-            style: GoogleFonts.chewy(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              shadows: _shadow,
-            ),
+            style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
           ),
+          const SizedBox(height: 2),
           Text(
-            post.projectTitle,
-            style: GoogleFonts.chewy(fontSize: 16, shadows: _shadow),
+            post.displayTitle,
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
+                .copyWith(shadows: _shadow),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -444,7 +440,6 @@ class _SlideIndicator extends StatelessWidget {
 
 class _RightActionColumn extends StatelessWidget {
   const _RightActionColumn({
-    required this.thumbsUp,
     required this.upCount,
     required this.downCount,
     required this.onThumbUp,
@@ -452,7 +447,6 @@ class _RightActionColumn extends StatelessWidget {
     required this.onMore,
   });
 
-  final bool? thumbsUp;
   final int upCount;
   final int downCount;
   final VoidCallback onThumbUp;
@@ -464,36 +458,28 @@ class _RightActionColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _ReactionCircle(
+        _ReactionEmoji(
           glyph: '👍',
-          isActive: thumbsUp == true,
           onTap: onThumbUp,
+          baseSize: 64,
         ),
         Text(
           _formatCount(upCount),
-          style: GoogleFonts.chewy(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            shadows: _shadow,
-          ),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
+              .copyWith(shadows: _shadow),
         ),
-        const SizedBox(height: 14),
-        _ReactionCircle(
+        const SizedBox(height: 18),
+        _ReactionEmoji(
           glyph: '👎',
-          isActive: thumbsUp == false,
           onTap: onThumbDown,
+          baseSize: 64,
         ),
         Text(
           _formatCount(downCount),
-          style: GoogleFonts.chewy(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            shadows: _shadow,
-          ),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
+              .copyWith(shadows: _shadow),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         _CircleIconButton(icon: Icons.more_vert, onTap: onMore),
       ],
     );
@@ -503,12 +489,10 @@ class _RightActionColumn extends StatelessWidget {
 class _EmojiReactionRow extends StatelessWidget {
   const _EmojiReactionRow({
     required this.counts,
-    required this.selected,
     required this.onSelect,
   });
 
   final Map<EmojiReaction, int> counts;
-  final EmojiReaction? selected;
   final ValueChanged<EmojiReaction> onSelect;
 
   @override
@@ -520,20 +504,16 @@ class _EmojiReactionRow extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ReactionCircle(
+              _ReactionEmoji(
                 glyph: emojiGlyphs[reaction]!,
-                isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
+                baseSize: 48,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 _formatCount(counts[reaction]!),
-                style: GoogleFonts.chewy(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  shadows: _shadow,
-                ),
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)
+                    .copyWith(shadows: _shadow),
               ),
             ],
           ),
@@ -542,35 +522,73 @@ class _EmojiReactionRow extends StatelessWidget {
   }
 }
 
-class _ReactionCircle extends StatelessWidget {
-  const _ReactionCircle({
+/// A floating emoji reaction button — no background chip, just the glyph
+/// itself (with a soft drop shadow for legibility over any photo). Tapping
+/// gives it a springy overshoot-and-settle bounce.
+class _ReactionEmoji extends StatefulWidget {
+  const _ReactionEmoji({
     required this.glyph,
-    required this.isActive,
     required this.onTap,
+    this.baseSize = 40,
   });
 
   final String glyph;
-  final bool isActive;
   final VoidCallback onTap;
+  final double baseSize;
+
+  @override
+  State<_ReactionEmoji> createState() => _ReactionEmojiState();
+}
+
+class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  late final _bounce = TweenSequence<double>([
+    TweenSequenceItem(weight: 30, tween: Tween(begin: 1.0, end: 1.5).chain(CurveTween(curve: Curves.easeOut))),
+    TweenSequenceItem(weight: 20, tween: Tween(begin: 1.5, end: 0.85).chain(CurveTween(curve: Curves.easeInOut))),
+    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.85, end: 1.0).chain(CurveTween(curve: Curves.elasticOut))),
+  ]).animate(_controller);
+  late final _wiggle = TweenSequence<double>([
+    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.0, end: -0.12)),
+    TweenSequenceItem(weight: 50, tween: Tween(begin: -0.12, end: 0.0)),
+  ]).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5, curve: Curves.easeOut)));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    widget.onTap();
+    _controller.forward(from: 0);
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: isActive ? 46 : 40,
-        height: isActive ? 46 : 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-          border: Border.all(
-            color: isActive ? kAccentColor : kBorderColor,
-            width: kBorderWidth,
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) => Transform.rotate(
+          angle: _wiggle.value,
+          child: Transform.scale(scale: _bounce.value, child: child),
+        ),
+        child: SizedBox(
+          width: widget.baseSize,
+          height: widget.baseSize,
+          child: Center(
+            child: Text(
+              widget.glyph,
+              style: TextStyle(
+                fontSize: widget.baseSize * 0.62,
+                shadows: const [Shadow(color: Colors.black45, blurRadius: 8)],
+              ),
+            ),
           ),
         ),
-        alignment: Alignment.center,
-        child: Text(glyph, style: TextStyle(fontSize: isActive ? 22 : 18)),
       ),
     );
   }

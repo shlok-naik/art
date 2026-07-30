@@ -1,36 +1,33 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SessionsRepository {
-  SessionsRepository(this._client, this._backendUrl);
+  SessionsRepository(this._client);
 
   final SupabaseClient _client;
-  final String _backendUrl;
 
   static const _photoBucket = 'session-photos';
 
-  Map<String, String> get _headers {
-    final token = _client.auth.currentSession?.accessToken;
-    return {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
+  Future<List<Map<String, dynamic>>> fetchSessions(String projectId) async {
+    final rows = await _client
+        .from('sessions')
+        .select()
+        .eq('project_id', projectId)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
   }
 
-  Future<List<Map<String, dynamic>>> fetchSessions(String projectId) async {
-    final uri = Uri.parse('$_backendUrl/api/sessions').replace(queryParameters: {
-      'project_id': 'eq.$projectId',
-      'order': 'created_at.desc',
-    });
-    final response = await http.get(uri, headers: _headers);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load sessions (${response.statusCode}): ${response.body}');
-    }
-    final decoded = jsonDecode(response.body) as List;
-    return decoded.cast<Map<String, dynamic>>();
+  /// Every session across the given projects in one query, so callers that
+  /// need all of a user's sessions (analytics) don't fetch per-project.
+  Future<List<Map<String, dynamic>>> fetchSessionsForProjects(List<String> projectIds) async {
+    if (projectIds.isEmpty) return const [];
+    final rows = await _client
+        .from('sessions')
+        .select()
+        .inFilter('project_id', projectIds)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
   }
 
   Future<String> uploadPhoto(Uint8List bytes, String projectId) async {
@@ -51,33 +48,21 @@ class SessionsRepository {
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
+    required String name,
   }) async {
-    final response = await http.post(
-      Uri.parse('$_backendUrl/api/sessions'),
-      headers: _headers,
-      body: jsonEncode({
-        'project_id': projectId,
-        'duration': durationSeconds,
-        'photo_url': photoUrl,
-        'stage': stage,
-        'tools_used': toolsUsed,
-        'difficulty': difficulty,
-      }),
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to create session (${response.statusCode}): ${response.body}');
-    }
+    await _client.from('sessions').insert({
+      'project_id': projectId,
+      'duration': durationSeconds,
+      'photo_url': photoUrl,
+      'stage': stage,
+      'tools_used': toolsUsed,
+      'difficulty': difficulty,
+      'name': name,
+    });
   }
 
   Future<void> updateSessionPhoto(String sessionId, String photoUrl) async {
-    final response = await http.patch(
-      Uri.parse('$_backendUrl/api/sessions/$sessionId'),
-      headers: _headers,
-      body: jsonEncode({'photo_url': photoUrl}),
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to update session (${response.statusCode}): ${response.body}');
-    }
+    await _client.from('sessions').update({'photo_url': photoUrl}).eq('id', sessionId);
   }
 
   Future<void> updateSessionDetails({
@@ -85,18 +70,13 @@ class SessionsRepository {
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
+    required String name,
   }) async {
-    final response = await http.patch(
-      Uri.parse('$_backendUrl/api/sessions/$sessionId'),
-      headers: _headers,
-      body: jsonEncode({
-        'stage': stage,
-        'tools_used': toolsUsed,
-        'difficulty': difficulty,
-      }),
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to update session (${response.statusCode}): ${response.body}');
-    }
+    await _client.from('sessions').update({
+      'stage': stage,
+      'tools_used': toolsUsed,
+      'difficulty': difficulty,
+      'name': name,
+    }).eq('id', sessionId);
   }
 }

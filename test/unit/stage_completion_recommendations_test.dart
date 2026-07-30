@@ -1,0 +1,22 @@
+import 'package:art/features/projects/presentation/session_details_form.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('each session stage has a completion recommendation', () {
+    for (final stage in kSessionStages) {
+      expect(kStageCompletionRecommendations[stage], isNotNull);
+    }
+  });
+
+  test('recommendations progress from sketching to finishing touches', () {
+    expect(
+      kStageCompletionRecommendations['Sketching'],
+      lessThan(kStageCompletionRecommendations['Finishing Touches']!),
+    );
+    expect(kStageCompletionRecommendations['Finishing Touches'], 90);
+  });
+
+  test('stages no longer include Finished — that is a project-level action now', () {
+    expect(kSessionStages, isNot(contains('Finished')));
+  });
+}

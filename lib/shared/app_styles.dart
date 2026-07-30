@@ -3,12 +3,51 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Shared look-and-feel constants matching the home screen's comic-panel style:
 /// white background, black text/borders in the Chewy font, and a deep orange accent.
-const kBorderColor = Colors.black;
+const kBorderColor = Color(0xFF111111);
 const kBorderWidth = 2.0;
 const kAccentColor = Colors.deepOrange;
 
+/// Accent-tinted background used for banners/callouts (streak card, theme banner).
+const kAccentTintColor = Color(0xFFFFF1EA);
+
+/// "Finished"/success status color pair (chip text on chip background).
+const kSuccessTextColor = Color(0xFF2E9E4E);
+const kSuccessBgColor = Color(0xFFE8F7EC);
+
 TextStyle appHeadlineStyle({double fontSize = 56, Color color = kAccentColor}) {
-  return GoogleFonts.sedgwickAveDisplay(fontSize: fontSize, height: 1.0, color: color);
+  return GoogleFonts.fredoka(fontSize: fontSize, height: 1.05, fontWeight: FontWeight.w900, color: color);
+}
+
+/// Nunito is used for body copy, stats, numbers and meta text so Chewy stays
+/// reserved for headlines, buttons and nav labels.
+TextStyle appBodyStyle({
+  double fontSize = 15,
+  FontWeight fontWeight = FontWeight.w600,
+  Color color = Colors.black,
+}) {
+  return GoogleFonts.nunito(fontSize: fontSize, fontWeight: fontWeight, color: color);
+}
+
+/// Flat "hard shadow" (offset only, no blur) used on virtually every card and
+/// button in the redesign — replaces plain unshadowed borders.
+List<BoxShadow> hardShadow({double offset = 4}) {
+  return [BoxShadow(color: kBorderColor, offset: Offset(offset, offset), blurRadius: 0)];
+}
+
+/// Card decoration for the redesigned screens: 2px black border, rounded
+/// corners and a hard shadow. Kept separate from [appCardDecoration] (used by
+/// screens outside this redesign) so existing plain-bordered screens are unaffected.
+BoxDecoration appHardCardDecoration({
+  double radius = 18,
+  double shadowOffset = 4,
+  Color color = Colors.white,
+}) {
+  return BoxDecoration(
+    color: color,
+    border: Border.all(color: kBorderColor, width: kBorderWidth),
+    borderRadius: BorderRadius.circular(radius),
+    boxShadow: hardShadow(offset: shadowOffset),
+  );
 }
 
 AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? actions}) {

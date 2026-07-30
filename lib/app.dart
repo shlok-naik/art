@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/providers.dart';
+import 'features/profile/presentation/onboarding_screen.dart';
 import 'features/profile/presentation/profile_setup_screen.dart';
 import 'features/profile/providers.dart';
 import 'features/shell/main_shell.dart';
@@ -12,9 +14,15 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Unfinished',
-      home: AuthGate(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: const MaterialApp(
+        title: 'Unfinished',
+        home: AuthGate(),
+      ),
     );
   }
 }
@@ -44,17 +52,25 @@ class AuthGate extends ConsumerWidget {
   }
 }
 
-class _ProfileGate extends ConsumerWidget {
+class _ProfileGate extends ConsumerStatefulWidget {
   const _ProfileGate();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProfileGate> createState() => _ProfileGateState();
+}
+
+class _ProfileGateState extends ConsumerState<_ProfileGate> {
+  bool _hasCompletedOnboarding = false;
+
+  @override
+  Widget build(BuildContext context) {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return profileAsync.when(
       data: (profile) {
         if (profile == null) {
-          return const ProfileSetupScreen();
+          if (_hasCompletedOnboarding) return const ProfileSetupScreen();
+          return OnboardingScreen(onComplete: () => setState(() => _hasCompletedOnboarding = true));
         }
         return const MainShell();
       },

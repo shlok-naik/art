@@ -28,4 +28,15 @@ class ProfileRepository {
       'display_name': displayName,
     });
   }
+
+  Future<void> updateProfile({
+    required String userId,
+    required String username,
+    required String displayName,
+  }) async {
+    await _client.from('profiles').update({
+      'username': username,
+      'display_name': displayName,
+    }).eq('id', userId);
+  }
 }

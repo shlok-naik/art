@@ -21,10 +21,13 @@ class AppBottomNav extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
-          BottomAppBar(
-            color: Colors.white,
+          Container(
             height: 104,
             padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: kBorderColor, width: kBorderWidth)),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
