@@ -50,6 +50,7 @@ class SessionRecord {
     required this.difficulty,
     required this.durationSeconds,
     required this.stage,
+    required this.toolsUsed,
     required this.createdAt,
   });
 
@@ -58,6 +59,7 @@ class SessionRecord {
   final double? difficulty;
   final double? durationSeconds;
   final String? stage;
+  final List<String> toolsUsed;
   final DateTime? createdAt;
 }
 
@@ -87,6 +89,7 @@ final allSessionsProvider = FutureProvider.autoDispose<List<SessionRecord>>((ref
         difficulty: _asDouble(session['difficulty']),
         durationSeconds: _asDouble(session['duration']),
         stage: session['stage']?.toString(),
+        toolsUsed: (session['tools_used'] as List?)?.map((t) => t.toString()).toList() ?? const [],
         createdAt: DateTime.tryParse(session['created_at']?.toString() ?? ''),
       ));
     }
@@ -151,35 +154,154 @@ final difficultyAnalyticsProvider = FutureProvider.autoDispose<DifficultyAnalyti
   return DifficultyAnalytics(perProject: perProject, perStage: perStage);
 });
 
-class ProgressOverTime {
-  const ProgressOverTime({required this.difficultyTrend, required this.durationTrendMinutes});
+class ProjectStats {
+  const ProjectStats({
+    required this.project,
+    required this.title,
+    required this.totalMinutes,
+    required this.sessionCount,
+    required this.createdAt,
+    required this.lastActiveAt,
+    required this.finishedStatus,
+  });
 
-  /// Difficulty of every session across all projects, chronological
-  /// (oldest first).
-  final List<double> difficultyTrend;
-
-  /// Duration (minutes) of every session across all projects with a valid
-  /// duration, chronological (oldest first).
-  final List<double> durationTrendMinutes;
+  final Map<String, dynamic> project;
+  final String title;
+  final double totalMinutes;
+  final int sessionCount;
+  final DateTime? createdAt;
+  final DateTime? lastActiveAt;
+  final String finishedStatus;
 }
 
-final progressOverTimeProvider = FutureProvider.autoDispose<ProgressOverTime>((ref) async {
+class StatusCount {
+  const StatusCount({required this.status, required this.count});
+
+  final String status;
+  final int count;
+}
+
+class ProjectsOverview {
+  const ProjectsOverview({required this.perProject, required this.statusBreakdown});
+
+  /// Every project, sorted by total time invested (most first) — projects
+  /// with no sessions yet sort to the bottom at 0.
+  final List<ProjectStats> perProject;
+
+  final List<StatusCount> statusBreakdown;
+}
+
+/// Free-tier "how are my projects doing" overview: time invested and
+/// session count per project, plus a status breakdown. Deliberately doesn't
+/// include the tool-usage/activity-heatmap data reserved for Pro.
+final projectsOverviewProvider = FutureProvider.autoDispose<ProjectsOverview>((ref) async {
+  final projects = await ref.watch(projectsListProvider.future);
   final sessions = await ref.watch(allSessionsProvider.future);
 
-  final sorted = [...sessions]
-    ..sort((a, b) => (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)));
+  final byProject = <String, List<SessionRecord>>{};
+  for (final session in sessions) {
+    final id = session.project['id'].toString();
+    byProject.putIfAbsent(id, () => []).add(session);
+  }
 
-  final difficultyTrend = [
-    for (final s in sorted)
-      if (s.difficulty != null) s.difficulty!,
-  ];
-  final durationTrendMinutes = [
-    for (final s in sorted)
-      if (s.durationSeconds != null) s.durationSeconds! / 60,
+  final perProject = <ProjectStats>[];
+  final statusTotals = <String, int>{};
+
+  for (final project in projects) {
+    final id = project['id'].toString();
+    final title = project['title']?.toString() ?? id;
+    final projectSessions = byProject[id] ?? const [];
+
+    final totalSeconds = projectSessions.fold<double>(
+      0,
+      (sum, s) => sum + (s.durationSeconds ?? 0),
+    );
+    final timestamps = [for (final s in projectSessions) s.createdAt].whereType<DateTime>().toList()
+      ..sort();
+
+    final status = project['finished_status']?.toString();
+    final normalizedStatus = (status == null || status.isEmpty) ? 'Unknown' : status;
+    statusTotals[normalizedStatus] = (statusTotals[normalizedStatus] ?? 0) + 1;
+
+    perProject.add(ProjectStats(
+      project: project,
+      title: title,
+      totalMinutes: totalSeconds / 60,
+      sessionCount: projectSessions.length,
+      createdAt: DateTime.tryParse(project['created_at']?.toString() ?? ''),
+      lastActiveAt: timestamps.isEmpty ? null : timestamps.last,
+      finishedStatus: normalizedStatus,
+    ));
+  }
+
+  perProject.sort((a, b) => b.totalMinutes.compareTo(a.totalMinutes));
+
+  final statusBreakdown = [
+    for (final entry in statusTotals.entries) StatusCount(status: entry.key, count: entry.value),
+  ]..sort((a, b) => b.count.compareTo(a.count));
+
+  return ProjectsOverview(perProject: perProject, statusBreakdown: statusBreakdown);
+});
+
+class ToolUsage {
+  const ToolUsage({required this.tool, required this.count});
+
+  final String tool;
+  final int count;
+}
+
+class ActivityDay {
+  const ActivityDay({required this.date, required this.sessionCount});
+
+  final DateTime date;
+  final int sessionCount;
+}
+
+class ProjectsProInsights {
+  const ProjectsProInsights({required this.topTools, required this.activity});
+
+  /// Most-used tools across every session, most-used first.
+  final List<ToolUsage> topTools;
+
+  /// One entry per day for the last 12 weeks (84 days), oldest first —
+  /// used to draw a GitHub-style practice-consistency heatmap.
+  final List<ActivityDay> activity;
+}
+
+/// Pro-only "deeper" project insights: tool usage and a practice-activity
+/// heatmap. Held back from the free overview on purpose.
+final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsights>((ref) async {
+  final sessions = await ref.watch(allSessionsProvider.future);
+
+  final toolCounts = <String, int>{};
+  for (final session in sessions) {
+    for (final tool in session.toolsUsed) {
+      if (tool.isEmpty) continue;
+      toolCounts[tool] = (toolCounts[tool] ?? 0) + 1;
+    }
+  }
+  final topTools = [
+    for (final entry in toolCounts.entries) ToolUsage(tool: entry.key, count: entry.value),
+  ]..sort((a, b) => b.count.compareTo(a.count));
+
+  final today = DateTime.now();
+  final startDay = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 83));
+  final dayCounts = <DateTime, int>{};
+  for (final session in sessions) {
+    final createdAt = session.createdAt;
+    if (createdAt == null) continue;
+    final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
+    if (day.isBefore(startDay)) continue;
+    dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+  }
+
+  final activity = [
+    for (var i = 0; i < 84; i++)
+      ActivityDay(
+        date: startDay.add(Duration(days: i)),
+        sessionCount: dayCounts[startDay.add(Duration(days: i))] ?? 0,
+      ),
   ];
 
-  return ProgressOverTime(
-    difficultyTrend: difficultyTrend,
-    durationTrendMinutes: durationTrendMinutes,
-  );
+  return ProjectsProInsights(topTools: topTools.take(6).toList(), activity: activity);
 });

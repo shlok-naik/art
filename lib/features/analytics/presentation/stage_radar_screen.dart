@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/sparkline.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 
@@ -18,7 +17,7 @@ class StageRadarScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsAsync = ref.watch(difficultyAnalyticsProvider);
-    final progressAsync = ref.watch(progressOverTimeProvider);
+    final insightsAsync = ref.watch(projectsProInsightsProvider);
 
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
@@ -67,11 +66,11 @@ class StageRadarScreen extends ConsumerWidget {
                         child: _StageRadarChart(stages: analytics.perStage),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    progressAsync.when(
-                      data: (progress) => _ProgressPreviewCard(progress: progress),
-                      loading: () => const SizedBox.shrink(),
-                      error: (error, _) => AppErrorText('Growth card failed to load: $error'),
+                    const SizedBox(height: 24),
+                    insightsAsync.when(
+                      data: (insights) => _ProInsights(insights: insights),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (error, _) => AppErrorText('Failed to load insights: $error'),
                     ),
                   ],
                 ),
@@ -267,130 +266,186 @@ class _RadarChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _RadarChartPainter oldDelegate) => oldDelegate.stages != stages;
 }
 
-/// Percent change between the average of the first half of [values] and
-/// the average of the second half — a simple, readable "trending up/down"
-/// signal. Falls back to first-vs-last when there aren't enough points for
-/// a stable half-split. Returns null when there's nothing meaningful to
-/// compare (fewer than 2 points, or a zero baseline).
-double? _trendDeltaPercent(List<double> values) {
-  if (values.length < 2) return null;
+class _ProInsights extends StatelessWidget {
+  const _ProInsights({required this.insights});
 
-  if (values.length < 4) {
-    final first = values.first;
-    final last = values.last;
-    if (first == 0) return null;
-    return (last - first) / first * 100;
-  }
-
-  final mid = values.length ~/ 2;
-  final firstHalf = values.sublist(0, mid);
-  final secondHalf = values.sublist(mid);
-  final firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
-  final secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
-  if (firstAvg == 0) return null;
-  return (secondAvg - firstAvg) / firstAvg * 100;
-}
-
-class _ProgressPreviewCard extends StatelessWidget {
-  const _ProgressPreviewCard({required this.progress});
-
-  final ProgressOverTime progress;
+  final ProjectsProInsights insights;
 
   @override
   Widget build(BuildContext context) {
-    if (progress.difficultyTrend.isEmpty && progress.durationTrendMinutes.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: appCardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.trending_up, color: kAccentColor, size: 28),
-              const SizedBox(width: 10),
-              Text(
-                'Your Growth',
-                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'See how you\'re trending across every project.',
-            style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54),
-          ),
-          const SizedBox(height: 14),
-          if (progress.difficultyTrend.isNotEmpty)
-            _TrendRow(
-              label: 'Tackling harder work',
-              values: progress.difficultyTrend,
-              higherIsBetter: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.workspace_premium, color: kAccentColor, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Top tools',
+              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
             ),
-          if (progress.difficultyTrend.isNotEmpty && progress.durationTrendMinutes.isNotEmpty)
-            const SizedBox(height: 12),
-          if (progress.durationTrendMinutes.isNotEmpty)
-            _TrendRow(
-              label: 'Getting faster',
-              values: progress.durationTrendMinutes,
-              higherIsBetter: false,
-            ),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'What you reach for most across every session.',
+          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: appCardDecoration(),
+          child: insights.topTools.isEmpty
+              ? Text(
+                  'Log a tool during a session to see this.',
+                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54),
+                )
+              : Column(
+                  children: [
+                    for (final tool in insights.topTools) ...[
+                      _ToolBarRow(tool: tool, maxCount: insights.topTools.first.count),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Practice streak',
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Sessions logged over the last 12 weeks.',
+          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: appCardDecoration(),
+          child: _ActivityHeatmap(days: insights.activity),
+        ),
+      ],
     );
   }
 }
 
-class _TrendRow extends StatelessWidget {
-  const _TrendRow({required this.label, required this.values, required this.higherIsBetter});
+class _ToolBarRow extends StatelessWidget {
+  const _ToolBarRow({required this.tool, required this.maxCount});
 
-  final String label;
-  final List<double> values;
-  final bool higherIsBetter;
+  final ToolUsage tool;
+  final int maxCount;
 
   @override
   Widget build(BuildContext context) {
-    final delta = _trendDeltaPercent(values);
-    final isImprovement = delta == null ? null : (higherIsBetter ? delta > 0 : delta < 0);
-
+    final fraction = maxCount == 0 ? 0.0 : tool.count / maxCount;
     return Row(
       children: [
+        SizedBox(
+          width: 92,
+          child: Text(
+            tool.tool,
+            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth * fraction,
+                    decoration: BoxDecoration(
+                      color: kAccentColor,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 24,
+          child: Text(
+            '${tool.count}',
+            textAlign: TextAlign.right,
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14, color: kAccentColor),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityHeatmap extends StatelessWidget {
+  const _ActivityHeatmap({required this.days});
+
+  final List<ActivityDay> days;
+
+  Color _colorFor(int count) {
+    if (count <= 0) return Colors.grey.shade200;
+    if (count == 1) return kAccentColor.withValues(alpha: 0.35);
+    if (count <= 3) return kAccentColor.withValues(alpha: 0.65);
+    return kAccentColor;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeDays = days.where((d) => d.sessionCount > 0).length;
+    final weeks = <List<ActivityDay>>[];
+    for (var i = 0; i < days.length; i += 7) {
+      weeks.add(days.sublist(i, math.min(i + 7, days.length)));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              Text(
-                label,
-                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              const SizedBox(height: 6),
-              if (values.length > 1)
-                Sparkline(values: values, width: 120, height: 28, color: kAccentColor),
+              for (final week in weeks)
+                Padding(
+                  padding: const EdgeInsets.only(right: 3),
+                  child: Column(
+                    children: [
+                      for (final day in week)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: _colorFor(day.sessionCount),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
-        const SizedBox(width: 12),
-        if (delta != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: (isImprovement ?? false) ? kAccentColor : Colors.black12,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${delta > 0 ? '+' : ''}${delta.toStringAsFixed(0)}%',
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: (isImprovement ?? false) ? Colors.white : Colors.black54,
-              ),
-            ),
-          ),
+        const SizedBox(height: 10),
+        Text(
+          '$activeDays active day${activeDays == 1 ? '' : 's'} in the last 12 weeks',
+          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+        ),
       ],
     );
   }

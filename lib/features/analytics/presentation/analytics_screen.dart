@@ -6,6 +6,7 @@ import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
 import 'difficulty_analytics_screen.dart';
+import 'projects_analytics_screen.dart';
 import 'stage_radar_screen.dart';
 
 class AnalyticsScreen extends StatelessWidget {
@@ -32,7 +33,14 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const _AnalyticsBox(),
+                _AnalyticsBox(
+                  label: 'Projects',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ProjectsAnalyticsScreen(),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 const _AnalyticsBox(),
                 const SizedBox(height: 12),
