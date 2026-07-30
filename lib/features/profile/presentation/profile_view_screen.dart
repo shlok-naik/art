@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../posts/presentation/my_posts_screen.dart';
 import '../providers.dart';
 
 class ProfileViewScreen extends ConsumerWidget {
@@ -57,6 +58,23 @@ class ProfileViewScreen extends ConsumerWidget {
                       Text(
                         '@${profile.username}',
                         style: GoogleFonts.chewy(fontSize: 18, color: kAccentColor),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MyPostsScreen()),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            shape: const StadiumBorder(),
+                            side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: const Icon(Icons.grid_view_outlined),
+                          label: const Text('My Posts'),
+                        ),
                       ),
                     ],
                   ),

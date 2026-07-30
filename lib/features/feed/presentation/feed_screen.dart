@@ -5,17 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
+import '../domain/reactions.dart';
 import '../providers.dart';
-
-enum _EmojiReaction { heart, laugh, wow, sad, angry }
-
-const _emojiGlyphs = {
-  _EmojiReaction.heart: '❤️',
-  _EmojiReaction.laugh: '😆',
-  _EmojiReaction.wow: '😮',
-  _EmojiReaction.sad: '😢',
-  _EmojiReaction.angry: '😠',
-};
 
 const _monthNames = [
   'January',
@@ -95,16 +86,12 @@ class _FeedPostCard extends ConsumerStatefulWidget {
 class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
   bool? _thumbsUp;
-  _EmojiReaction? _selectedEmoji;
+  EmojiReaction? _selectedEmoji;
 
-  late int _upCount = 340 + widget.post.id.hashCode.remainder(200).abs();
-  late int _downCount = 4 + widget.post.id.hashCode.remainder(6).abs();
-  late final Map<_EmojiReaction, int> _emojiCounts = {
-    for (final reaction in _EmojiReaction.values)
-      reaction:
-          8 +
-          (widget.post.id.hashCode + reaction.index * 17).remainder(60).abs(),
-  };
+  late final _baseCounts = baseReactionCounts(widget.post.id);
+  late int _upCount = _baseCounts.upCount;
+  late int _downCount = _baseCounts.downCount;
+  late final Map<EmojiReaction, int> _emojiCounts = Map.of(_baseCounts.emojiCounts);
 
   void _toggleThumb(bool up) {
     setState(() {
@@ -129,7 +116,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     });
   }
 
-  void _toggleEmoji(_EmojiReaction reaction) {
+  void _toggleEmoji(EmojiReaction reaction) {
     setState(() {
       if (_selectedEmoji == reaction) {
         _emojiCounts[reaction] = _emojiCounts[reaction]! - 1;
@@ -520,21 +507,21 @@ class _EmojiReactionRow extends StatelessWidget {
     required this.onSelect,
   });
 
-  final Map<_EmojiReaction, int> counts;
-  final _EmojiReaction? selected;
-  final ValueChanged<_EmojiReaction> onSelect;
+  final Map<EmojiReaction, int> counts;
+  final EmojiReaction? selected;
+  final ValueChanged<EmojiReaction> onSelect;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        for (final reaction in _EmojiReaction.values)
+        for (final reaction in EmojiReaction.values)
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _ReactionCircle(
-                glyph: _emojiGlyphs[reaction]!,
+                glyph: emojiGlyphs[reaction]!,
                 isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
               ),

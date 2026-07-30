@@ -79,4 +79,24 @@ class SessionsRepository {
       throw Exception('Failed to update session (${response.statusCode}): ${response.body}');
     }
   }
+
+  Future<void> updateSessionDetails({
+    required String sessionId,
+    required String stage,
+    required List<String> toolsUsed,
+    required int difficulty,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$_backendUrl/api/sessions/$sessionId'),
+      headers: _headers,
+      body: jsonEncode({
+        'stage': stage,
+        'tools_used': toolsUsed,
+        'difficulty': difficulty,
+      }),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Failed to update session (${response.statusCode}): ${response.body}');
+    }
+  }
 }

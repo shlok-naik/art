@@ -33,6 +33,7 @@ final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) async
 
       final durationSeconds = int.tryParse(session['duration']?.toString() ?? '') ?? 0;
       final stage = session['stage']?.toString();
+      final difficulty = int.tryParse(session['difficulty']?.toString() ?? '');
       final toolsUsedRaw = session['tools_used'];
       final toolsUsed = toolsUsedRaw is List
           ? toolsUsedRaw.map((tool) => tool.toString()).toList()
@@ -43,6 +44,7 @@ final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) async
       posts.add(FeedPost(
         id: session['id'].toString(),
         type: FeedPostType.session,
+        projectId: projectId,
         projectTitle: projectTitle,
         artist: username,
         slideCount: 1,
@@ -52,6 +54,8 @@ final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) async
         toolsUsed: toolsUsed,
         timeTaken: _formatTimeTaken(durationSeconds),
         photoUrl: photoUrl,
+        stage: stage,
+        difficulty: difficulty,
       ));
     }
   }
