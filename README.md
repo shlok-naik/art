@@ -72,3 +72,14 @@ more than one is available, it will let you choose.
 
 Hot reload is enabled while `flutter run` is active. Save a file and press
 `r` in the terminal to reload, or `R` for a full restart.
+
+## Testing
+
+Run the full test suite with:
+
+```bash
+flutter test
+```
+
+Offline unit tests live in `test/unit/`. They cover small pieces of app logic
+without requiring a device, a running backend, or a Supabase connection.
