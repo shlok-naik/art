@@ -10,6 +10,7 @@ import '../../pro/presentation/pro_screen.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
+import 'tool_bar_row.dart';
 
 String _formatMinutes(double minutes) {
   if (minutes <= 0) return '0m';
@@ -73,6 +74,30 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                         children: [
                           for (final status in overview.statusBreakdown) ...[
                             _StatusRow(status: status, total: overview.perProject.length),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (overview.fastestFinish != null) ...[
+                      const SizedBox(height: 12),
+                      _FastestFinishCard(fastestFinish: overview.fastestFinish!),
+                    ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Completion',
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: appCardDecoration(),
+                      child: Column(
+                        children: [
+                          for (final project in [...overview.perProject]
+                            ..sort((a, b) => b.completionPercent.compareTo(a.completionPercent))) ...[
+                            _CompletionRow(stats: project),
                             const SizedBox(height: 12),
                           ],
                         ],
@@ -179,6 +204,110 @@ class _StatusRow extends StatelessWidget {
   }
 }
 
+class _FastestFinishCard extends StatelessWidget {
+  const _FastestFinishCard({required this.fastestFinish});
+
+  final FastestFinish fastestFinish;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: kAccentTintColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorderColor, width: kBorderWidth),
+      ),
+      child: Row(
+        children: [
+          const Text('🏎️', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Fastest finish',
+                  style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+                ),
+                Text(
+                  '${fastestFinish.title} · ${fastestFinish.days} day${fastestFinish.days == 1 ? '' : 's'}',
+                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionRow extends StatelessWidget {
+  const _CompletionRow({required this.stats});
+
+  final ProjectStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFinished = stats.completionPercent >= 100;
+    return Row(
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            stats.title,
+            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                  Container(
+                    height: 14,
+                    width: constraints.maxWidth * (stats.completionPercent / 100).clamp(0.0, 1.0),
+                    decoration: BoxDecoration(
+                      color: isFinished ? kSuccessTextColor : kAccentColor,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 44,
+          child: Text(
+            isFinished ? '🏁' : '${stats.completionPercent}%',
+            textAlign: TextAlign.right,
+            style: GoogleFonts.chewy(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isFinished ? kSuccessTextColor : kAccentColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProjectStatsRow extends StatelessWidget {
   const _ProjectStatsRow({required this.stats, required this.onTap});
 
@@ -259,12 +388,12 @@ class _TopToolsTeaser extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                 child: IgnorePointer(
                   child: Column(
                     children: [
                       for (final tool in _sampleTools) ...[
-                        _BarOnlyRow(fraction: tool.count / _sampleTools.first.count),
+                        ToolBarRow(tool: tool, maxCount: _sampleTools.first.count),
                         const SizedBox(height: 12),
                       ],
                     ],
@@ -310,46 +439,3 @@ class _TopToolsTeaser extends StatelessWidget {
   }
 }
 
-/// Bare bar shape with no text — used only in the blurred teaser above,
-/// since blurred text reads as an illegible smudge rather than a clean blur.
-class _BarOnlyRow extends StatelessWidget {
-  const _BarOnlyRow({required this.fraction});
-
-  final double fraction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const SizedBox(width: 92),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  Container(
-                    height: 14,
-                    width: constraints.maxWidth,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                  Container(
-                    height: 14,
-                    width: constraints.maxWidth * fraction,
-                    decoration: BoxDecoration(
-                      color: kAccentColor,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 34),
-      ],
-    );
-  }
-}

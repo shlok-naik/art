@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
+import 'art_wrapped_screen.dart';
 
 class ProScreen extends StatelessWidget {
   const ProScreen({super.key});
@@ -49,7 +50,13 @@ class ProScreen extends StatelessWidget {
                 description: "Time spent per stage, and how you're improving over time.",
               ),
               const SizedBox(height: 12),
-              const _ArtWrappedCard(),
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ArtWrappedScreen()),
+                ),
+                child: const _ArtWrappedCard(),
+              ),
               const SizedBox(height: 16),
               const _PriceCard(),
               const SizedBox(height: 16),

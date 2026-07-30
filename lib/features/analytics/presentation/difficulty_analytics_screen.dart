@@ -20,6 +20,7 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsAsync = ref.watch(difficultyAnalyticsProvider);
+    final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
@@ -79,6 +80,29 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                       ],
                     ],
                     const SizedBox(height: 20),
+                    Text(
+                      'Difficulty distribution',
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: appCardDecoration(),
+                      child: _DifficultyHistogram(histogram: analytics.histogram),
+                    ),
+                    const SizedBox(height: 20),
+                    timeAsync.maybeWhen(
+                      data: (time) {
+                        final callout = _difficultyVsSpeedCallout(analytics.perStage, time.perStage);
+                        if (callout == null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: _CalloutCard(text: callout),
+                        );
+                      },
+                      orElse: () => const SizedBox.shrink(),
+                    ),
                     Text(
                       'Average difficulty per stage',
                       style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
@@ -308,6 +332,113 @@ class _StageBarRow extends StatelessWidget {
   }
 }
 
+/// A short "your hardest stage is also your slowest" style insight,
+/// combining difficulty and time-per-stage data that's already computed
+/// elsewhere. Null if there isn't enough data to say anything meaningful.
+String? _difficultyVsSpeedCallout(List<StageDifficulty> difficulty, List<StageTime> time) {
+  StageDifficulty? hardest;
+  for (final stage in difficulty) {
+    if (stage.average == null) continue;
+    if (hardest == null || stage.average! > hardest.average!) hardest = stage;
+  }
+
+  StageTime? slowest;
+  for (final stage in time) {
+    if (stage.averageMinutes == null) continue;
+    if (slowest == null || stage.averageMinutes! > slowest.averageMinutes!) slowest = stage;
+  }
+
+  if (hardest == null || slowest == null) return null;
+
+  if (hardest.stage == slowest.stage) {
+    return '${hardest.stage} is both your hardest and slowest stage.';
+  }
+  return '${hardest.stage} is your hardest stage — ${slowest.stage} takes you the longest.';
+}
+
+class _CalloutCard extends StatelessWidget {
+  const _CalloutCard({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: kAccentTintColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorderColor, width: kBorderWidth),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lightbulb_outline, color: kAccentColor, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DifficultyHistogram extends StatelessWidget {
+  const _DifficultyHistogram({required this.histogram});
+
+  /// Session count per difficulty rating, index 0 = difficulty 1.
+  final List<int> histogram;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxCount = histogram.fold<int>(0, (max, c) => c > max ? c : max);
+    return SizedBox(
+      height: 100,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < histogram.length; i++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.bottomCenter,
+                        heightFactor: maxCount == 0 ? 0 : histogram[i] / maxCount,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: histogram[i] == 0 ? Colors.grey.shade200 : kAccentColor,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (var i = 1; i <= 10; i++)
+                Expanded(
+                  child: Text(
+                    '$i',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Sample values (not the user's real data) with a deliberately wide spread
 /// so the radar chart's shape reads clearly through the blur.
 final _sampleStages = [
@@ -341,9 +472,9 @@ class _RadarChartTeaser extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                   child: IgnorePointer(
-                    child: StageRadarChart(stages: _sampleStages, showLabels: false),
+                    child: StageRadarChart(stages: _sampleStages),
                   ),
                 ),
               ),
