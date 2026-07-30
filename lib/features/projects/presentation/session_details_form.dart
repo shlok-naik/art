@@ -9,7 +9,6 @@ const kSessionStages = [
   'Coloring',
   'Rendering',
   'Finishing Touches',
-  'Finished',
 ];
 
 const kStageCompletionRecommendations = {
@@ -18,7 +17,6 @@ const kStageCompletionRecommendations = {
   'Coloring': 50,
   'Rendering': 75,
   'Finishing Touches': 90,
-  'Finished': 100,
 };
 
 /// Collects stage/tools/difficulty metadata for a session before it's
@@ -58,6 +56,7 @@ class SessionDetailsFillOutScreen extends StatefulWidget {
 
 class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScreen> {
   late final _nameController = TextEditingController(text: widget.initialName ?? '');
+  String? _nameError;
   late String _stage = widget.initialStage ?? kSessionStages.first;
   late final List<String> _tools = List.of(widget.initialTools ?? const []);
   final _toolController = TextEditingController();
@@ -65,6 +64,15 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
   late int _projectCompletion = widget.initialProjectCompletion ?? 0;
 
   int get _recommendedCompletion => kStageCompletionRecommendations[_stage] ?? 0;
+
+  void _handleSubmit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _nameError = 'Give this session a name');
+      return;
+    }
+    widget.onSubmit(name, _stage, List.of(_tools), _difficulty, _projectCompletion);
+  }
 
   void _addTool() {
     final value = _toolController.text.trim();
@@ -103,13 +111,18 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
               style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24),
             ),
             const SizedBox(height: 20),
-            Text('Session Name (optional)', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Session Name', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
               enabled: !widget.isSubmitting,
-              decoration: appInputDecoration('e.g. Sunset Mountains — Session 3'),
+              decoration: appInputDecoration('e.g. Sunset Mountains — Session 3').copyWith(
+                errorText: _nameError,
+              ),
               style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+              onChanged: (_) {
+                if (_nameError != null) setState(() => _nameError = null);
+              },
             ),
             const SizedBox(height: 20),
             Text('Stage', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -253,13 +266,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
             AppPrimaryButton(
               label: widget.submitLabel,
               isLoading: widget.isSubmitting,
-              onPressed: () => widget.onSubmit(
-                _nameController.text.trim(),
-                _stage,
-                List.of(_tools),
-                _difficulty,
-                _projectCompletion,
-              ),
+              onPressed: widget.isSubmitting ? null : _handleSubmit,
             ),
             const SizedBox(height: 12),
             TextButton(

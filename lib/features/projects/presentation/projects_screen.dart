@@ -59,6 +59,48 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     }
   }
 
+  Future<void> _finishProject(Map<String, dynamic> project) async {
+    final title = project['title']?.toString() ?? project['id'].toString();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('Finish project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+        content: Text(
+          '"$title" will be marked 100% complete and locked — no new sessions can be added afterward.',
+          style: GoogleFonts.chewy(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Finish', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(projectsRepositoryProvider).finishProject(project['id'].toString());
+      if (!mounted) return;
+      ref.invalidate(projectsListProvider);
+      ref.invalidate(lastOpenedProjectProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to finish project: $e')),
+      );
+    }
+  }
+
   Future<void> _deleteProject(Map<String, dynamic> project) async {
     final title = project['title']?.toString() ?? project['id'].toString();
     final confirmed = await showDialog<bool>(
@@ -194,6 +236,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
                             );
                           },
+                          onFinish: () => _finishProject(project),
                           onDelete: () => _deleteProject(project),
                         );
                       },
@@ -219,10 +262,16 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 }
 
 class _ProjectCard extends ConsumerWidget {
-  const _ProjectCard({required this.project, required this.onOpen, required this.onDelete});
+  const _ProjectCard({
+    required this.project,
+    required this.onOpen,
+    required this.onFinish,
+    required this.onDelete,
+  });
 
   final Map<String, dynamic> project;
   final VoidCallback onOpen;
+  final VoidCallback onFinish;
   final VoidCallback onDelete;
 
   @override
@@ -275,13 +324,27 @@ class _ProjectCard extends ConsumerWidget {
                 ],
               ),
             ),
-            InkWell(
-              onTap: onDelete,
-              borderRadius: BorderRadius.circular(20),
-              child: const Padding(
-                padding: EdgeInsets.all(6),
-                child: Icon(Icons.close, color: Colors.black, size: 20),
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isFinished)
+                  InkWell(
+                    onTap: onFinish,
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.check_circle_outline, color: kSuccessTextColor, size: 20),
+                    ),
+                  ),
+                InkWell(
+                  onTap: onDelete,
+                  borderRadius: BorderRadius.circular(20),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.close, color: Colors.black, size: 20),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

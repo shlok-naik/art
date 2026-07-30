@@ -8,15 +8,15 @@ void main() {
     }
   });
 
-  test('recommendations progress from sketching through finished', () {
+  test('recommendations progress from sketching to finishing touches', () {
     expect(
       kStageCompletionRecommendations['Sketching'],
       lessThan(kStageCompletionRecommendations['Finishing Touches']!),
     );
-    expect(
-      kStageCompletionRecommendations['Finishing Touches'],
-      lessThan(kStageCompletionRecommendations['Finished']!),
-    );
-    expect(kStageCompletionRecommendations['Finished'], 100);
+    expect(kStageCompletionRecommendations['Finishing Touches'], 90);
+  });
+
+  test('stages no longer include Finished — that is a project-level action now', () {
+    expect(kSessionStages, isNot(contains('Finished')));
   });
 }

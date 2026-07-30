@@ -232,21 +232,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     final reactions =
         ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
     final counts = reactions.counts;
-    final myVote = reactions.myVote;
-    final myEmoji = reactions.myEmoji;
-
-    final thumbsUp = switch (myVote?['reaction_type']) {
-      'up' => true,
-      'down' => false,
-      _ => null,
-    };
-    EmojiReaction? selectedEmoji;
-    for (final reaction in EmojiReaction.values) {
-      if (reaction.name == myEmoji?['reaction_type']) {
-        selectedEmoji = reaction;
-        break;
-      }
-    }
 
     return Stack(
       fit: StackFit.expand,
@@ -352,7 +337,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 4,
                   bottom: 78,
                   child: _RightActionColumn(
-                    thumbsUp: thumbsUp,
                     upCount: counts['up'] ?? 0,
                     downCount: counts['down'] ?? 0,
                     onThumbUp: () => _react('up'),
@@ -369,7 +353,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       for (final reaction in EmojiReaction.values)
                         reaction: counts[reaction.name] ?? 0,
                     },
-                    selected: selectedEmoji,
                     onSelect: (reaction) => _react(reaction.name),
                   ),
                 ),
@@ -457,7 +440,6 @@ class _SlideIndicator extends StatelessWidget {
 
 class _RightActionColumn extends StatelessWidget {
   const _RightActionColumn({
-    required this.thumbsUp,
     required this.upCount,
     required this.downCount,
     required this.onThumbUp,
@@ -465,7 +447,6 @@ class _RightActionColumn extends StatelessWidget {
     required this.onMore,
   });
 
-  final bool? thumbsUp;
   final int upCount;
   final int downCount;
   final VoidCallback onThumbUp;
@@ -479,7 +460,6 @@ class _RightActionColumn extends StatelessWidget {
       children: [
         _ReactionEmoji(
           glyph: '👍',
-          isActive: thumbsUp == true,
           onTap: onThumbUp,
           baseSize: 64,
         ),
@@ -491,7 +471,6 @@ class _RightActionColumn extends StatelessWidget {
         const SizedBox(height: 18),
         _ReactionEmoji(
           glyph: '👎',
-          isActive: thumbsUp == false,
           onTap: onThumbDown,
           baseSize: 64,
         ),
@@ -510,12 +489,10 @@ class _RightActionColumn extends StatelessWidget {
 class _EmojiReactionRow extends StatelessWidget {
   const _EmojiReactionRow({
     required this.counts,
-    required this.selected,
     required this.onSelect,
   });
 
   final Map<EmojiReaction, int> counts;
-  final EmojiReaction? selected;
   final ValueChanged<EmojiReaction> onSelect;
 
   @override
@@ -529,7 +506,6 @@ class _EmojiReactionRow extends StatelessWidget {
             children: [
               _ReactionEmoji(
                 glyph: emojiGlyphs[reaction]!,
-                isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
                 baseSize: 48,
               ),
@@ -548,18 +524,15 @@ class _EmojiReactionRow extends StatelessWidget {
 
 /// A floating emoji reaction button — no background chip, just the glyph
 /// itself (with a soft drop shadow for legibility over any photo). Tapping
-/// gives it a springy overshoot-and-settle bounce, and an active reaction
-/// gets a permanent size bump plus a warm glow instead of a solid fill.
+/// gives it a springy overshoot-and-settle bounce.
 class _ReactionEmoji extends StatefulWidget {
   const _ReactionEmoji({
     required this.glyph,
-    required this.isActive,
     required this.onTap,
     this.baseSize = 40,
   });
 
   final String glyph;
-  final bool isActive;
   final VoidCallback onTap;
   final double baseSize;
 
@@ -595,7 +568,6 @@ class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
-    final size = widget.isActive ? widget.baseSize + 12 : widget.baseSize;
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedBuilder(
@@ -604,23 +576,17 @@ class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProvide
           angle: _wiggle.value,
           child: Transform.scale(scale: _bounce.value, child: child),
         ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          width: size,
-          height: size,
-          alignment: Alignment.center,
-          decoration: widget.isActive
-              ? BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: kAccentColor.withValues(alpha: 0.6), blurRadius: 24, spreadRadius: 2),
-                  ],
-                )
-              : null,
-          child: Text(
-            widget.glyph,
-            style: TextStyle(fontSize: size * 0.62, shadows: const [Shadow(color: Colors.black45, blurRadius: 8)]),
+        child: SizedBox(
+          width: widget.baseSize,
+          height: widget.baseSize,
+          child: Center(
+            child: Text(
+              widget.glyph,
+              style: TextStyle(
+                fontSize: widget.baseSize * 0.62,
+                shadows: const [Shadow(color: Colors.black45, blurRadius: 8)],
+              ),
+            ),
           ),
         ),
       ),

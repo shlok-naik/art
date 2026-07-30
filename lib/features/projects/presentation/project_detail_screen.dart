@@ -57,7 +57,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   String get _projectId => widget.project['id'].toString();
 
+  bool get _isFinished =>
+      (int.tryParse(widget.project['completion_percent']?.toString() ?? '') ?? 0) >= 100;
+
   void _startSession() {
+    if (_isFinished) return;
     setState(() {
       _stage = _SessionStage.running;
       _elapsed = Duration.zero;
@@ -255,10 +259,34 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final sessionsAsync = ref.watch(sessionsListProvider(_projectId));
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: AppPrimaryButton(label: 'Start New Session', onPressed: _startSession),
-        ),
+        if (_isFinished)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: kSuccessBgColor,
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'This project is finished — 100% complete and locked. No new sessions can be added.',
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kSuccessTextColor),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: AppPrimaryButton(label: 'Start New Session', onPressed: _startSession),
+          ),
         if (_errorText != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
