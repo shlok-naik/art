@@ -159,7 +159,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   Widget _buildViewingBody() {
     final post = widget.post;
-    final counts = baseReactionCounts(post.id);
+    final countsMap = ref.watch(reactionCountsProvider(post.id)).value ?? const <String, int>{};
+    final counts = ReactionCounts.fromCountsMap(countsMap);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

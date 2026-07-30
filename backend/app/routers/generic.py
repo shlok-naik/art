@@ -4,7 +4,7 @@ from app.config import SUPABASE_URL, SUPABASE_ANON_KEY
 import httpx
 
 router = APIRouter()
-ALLOWED_TABLES = ["profiles", "projects", "sessions"]
+ALLOWED_TABLES = ["profiles", "projects", "sessions", "reactions", "reaction_counts"]
 
 
 def check_table(table: str):

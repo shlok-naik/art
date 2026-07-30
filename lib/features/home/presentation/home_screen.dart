@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../feed/domain/feed_post.dart';
+import '../../feed/domain/reactions.dart';
+import '../../feed/providers.dart';
 import '../../league/presentation/league_screen.dart';
+import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
@@ -12,6 +16,13 @@ import '../../pro/presentation/pro_screen.dart';
 const _borderColor = Colors.black;
 const _borderWidth = 2.0;
 const _sidePadding = EdgeInsets.symmetric(horizontal: 16);
+
+const _monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+String _formatPostDate(DateTime date) => '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
 
 // Reference width the body content below is designed against. Height is left
 // to the Column's own natural size (via mainAxisSize.min) rather than a
@@ -27,6 +38,13 @@ class HomeScreen extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
     final username = profileAsync.value?.username ?? 'user';
     final lastProject = ref.watch(lastOpenedProjectProvider).value;
+
+    final feedPosts = ref.watch(feedPostsProvider).value ?? const <FeedPost>[];
+    final mostRecentPost = feedPosts.isEmpty ? null : feedPosts.first;
+    final mostRecentCounts = mostRecentPost == null
+        ? const <String, int>{}
+        : ref.watch(reactionCountsProvider(mostRecentPost.id)).value ?? const <String, int>{};
+    final mostRecentReactionsTotal = ReactionCounts.fromCountsMap(mostRecentCounts).total;
 
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
@@ -240,74 +258,110 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Padding(
                         padding: _sidePadding,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: _borderColor,
-                              width: _borderWidth,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
-                                children: [
-                                  Container(
-                                    height: 130,
-                                    width: double.infinity,
-                                    color: Colors.grey.shade200,
-                                    child: Center(
-                                      child: Text(
-                                        'Image',
-                                        style: GoogleFonts.chewy(
-                                          fontSize: 54,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: mostRecentPost == null
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => PostDetailScreen(post: mostRecentPost),
                                   ),
-                                  Positioned(
-                                    right: 8,
-                                    bottom: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.7,
-                                        ),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        'Reactions Counter',
-                                        style: GoogleFonts.chewy(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Title',
-                                style: GoogleFonts.chewy(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
                                 ),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _borderColor,
+                                width: _borderWidth,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Views    Date',
-                                style: GoogleFonts.chewy(fontSize: 15),
-                              ),
-                            ],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        height: 130,
+                                        width: double.infinity,
+                                        color: Colors.grey.shade200,
+                                        child:
+                                            (mostRecentPost?.photoUrl == null ||
+                                                mostRecentPost!.photoUrl!.isEmpty)
+                                            ? Center(
+                                                child: Text(
+                                                  mostRecentPost == null ? 'No posts yet' : 'Image',
+                                                  style: GoogleFonts.chewy(
+                                                    fontSize: mostRecentPost == null ? 18 : 54,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black45,
+                                                  ),
+                                                ),
+                                              )
+                                            : Image.network(
+                                                mostRecentPost.photoUrl!,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) => const Center(
+                                                  child: Icon(
+                                                    Icons.image_not_supported,
+                                                    size: 40,
+                                                    color: Colors.black38,
+                                                  ),
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    if (mostRecentPost != null)
+                                      Positioned(
+                                        right: 8,
+                                        bottom: 8,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.7),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.favorite, size: 14, color: Colors.white),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '$mostRecentReactionsTotal',
+                                                style: GoogleFonts.chewy(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  mostRecentPost?.projectTitle ?? 'No recent posts',
+                                  style: GoogleFonts.chewy(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  mostRecentPost == null
+                                      ? 'Finish a session to see it here.'
+                                      : '${mostRecentPost.views} views    ${_formatPostDate(mostRecentPost.datePosted)}',
+                                  style: GoogleFonts.chewy(fontSize: 15),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

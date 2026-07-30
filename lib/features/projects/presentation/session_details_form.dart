@@ -22,21 +22,31 @@ class SessionDetailsFillOutScreen extends StatefulWidget {
     required this.onSubmit,
     required this.onBack,
     this.isSubmitting = false,
+    this.title = 'Session Details',
+    this.submitLabel = 'Save Session',
+    this.initialStage,
+    this.initialTools,
+    this.initialDifficulty,
   });
 
   final void Function(String stage, List<String> toolsUsed, int difficulty) onSubmit;
   final VoidCallback onBack;
   final bool isSubmitting;
+  final String title;
+  final String submitLabel;
+  final String? initialStage;
+  final List<String>? initialTools;
+  final int? initialDifficulty;
 
   @override
   State<SessionDetailsFillOutScreen> createState() => _SessionDetailsFillOutScreenState();
 }
 
 class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScreen> {
-  String _stage = kSessionStages.first;
-  final List<String> _tools = [];
+  late String _stage = widget.initialStage ?? kSessionStages.first;
+  late final List<String> _tools = List.of(widget.initialTools ?? const []);
   final _toolController = TextEditingController();
-  int _difficulty = 5;
+  late int _difficulty = widget.initialDifficulty ?? 5;
 
   void _addTool() {
     final value = _toolController.text.trim();
@@ -70,7 +80,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Session Details',
+              widget.title,
               style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24),
             ),
             const SizedBox(height: 20),
@@ -156,7 +166,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
             ),
             const SizedBox(height: 24),
             AppPrimaryButton(
-              label: 'Save Session',
+              label: widget.submitLabel,
               isLoading: widget.isSubmitting,
               onPressed: () => widget.onSubmit(_stage, List.of(_tools), _difficulty),
             ),

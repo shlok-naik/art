@@ -5,17 +5,21 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
+import '../domain/reactions.dart';
 import '../providers.dart';
 
-enum _EmojiReaction { heart, laugh, wow, sad, angry }
+bool _isVoteType(String reactionType) => reactionType == 'up' || reactionType == 'down';
 
-const _emojiGlyphs = {
-  _EmojiReaction.heart: '❤️',
-  _EmojiReaction.laugh: '😆',
-  _EmojiReaction.wow: '😮',
-  _EmojiReaction.sad: '😢',
-  _EmojiReaction.angry: '😠',
-};
+Map<String, dynamic>? _findReaction(
+  List<Map<String, dynamic>> reactions,
+  bool Function(String reactionType) matches,
+) {
+  for (final reaction in reactions) {
+    final type = reaction['reaction_type']?.toString();
+    if (type != null && matches(type)) return reaction;
+  }
+  return null;
+}
 
 const _monthNames = [
   'January',
@@ -94,54 +98,95 @@ class _FeedPostCard extends ConsumerStatefulWidget {
 
 class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
-  bool? _thumbsUp;
-  _EmojiReaction? _selectedEmoji;
+  bool _isReacting = false;
 
-  late int _upCount = 340 + widget.post.id.hashCode.remainder(200).abs();
-  late int _downCount = 4 + widget.post.id.hashCode.remainder(6).abs();
-  late final Map<_EmojiReaction, int> _emojiCounts = {
-    for (final reaction in _EmojiReaction.values)
-      reaction:
-          8 +
-          (widget.post.id.hashCode + reaction.index * 17).remainder(60).abs(),
-  };
+  // Local overrides shown instantly on tap, before the network round-trip
+  // completes, so reacting never has to wait for a refetch to "feel" like it
+  // worked. Cleared once fresh data confirming the change has landed (or
+  // reset to the pre-tap values if the request fails).
+  Map<String, int>? _optimisticCounts;
+  List<Map<String, dynamic>>? _optimisticMyReactions;
 
-  void _toggleThumb(bool up) {
-    setState(() {
-      if (_thumbsUp == up) {
-        // Tapping the active thumb again clears it.
-        if (up) {
-          _upCount--;
-        } else {
-          _downCount--;
-        }
-        _thumbsUp = null;
-        return;
+  String get _sessionId => widget.post.id;
+
+  Future<void> _react(String reactionType, Map<String, dynamic>? existing) async {
+    if (_isReacting) return;
+
+    final previousCounts = _optimisticCounts ?? ref.read(reactionCountsProvider(_sessionId)).value ?? const {};
+    final previousMyReactions =
+        _optimisticMyReactions ?? ref.read(myReactionsProvider(_sessionId)).value ?? const [];
+
+    final isRemoving = existing != null && existing['reaction_type'] == reactionType;
+    final isSwitching = existing != null && !isRemoving;
+
+    final optimisticCounts = Map<String, int>.of(previousCounts);
+    final optimisticMyReactions = List<Map<String, dynamic>>.of(previousMyReactions);
+
+    if (isRemoving) {
+      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 1) - 1;
+      optimisticMyReactions.removeWhere((r) => r['id'] == existing['id']);
+    } else if (isSwitching) {
+      final oldType = existing['reaction_type']?.toString();
+      if (oldType != null) {
+        optimisticCounts[oldType] = (optimisticCounts[oldType] ?? 1) - 1;
       }
-      if (_thumbsUp == true) _upCount--;
-      if (_thumbsUp == false) _downCount--;
-      if (up) {
-        _upCount++;
+      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 0) + 1;
+      optimisticMyReactions
+        ..removeWhere((r) => r['id'] == existing['id'])
+        ..add({...existing, 'reaction_type': reactionType});
+    } else {
+      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 0) + 1;
+      optimisticMyReactions.add({
+        'id': '_optimistic_$reactionType',
+        'session_id': _sessionId,
+        'reaction_type': reactionType,
+      });
+    }
+
+    setState(() {
+      _isReacting = true;
+      _optimisticCounts = optimisticCounts;
+      _optimisticMyReactions = optimisticMyReactions;
+    });
+
+    final repo = ref.read(reactionsRepositoryProvider);
+    try {
+      if (isRemoving) {
+        await repo.deleteReaction(existing['id'].toString());
+      } else if (isSwitching) {
+        await repo.updateReaction(reactionId: existing['id'].toString(), reactionType: reactionType);
       } else {
-        _downCount++;
+        await repo.createReaction(sessionId: _sessionId, reactionType: reactionType);
       }
-      _thumbsUp = up;
-    });
-  }
-
-  void _toggleEmoji(_EmojiReaction reaction) {
-    setState(() {
-      if (_selectedEmoji == reaction) {
-        _emojiCounts[reaction] = _emojiCounts[reaction]! - 1;
-        _selectedEmoji = null;
-        return;
+      ref.invalidate(reactionCountsProvider(_sessionId));
+      ref.invalidate(myReactionsProvider(_sessionId));
+      try {
+        // Wait for the real data before dropping the optimistic override,
+        // so the UI never flashes back to the stale pre-tap counts while
+        // the refetch is still in flight.
+        await ref.read(reactionCountsProvider(_sessionId).future);
+        await ref.read(myReactionsProvider(_sessionId).future);
+      } catch (_) {
+        // If the refetch itself fails, just keep showing the optimistic
+        // value rather than surface a second, confusing error.
       }
-      if (_selectedEmoji != null) {
-        _emojiCounts[_selectedEmoji!] = _emojiCounts[_selectedEmoji!]! - 1;
-      }
-      _emojiCounts[reaction] = _emojiCounts[reaction]! + 1;
-      _selectedEmoji = reaction;
-    });
+      if (!mounted) return;
+      setState(() {
+        _optimisticCounts = null;
+        _optimisticMyReactions = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _optimisticCounts = null;
+        _optimisticMyReactions = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to react: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isReacting = false);
+    }
   }
 
   void _showDetails() {
@@ -266,6 +311,31 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
+    // Prefer the optimistic local override (set instantly on tap) over
+    // whatever's currently in the provider, so reacting never waits on a
+    // network round-trip to be reflected on screen.
+    final counts = _optimisticCounts ??
+        ref.watch(reactionCountsProvider(_sessionId)).value ??
+        const <String, int>{};
+    final myReactions = _optimisticMyReactions ??
+        ref.watch(myReactionsProvider(_sessionId)).value ??
+        const <Map<String, dynamic>>[];
+    final myVote = _findReaction(myReactions, _isVoteType);
+    final myEmoji = _findReaction(myReactions, (type) => !_isVoteType(type));
+
+    final thumbsUp = switch (myVote?['reaction_type']) {
+      'up' => true,
+      'down' => false,
+      _ => null,
+    };
+    EmojiReaction? selectedEmoji;
+    for (final reaction in EmojiReaction.values) {
+      if (reaction.name == myEmoji?['reaction_type']) {
+        selectedEmoji = reaction;
+        break;
+      }
+    }
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -350,11 +420,11 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 4,
                   bottom: 78,
                   child: _RightActionColumn(
-                    thumbsUp: _thumbsUp,
-                    upCount: _upCount,
-                    downCount: _downCount,
-                    onThumbUp: () => _toggleThumb(true),
-                    onThumbDown: () => _toggleThumb(false),
+                    thumbsUp: thumbsUp,
+                    upCount: counts['up'] ?? 0,
+                    downCount: counts['down'] ?? 0,
+                    onThumbUp: () => _react('up', myVote),
+                    onThumbDown: () => _react('down', myVote),
                     onMore: _showDetails,
                   ),
                 ),
@@ -363,9 +433,11 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 0,
                   bottom: 0,
                   child: _EmojiReactionRow(
-                    counts: _emojiCounts,
-                    selected: _selectedEmoji,
-                    onSelect: _toggleEmoji,
+                    counts: {
+                      for (final reaction in EmojiReaction.values) reaction: counts[reaction.name] ?? 0,
+                    },
+                    selected: selectedEmoji,
+                    onSelect: (reaction) => _react(reaction.name, myEmoji),
                   ),
                 ),
               ],
@@ -520,21 +592,21 @@ class _EmojiReactionRow extends StatelessWidget {
     required this.onSelect,
   });
 
-  final Map<_EmojiReaction, int> counts;
-  final _EmojiReaction? selected;
-  final ValueChanged<_EmojiReaction> onSelect;
+  final Map<EmojiReaction, int> counts;
+  final EmojiReaction? selected;
+  final ValueChanged<EmojiReaction> onSelect;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        for (final reaction in _EmojiReaction.values)
+        for (final reaction in EmojiReaction.values)
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _ReactionCircle(
-                glyph: _emojiGlyphs[reaction]!,
+                glyph: emojiGlyphs[reaction]!,
                 isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
               ),

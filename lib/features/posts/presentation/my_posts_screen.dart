@@ -123,15 +123,16 @@ class _PostGrid extends StatelessWidget {
   }
 }
 
-class _PostTile extends StatelessWidget {
+class _PostTile extends ConsumerWidget {
   const _PostTile({required this.post, required this.isGrid});
 
   final FeedPost post;
   final bool isGrid;
 
   @override
-  Widget build(BuildContext context) {
-    final total = baseReactionCounts(post.id).total;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final counts = ref.watch(reactionCountsProvider(post.id)).value ?? const <String, int>{};
+    final total = ReactionCounts.fromCountsMap(counts).total;
     final photoUrl = post.photoUrl;
 
     return GestureDetector(

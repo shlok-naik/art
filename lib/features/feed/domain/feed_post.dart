@@ -6,6 +6,7 @@ class FeedPost {
   const FeedPost({
     required this.id,
     required this.type,
+    required this.projectId,
     required this.projectTitle,
     required this.artist,
     required this.slideCount,
@@ -15,10 +16,13 @@ class FeedPost {
     required this.toolsUsed,
     required this.timeTaken,
     this.photoUrl,
+    this.stage,
+    this.difficulty,
   });
 
   final String id;
   final FeedPostType type;
+  final String projectId;
   final String projectTitle;
   final String artist;
   final int slideCount;
@@ -28,4 +32,6 @@ class FeedPost {
   final List<String> toolsUsed;
   final String timeTaken;
   final String? photoUrl;
+  final String? stage;
+  final int? difficulty;
 }
