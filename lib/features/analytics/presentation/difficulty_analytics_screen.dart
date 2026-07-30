@@ -331,17 +331,20 @@ class _RadarChartTeaser extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
         decoration: appCardDecoration(),
+        clipBehavior: Clip.antiAlias,
         child: AspectRatio(
           aspectRatio: 1,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: IgnorePointer(
-                  child: StageRadarChart(stages: _sampleStages),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  child: IgnorePointer(
+                    child: StageRadarChart(stages: _sampleStages, showLabels: false),
+                  ),
                 ),
               ),
               Container(color: Colors.white.withValues(alpha: 0.35)),

@@ -9,6 +9,7 @@ import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'stage_radar_chart.dart';
+import 'tool_bar_row.dart';
 
 /// Pro-only view of average difficulty per stage as a radar/spider chart —
 /// gated behind the "Go Pro" box on the Analytics screen.
@@ -130,7 +131,7 @@ class _ProInsights extends StatelessWidget {
               : Column(
                   children: [
                     for (final tool in insights.topTools) ...[
-                      _ToolBarRow(tool: tool, maxCount: insights.topTools.first.count),
+                      ToolBarRow(tool: tool, maxCount: insights.topTools.first.count),
                       const SizedBox(height: 12),
                     ],
                   ],
@@ -153,69 +154,28 @@ class _ProInsights extends StatelessWidget {
           decoration: appCardDecoration(),
           child: _ActivityHeatmap(days: insights.activity),
         ),
-      ],
-    );
-  }
-}
-
-class _ToolBarRow extends StatelessWidget {
-  const _ToolBarRow({required this.tool, required this.maxCount});
-
-  final ToolUsage tool;
-  final int maxCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final fraction = maxCount == 0 ? 0.0 : tool.count / maxCount;
-    return Row(
-      children: [
-        SizedBox(
-          width: 92,
-          child: Text(
-            tool.tool,
-            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-          ),
+        const SizedBox(height: 24),
+        Text(
+          'When you work',
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
         ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  Container(
-                    height: 14,
-                    width: constraints.maxWidth,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                  Container(
-                    height: 14,
-                    width: constraints.maxWidth * fraction,
-                    decoration: BoxDecoration(
-                      color: kAccentColor,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+        const SizedBox(height: 4),
+        Text(
+          'Sessions started, by time of day.',
+          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
         ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 24,
-          child: Text(
-            '${tool.count}',
-            textAlign: TextAlign.right,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14, color: kAccentColor),
-          ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: appCardDecoration(),
+          child: _HourlyActivityChart(hourly: insights.hourlyActivity),
         ),
       ],
     );
   }
 }
+
 
 class _ActivityHeatmap extends StatelessWidget {
   const _ActivityHeatmap({required this.days});
@@ -273,6 +233,70 @@ class _ActivityHeatmap extends StatelessWidget {
           style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
         ),
       ],
+    );
+  }
+}
+
+class _HourlyActivityChart extends StatelessWidget {
+  const _HourlyActivityChart({required this.hourly});
+
+  /// Session count by hour of day, index 0-23.
+  final List<int> hourly;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxCount = hourly.fold<int>(0, (max, c) => c > max ? c : max);
+    return SizedBox(
+      height: 80,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var hour = 0; hour < 24; hour++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.bottomCenter,
+                        heightFactor: maxCount == 0 ? 0 : hourly[hour] / maxCount,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: hourly[hour] == 0 ? Colors.grey.shade200 : kAccentColor,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Text('12am', style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+              ),
+              Expanded(
+                child: Text(
+                  '12pm',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '11pm',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

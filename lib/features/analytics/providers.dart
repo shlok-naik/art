@@ -243,6 +243,74 @@ final projectsOverviewProvider = FutureProvider.autoDispose<ProjectsOverview>((r
   return ProjectsOverview(perProject: perProject, statusBreakdown: statusBreakdown);
 });
 
+class StageTime {
+  const StageTime({required this.stage, required this.totalMinutes});
+
+  final String stage;
+  final double? totalMinutes;
+}
+
+class LongestSession {
+  const LongestSession({required this.projectTitle, required this.minutes});
+
+  final String projectTitle;
+  final double minutes;
+}
+
+class TimeAnalytics {
+  const TimeAnalytics({
+    required this.totalMinutes,
+    required this.averageSessionMinutes,
+    required this.longestSession,
+    required this.perStage,
+  });
+
+  final double totalMinutes;
+  final double averageSessionMinutes;
+  final LongestSession? longestSession;
+  final List<StageTime> perStage;
+}
+
+/// Free-tier time-spent overview: total hours logged, average/longest
+/// session, and time invested per stage. Deliberately doesn't include the
+/// time-of-day pattern reserved for Pro.
+final timeAnalyticsProvider = FutureProvider.autoDispose<TimeAnalytics>((ref) async {
+  final sessions = await ref.watch(allSessionsProvider.future);
+  final timedSessions = sessions.where((s) => s.durationSeconds != null).toList();
+
+  final totalMinutes = timedSessions.fold<double>(0, (sum, s) => sum + s.durationSeconds! / 60);
+  final averageSessionMinutes = timedSessions.isEmpty ? 0.0 : totalMinutes / timedSessions.length;
+
+  LongestSession? longestSession;
+  for (final session in timedSessions) {
+    final minutes = session.durationSeconds! / 60;
+    if (longestSession == null || minutes > longestSession.minutes) {
+      longestSession = LongestSession(projectTitle: session.projectTitle, minutes: minutes);
+    }
+  }
+
+  final stageTotals = <String, double>{};
+  for (final session in timedSessions) {
+    if (session.stage == null || session.stage!.isEmpty) continue;
+    stageTotals[session.stage!] = (stageTotals[session.stage!] ?? 0) + session.durationSeconds! / 60;
+  }
+  final perStage = [
+    for (final stage in kSessionStages) StageTime(stage: stage, totalMinutes: stageTotals[stage]),
+  ]..sort((a, b) {
+      if (a.totalMinutes == null && b.totalMinutes == null) return 0;
+      if (a.totalMinutes == null) return 1;
+      if (b.totalMinutes == null) return -1;
+      return b.totalMinutes!.compareTo(a.totalMinutes!);
+    });
+
+  return TimeAnalytics(
+    totalMinutes: totalMinutes,
+    averageSessionMinutes: averageSessionMinutes,
+    longestSession: longestSession,
+    perStage: perStage,
+  );
+});
+
 class ToolUsage {
   const ToolUsage({required this.tool, required this.count});
 
@@ -258,7 +326,11 @@ class ActivityDay {
 }
 
 class ProjectsProInsights {
-  const ProjectsProInsights({required this.topTools, required this.activity});
+  const ProjectsProInsights({
+    required this.topTools,
+    required this.activity,
+    required this.hourlyActivity,
+  });
 
   /// Most-used tools across every session, most-used first.
   final List<ToolUsage> topTools;
@@ -266,10 +338,13 @@ class ProjectsProInsights {
   /// One entry per day for the last 12 weeks (84 days), oldest first —
   /// used to draw a GitHub-style practice-consistency heatmap.
   final List<ActivityDay> activity;
+
+  /// Session count by hour of day (index 0-23) — when you actually work.
+  final List<int> hourlyActivity;
 }
 
-/// Pro-only "deeper" project insights: tool usage and a practice-activity
-/// heatmap. Held back from the free overview on purpose.
+/// Pro-only "deeper" project insights: tool usage, a practice-activity
+/// heatmap, and a time-of-day pattern. Held back from the free overview.
 final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsights>((ref) async {
   final sessions = await ref.watch(allSessionsProvider.future);
 
@@ -287,9 +362,12 @@ final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsigh
   final today = DateTime.now();
   final startDay = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 83));
   final dayCounts = <DateTime, int>{};
+  final hourlyActivity = List<int>.filled(24, 0);
   for (final session in sessions) {
     final createdAt = session.createdAt;
     if (createdAt == null) continue;
+    hourlyActivity[createdAt.hour]++;
+
     final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
     if (day.isBefore(startDay)) continue;
     dayCounts[day] = (dayCounts[day] ?? 0) + 1;
@@ -303,5 +381,9 @@ final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsigh
       ),
   ];
 
-  return ProjectsProInsights(topTools: topTools.take(6).toList(), activity: activity);
+  return ProjectsProInsights(
+    topTools: topTools.take(6).toList(),
+    activity: activity,
+    hourlyActivity: hourlyActivity,
+  );
 });

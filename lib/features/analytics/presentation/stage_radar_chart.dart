@@ -10,9 +10,13 @@ import '../providers.dart';
 /// full Stage Difficulty (Pro) screen and the blurred preview teaser shown
 /// on the free Difficulty screen.
 class StageRadarChart extends StatelessWidget {
-  const StageRadarChart({super.key, required this.stages});
+  const StageRadarChart({super.key, required this.stages, this.showLabels = true});
 
   final List<StageDifficulty> stages;
+
+  /// Set false for decorative-only use (e.g. a blurred teaser) — text
+  /// doesn't blur cleanly, so it's better left out entirely there.
+  final bool showLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +34,12 @@ class StageRadarChart extends StatelessWidget {
               size: size,
               painter: _RadarChartPainter(stages: stages),
             ),
-            for (var i = 0; i < stages.length; i++)
-              _radarLabel(stages[i].stage, i, stages.length, center, radius, labelInset),
-            for (var i = 0; i < stages.length; i++)
-              _radarValueLabel(stages[i].average, i, stages.length, center, radius),
+            if (showLabels) ...[
+              for (var i = 0; i < stages.length; i++)
+                _radarLabel(stages[i].stage, i, stages.length, center, radius, labelInset),
+              for (var i = 0; i < stages.length; i++)
+                _radarValueLabel(stages[i].average, i, stages.length, center, radius),
+            ],
           ],
         );
       },
