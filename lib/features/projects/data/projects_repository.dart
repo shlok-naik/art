@@ -31,6 +31,14 @@ class ProjectsRepository {
     await _client.from('projects').update({'completion_percent': completionPercent}).eq('id', id);
   }
 
+  /// Marks a project as finished: 100% complete and locked — no further
+  /// sessions can be added to it. One-way; there's no "unfinish".
+  Future<void> finishProject(String id) async {
+    await _client
+        .from('projects')
+        .update({'completion_percent': 100, 'finished_status': 'Finished'}).eq('id', id);
+  }
+
   Future<void> deleteProject(String id) async {
     final deleted = await _client.from('projects').delete().eq('id', id).select('id');
     if (deleted.isEmpty) {

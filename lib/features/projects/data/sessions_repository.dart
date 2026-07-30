@@ -48,6 +48,7 @@ class SessionsRepository {
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
+    required String name,
   }) async {
     await _client.from('sessions').insert({
       'project_id': projectId,
@@ -56,6 +57,7 @@ class SessionsRepository {
       'stage': stage,
       'tools_used': toolsUsed,
       'difficulty': difficulty,
+      'name': name,
     });
   }
 
@@ -68,11 +70,13 @@ class SessionsRepository {
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
+    required String name,
   }) async {
     await _client.from('sessions').update({
       'stage': stage,
       'tools_used': toolsUsed,
       'difficulty': difficulty,
+      'name': name,
     }).eq('id', sessionId);
   }
 }

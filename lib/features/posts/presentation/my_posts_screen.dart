@@ -172,7 +172,7 @@ class _PostTile extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            post.projectTitle,
+            post.displayTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: isGrid ? 15 : 18),

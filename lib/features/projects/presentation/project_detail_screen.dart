@@ -10,11 +10,13 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../feed/domain/feed_post.dart';
+import '../../posts/presentation/post_detail_screen.dart';
+import '../../profile/providers.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'session_capture.dart';
 import 'session_details_form.dart';
-import 'session_detail_screen.dart';
 
 const _monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -55,7 +57,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   String get _projectId => widget.project['id'].toString();
 
+  bool get _isFinished =>
+      (int.tryParse(widget.project['completion_percent']?.toString() ?? '') ?? 0) >= 100;
+
   void _startSession() {
+    if (_isFinished) return;
     setState(() {
       _stage = _SessionStage.running;
       _elapsed = Duration.zero;
@@ -121,6 +127,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   Future<void> _submit({
+    required String name,
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
@@ -155,6 +162,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         stage: stage,
         toolsUsed: toolsUsed,
         difficulty: difficulty,
+        name: name,
       );
       try {
         await ref.read(projectsRepositoryProvider).updateCompletion(_projectId, projectCompletion);
@@ -251,10 +259,34 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final sessionsAsync = ref.watch(sessionsListProvider(_projectId));
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: AppPrimaryButton(label: 'Start New Session', onPressed: _startSession),
-        ),
+        if (_isFinished)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: kSuccessBgColor,
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'This project is finished — 100% complete and locked. No new sessions can be added.',
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kSuccessTextColor),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: AppPrimaryButton(label: 'Start New Session', onPressed: _startSession),
+          ),
         if (_errorText != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -292,12 +324,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
+                      final username = ref.read(currentProfileProvider).value?.username ?? 'you';
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => SessionDetailScreen(
-                            session: session,
-                            projectId: _projectId,
-                            project: widget.project,
+                          builder: (_) => PostDetailScreen(
+                            post: FeedPost.fromRow(
+                              session: session,
+                              project: widget.project,
+                              artist: username,
+                            ),
                           ),
                         ),
                       );
@@ -394,7 +429,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           showProjectCompletion: true,
           isSubmitting: _stage == _SessionStage.submitting,
           onBack: () => setState(() => _stage = _SessionStage.review),
-          onSubmit: (stage, toolsUsed, difficulty, projectCompletion) => _submit(
+          onSubmit: (name, stage, toolsUsed, difficulty, projectCompletion) => _submit(
+            name: name,
             stage: stage,
             toolsUsed: toolsUsed,
             difficulty: difficulty,

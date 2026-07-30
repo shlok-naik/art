@@ -140,7 +140,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
                 ),
                 Text(
-                  post.projectTitle,
+                  post.displayTitle,
                   style: GoogleFonts.chewy(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
@@ -232,21 +232,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     final reactions =
         ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
     final counts = reactions.counts;
-    final myVote = reactions.myVote;
-    final myEmoji = reactions.myEmoji;
-
-    final thumbsUp = switch (myVote?['reaction_type']) {
-      'up' => true,
-      'down' => false,
-      _ => null,
-    };
-    EmojiReaction? selectedEmoji;
-    for (final reaction in EmojiReaction.values) {
-      if (reaction.name == myEmoji?['reaction_type']) {
-        selectedEmoji = reaction;
-        break;
-      }
-    }
 
     return Stack(
       fit: StackFit.expand,
@@ -352,7 +337,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   right: 4,
                   bottom: 78,
                   child: _RightActionColumn(
-                    thumbsUp: thumbsUp,
                     upCount: counts['up'] ?? 0,
                     downCount: counts['down'] ?? 0,
                     onThumbUp: () => _react('up'),
@@ -369,7 +353,6 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       for (final reaction in EmojiReaction.values)
                         reaction: counts[reaction.name] ?? 0,
                     },
-                    selected: selectedEmoji,
                     onSelect: (reaction) => _react(reaction.name),
                   ),
                 ),
@@ -414,7 +397,7 @@ class _PostCaption extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            post.projectTitle,
+            post.displayTitle,
             style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
                 .copyWith(shadows: _shadow),
             overflow: TextOverflow.ellipsis,
@@ -457,7 +440,6 @@ class _SlideIndicator extends StatelessWidget {
 
 class _RightActionColumn extends StatelessWidget {
   const _RightActionColumn({
-    required this.thumbsUp,
     required this.upCount,
     required this.downCount,
     required this.onThumbUp,
@@ -465,7 +447,6 @@ class _RightActionColumn extends StatelessWidget {
     required this.onMore,
   });
 
-  final bool? thumbsUp;
   final int upCount;
   final int downCount;
   final VoidCallback onThumbUp;
@@ -477,23 +458,21 @@ class _RightActionColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _ReactionCircle(
+        _ReactionEmoji(
           glyph: '👍',
-          isActive: thumbsUp == true,
           onTap: onThumbUp,
-          baseSize: 56,
+          baseSize: 64,
         ),
         Text(
           _formatCount(upCount),
           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
               .copyWith(shadows: _shadow),
         ),
-        const SizedBox(height: 16),
-        _ReactionCircle(
+        const SizedBox(height: 18),
+        _ReactionEmoji(
           glyph: '👎',
-          isActive: thumbsUp == false,
           onTap: onThumbDown,
-          baseSize: 56,
+          baseSize: 64,
         ),
         Text(
           _formatCount(downCount),
@@ -510,12 +489,10 @@ class _RightActionColumn extends StatelessWidget {
 class _EmojiReactionRow extends StatelessWidget {
   const _EmojiReactionRow({
     required this.counts,
-    required this.selected,
     required this.onSelect,
   });
 
   final Map<EmojiReaction, int> counts;
-  final EmojiReaction? selected;
   final ValueChanged<EmojiReaction> onSelect;
 
   @override
@@ -527,11 +504,10 @@ class _EmojiReactionRow extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ReactionCircle(
+              _ReactionEmoji(
                 glyph: emojiGlyphs[reaction]!,
-                isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
-                baseSize: 44,
+                baseSize: 48,
               ),
               const SizedBox(height: 3),
               Text(
@@ -546,38 +522,73 @@ class _EmojiReactionRow extends StatelessWidget {
   }
 }
 
-class _ReactionCircle extends StatelessWidget {
-  const _ReactionCircle({
+/// A floating emoji reaction button — no background chip, just the glyph
+/// itself (with a soft drop shadow for legibility over any photo). Tapping
+/// gives it a springy overshoot-and-settle bounce.
+class _ReactionEmoji extends StatefulWidget {
+  const _ReactionEmoji({
     required this.glyph,
-    required this.isActive,
     required this.onTap,
     this.baseSize = 40,
   });
 
   final String glyph;
-  final bool isActive;
   final VoidCallback onTap;
   final double baseSize;
 
   @override
+  State<_ReactionEmoji> createState() => _ReactionEmojiState();
+}
+
+class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  late final _bounce = TweenSequence<double>([
+    TweenSequenceItem(weight: 30, tween: Tween(begin: 1.0, end: 1.5).chain(CurveTween(curve: Curves.easeOut))),
+    TweenSequenceItem(weight: 20, tween: Tween(begin: 1.5, end: 0.85).chain(CurveTween(curve: Curves.easeInOut))),
+    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.85, end: 1.0).chain(CurveTween(curve: Curves.elasticOut))),
+  ]).animate(_controller);
+  late final _wiggle = TweenSequence<double>([
+    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.0, end: -0.12)),
+    TweenSequenceItem(weight: 50, tween: Tween(begin: -0.12, end: 0.0)),
+  ]).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5, curve: Curves.easeOut)));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    widget.onTap();
+    _controller.forward(from: 0);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final size = isActive ? baseSize + 6 : baseSize;
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-          border: Border.all(
-            color: isActive ? kAccentColor : kBorderColor,
-            width: kBorderWidth,
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) => Transform.rotate(
+          angle: _wiggle.value,
+          child: Transform.scale(scale: _bounce.value, child: child),
+        ),
+        child: SizedBox(
+          width: widget.baseSize,
+          height: widget.baseSize,
+          child: Center(
+            child: Text(
+              widget.glyph,
+              style: TextStyle(
+                fontSize: widget.baseSize * 0.62,
+                shadows: const [Shadow(color: Colors.black45, blurRadius: 8)],
+              ),
+            ),
           ),
         ),
-        alignment: Alignment.center,
-        child: Text(glyph, style: TextStyle(fontSize: size * 0.5)),
       ),
     );
   }
