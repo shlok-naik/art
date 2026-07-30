@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
+import 'edit_profile_screen.dart';
 
 // Placeholder stats/achievements — replace once the backend exposes real
 // follower counts, league standing and streak/achievement data.
@@ -164,7 +165,9 @@ class ProfileViewScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   InkWell(
-                    onTap: () {},
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
+                    ),
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       width: double.infinity,
