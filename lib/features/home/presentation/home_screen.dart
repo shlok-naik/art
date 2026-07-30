@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../analytics/presentation/analytics_screen.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/domain/reactions.dart';
 import '../../feed/providers.dart';
 import '../../league/presentation/league_screen.dart';
+import '../../posts/presentation/my_posts_screen.dart';
 import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
@@ -109,9 +111,27 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Expanded(child: _PillButton(label: 'Analytics')),
+                            Expanded(
+                              child: _PillButton(
+                                label: 'Analytics',
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const AnalyticsScreen(),
+                                  ),
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 4),
-                            Expanded(child: _PillButton(label: 'My Posts')),
+                            Expanded(
+                              child: _PillButton(
+                                label: 'My Posts',
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const MyPostsScreen(),
+                                  ),
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: _PillButton(
