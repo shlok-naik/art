@@ -6,23 +6,19 @@ import '../../../shared/app_styles.dart';
 const kSessionStages = [
   'Sketching',
   'Outlining',
-  'Drawing',
   'Coloring',
-  'Inking',
   'Rendering',
-  'Editing',
   'Finishing Touches',
+  'Finished',
 ];
 
 const kStageCompletionRecommendations = {
   'Sketching': 10,
-  'Outlining': 20,
-  'Drawing': 35,
+  'Outlining': 25,
   'Coloring': 50,
-  'Inking': 65,
-  'Rendering': 80,
-  'Editing': 90,
-  'Finishing Touches': 95,
+  'Rendering': 75,
+  'Finishing Touches': 90,
+  'Finished': 100,
 };
 
 /// Collects stage/tools/difficulty metadata for a session before it's
