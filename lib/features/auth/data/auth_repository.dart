@@ -23,5 +23,9 @@ class AuthRepository {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<UserResponse> updatePassword(String password) {
+    return _client.auth.updateUser(UserAttributes(password: password));
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }

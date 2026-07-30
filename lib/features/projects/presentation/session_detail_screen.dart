@@ -141,6 +141,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final durationSeconds = int.tryParse(widget.session['duration']?.toString() ?? '') ?? 0;
     final stage = widget.session['stage']?.toString();
     final difficulty = widget.session['difficulty']?.toString();
+    final projectCompletion =
+        int.tryParse(widget.project['completion_percent']?.toString() ?? '') ?? 0;
     final toolsUsedRaw = widget.session['tools_used'];
     final toolsUsed = toolsUsedRaw is List
         ? toolsUsedRaw.map((tool) => tool.toString()).toList()
@@ -230,6 +232,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     ],
                   ),
                 ],
+                const SizedBox(height: 12),
+                _SessionStat(label: 'Project completion', value: '$projectCompletion%'),
                 if (toolsUsed.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(

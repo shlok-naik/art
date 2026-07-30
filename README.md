@@ -1,14 +1,17 @@
 # art
 
-A Flutter project.
+A Flutter app for tracking creative projects, sharing progress, and connecting
+with other artists.
 
-## Getting started (clone and run)
+## Getting started
 
 ### 1. Prerequisites
 
-- Install [Flutter](https://docs.flutter.dev/get-started/install) and make sure `flutter doctor` runs with no blocking issues.
-- Install [Android Studio](https://developer.android.com/studio) (needed for the Android SDK, and for the emulator if you don't have a physical phone).
-- A code editor — [VS Code](https://code.visualstudio.com/) with the Flutter extension, or Android Studio itself, both work well.
+- Install [Flutter](https://docs.flutter.dev/get-started/install) and make
+  sure `flutter doctor` has no blocking issues.
+- Install [Android Studio](https://developer.android.com/studio) for the
+  Android SDK and emulator.
+- Use VS Code with the Flutter extension or Android Studio as your editor.
 
 ### 2. Clone the repository
 
@@ -25,63 +28,58 @@ flutter pub get
 
 ### 4. Configure Supabase
 
-Copy `.env.example` to `.env`, then fill in the values for your Supabase
-project. The `.env` file is intentionally ignored by Git and must not be
-committed.
+Create a `.env` file in the project root with your Supabase project URL and
+publishable (anon) key. The file is ignored by Git and must not be committed.
 
-```bash
-cp .env.example .env
+```dotenv
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-publishable-anon-key
 ```
 
-### 5. Run the backend
+The Flutter app communicates with Supabase directly, so no local backend is
+needed to run the current features.
 
-The Projects feature calls a small FastAPI backend (`backend/`) that proxies
-requests to Supabase. It needs to be running locally for that feature to work.
+### 5. Run the app
 
-```bash
-cd backend
-python -m venv .venv
-.venv/Scripts/activate   # .venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
+You can run on a physical Android device or an Android emulator.
 
-Leave this running in its own terminal. `.env`'s `BACKEND_URL` points the
-Flutter app at it (`http://localhost:8000` by default). If you're running on
-a physical phone over USB rather than an emulator, `localhost` on the phone
-isn't your computer — first run `adb reverse tcp:8000 tcp:8000` so the
-phone's `localhost:8000` tunnels back to your machine.
+**Physical phone**
 
-### 6. Run the app
+1. Enable Developer Options and USB debugging on the phone.
+2. Connect it by USB and accept the debugging prompt.
+3. Confirm Flutter detects it:
 
-You can run on a physical Android phone or on a virtual device (emulator) created in Android Studio.
-
-**Option A: Physical phone**
-
-1. On your phone, enable Developer Options (Settings → About phone → tap "Build number" 7 times).
-2. In Developer Options, enable "USB debugging".
-3. Connect the phone to your computer via USB (accept the debugging prompt on the phone).
-4. Check the device is detected:
    ```bash
    flutter devices
    ```
-5. Run the app:
+
+4. Start the app:
+
    ```bash
    flutter run
    ```
 
-**Option B: Virtual device (Android emulator)**
+**Android emulator**
 
-1. Open Android Studio → **More Actions** → **Virtual Device Manager**.
-2. Click **Create Device**, pick a phone profile, and download a system image, then finish the setup.
-3. Start the emulator from the Virtual Device Manager (or it will auto-start when you run the app).
-4. Run the app:
-   ```bash
-   flutter run
-   ```
+1. Open Android Studio, then open the Virtual Device Manager.
+2. Create and start an emulator.
+3. Run `flutter run` from the project directory.
 
-Flutter will detect the running emulator or connected phone automatically. If more than one device is available, `flutter run` will let you pick which one to launch on.
+Flutter will detect a connected device or running emulator automatically. If
+more than one is available, it will let you choose.
 
-### 7. Making changes
+### 6. Making changes
 
-Hot reload is enabled by default while `flutter run` is active — save a file and press `r` in the terminal to see changes instantly, or `R` for a full hot restart.
+Hot reload is enabled while `flutter run` is active. Save a file and press
+`r` in the terminal to reload, or `R` for a full restart.
+
+## Testing
+
+Run the full test suite with:
+
+```bash
+flutter test
+```
+
+Offline unit tests live in `test/unit/`. They cover small pieces of app logic
+without requiring a device, a running backend, or a Supabase connection.

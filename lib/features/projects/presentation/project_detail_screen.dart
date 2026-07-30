@@ -124,6 +124,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
+    required int projectCompletion,
   }) async {
     final photo = _capturedPhoto;
     if (photo == null) return;
@@ -155,6 +156,19 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         toolsUsed: toolsUsed,
         difficulty: difficulty,
       );
+      try {
+        await ref.read(projectsRepositoryProvider).updateCompletion(_projectId, projectCompletion);
+        widget.project['completion_percent'] = projectCompletion;
+        ref.invalidate(projectsListProvider);
+        ref.invalidate(lastOpenedProjectProvider);
+      } catch (e) {
+        debugPrint('Project completion update failed: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Session saved, but project completion was not updated.')),
+          );
+        }
+      }
       if (!mounted) return;
       ref.invalidate(sessionsListProvider(_projectId));
       setState(() {
@@ -375,10 +389,17 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       case _SessionStage.details:
       case _SessionStage.submitting:
         body = SessionDetailsFillOutScreen(
+          initialProjectCompletion:
+              int.tryParse(widget.project['completion_percent']?.toString() ?? '') ?? 0,
+          showProjectCompletion: true,
           isSubmitting: _stage == _SessionStage.submitting,
           onBack: () => setState(() => _stage = _SessionStage.review),
-          onSubmit: (stage, toolsUsed, difficulty) =>
-              _submit(stage: stage, toolsUsed: toolsUsed, difficulty: difficulty),
+          onSubmit: (stage, toolsUsed, difficulty, projectCompletion) => _submit(
+            stage: stage,
+            toolsUsed: toolsUsed,
+            difficulty: difficulty,
+            projectCompletion: projectCompletion,
+          ),
         );
       case _SessionStage.running:
       case _SessionStage.paused:

@@ -33,6 +33,8 @@ class HomeScreen extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
     final username = profileAsync.value?.username ?? 'user';
     final lastProject = ref.watch(lastOpenedProjectProvider).value;
+    final lastProjectCompletion =
+        int.tryParse(lastProject?['completion_percent']?.toString() ?? '') ?? 0;
 
     final myPosts = ref.watch(myPostsProvider).value ?? const <FeedPost>[];
     final mostRecentPost = myPosts.isEmpty ? null : myPosts.first;
@@ -222,14 +224,14 @@ class HomeScreen extends ConsumerWidget {
                                     color: const Color(0xFFF0EDE8),
                                     alignment: Alignment.centerLeft,
                                     child: FractionallySizedBox(
-                                      widthFactor: 0.62,
+                                      widthFactor: lastProjectCompletion / 100,
                                       child: Container(color: kAccentColor),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '62% complete',
+                                  '$lastProjectCompletion% complete',
                                   style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor),
                                 ),
                               ],

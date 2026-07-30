@@ -6,13 +6,20 @@ import '../../../shared/app_styles.dart';
 const kSessionStages = [
   'Sketching',
   'Outlining',
-  'Drawing',
   'Coloring',
-  'Inking',
   'Rendering',
-  'Editing',
   'Finishing Touches',
+  'Finished',
 ];
+
+const kStageCompletionRecommendations = {
+  'Sketching': 10,
+  'Outlining': 25,
+  'Coloring': 50,
+  'Rendering': 75,
+  'Finishing Touches': 90,
+  'Finished': 100,
+};
 
 /// Collects stage/tools/difficulty metadata for a session before it's
 /// submitted. Shown after the photo has been captured and confirmed.
@@ -27,9 +34,11 @@ class SessionDetailsFillOutScreen extends StatefulWidget {
     this.initialStage,
     this.initialTools,
     this.initialDifficulty,
+    this.initialProjectCompletion,
+    this.showProjectCompletion = false,
   });
 
-  final void Function(String stage, List<String> toolsUsed, int difficulty) onSubmit;
+  final void Function(String stage, List<String> toolsUsed, int difficulty, int projectCompletion) onSubmit;
   final VoidCallback onBack;
   final bool isSubmitting;
   final String title;
@@ -37,6 +46,8 @@ class SessionDetailsFillOutScreen extends StatefulWidget {
   final String? initialStage;
   final List<String>? initialTools;
   final int? initialDifficulty;
+  final int? initialProjectCompletion;
+  final bool showProjectCompletion;
 
   @override
   State<SessionDetailsFillOutScreen> createState() => _SessionDetailsFillOutScreenState();
@@ -47,6 +58,9 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
   late final List<String> _tools = List.of(widget.initialTools ?? const []);
   final _toolController = TextEditingController();
   late int _difficulty = widget.initialDifficulty ?? 5;
+  late int _projectCompletion = widget.initialProjectCompletion ?? 0;
+
+  int get _recommendedCompletion => kStageCompletionRecommendations[_stage] ?? 0;
 
   void _addTool() {
     final value = _toolController.text.trim();
@@ -164,11 +178,73 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                 ),
               ],
             ),
+            if (widget.showProjectCompletion) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Project Completion',
+                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: kAccentTintColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Recommended for $_stage: $_recommendedCompletion%',
+                        style: GoogleFonts.chewy(fontSize: 13, color: kAccentColor),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: widget.isSubmitting
+                          ? null
+                          : () => setState(() => _projectCompletion = _recommendedCompletion),
+                      child: Text('Use this', style: GoogleFonts.chewy(color: kAccentColor)),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Slider(
+                      value: _projectCompletion.toDouble(),
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      activeColor: kAccentColor,
+                      label: '$_projectCompletion%',
+                      onChanged: widget.isSubmitting
+                          ? null
+                          : (value) => setState(() => _projectCompletion = value.round()),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 42,
+                    child: Text(
+                      '$_projectCompletion%',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             AppPrimaryButton(
               label: widget.submitLabel,
               isLoading: widget.isSubmitting,
-              onPressed: () => widget.onSubmit(_stage, List.of(_tools), _difficulty),
+              onPressed: () => widget.onSubmit(
+                _stage,
+                List.of(_tools),
+                _difficulty,
+                _projectCompletion,
+              ),
             ),
             const SizedBox(height: 12),
             TextButton(

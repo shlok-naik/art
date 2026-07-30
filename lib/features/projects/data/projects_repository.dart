@@ -27,6 +27,10 @@ class ProjectsRepository {
     await _client.from('projects').insert(values);
   }
 
+  Future<void> updateCompletion(String id, int completionPercent) async {
+    await _client.from('projects').update({'completion_percent': completionPercent}).eq('id', id);
+  }
+
   Future<void> deleteProject(String id) async {
     final deleted = await _client.from('projects').delete().eq('id', id).select('id');
     if (deleted.isEmpty) {
