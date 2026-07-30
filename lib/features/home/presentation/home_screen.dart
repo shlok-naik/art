@@ -8,6 +8,7 @@ import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
 import '../../projects/providers.dart';
 import '../../pro/presentation/pro_screen.dart';
+import '../../posts/presentation/my_posts_screen.dart';
 
 const _borderColor = Colors.black;
 const _borderWidth = 2.0;
@@ -93,7 +94,16 @@ class HomeScreen extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Expanded(child: _PillButton(label: 'Analytics')),
                             const SizedBox(width: 4),
-                            Expanded(child: _PillButton(label: 'My Posts')),
+                            Expanded(
+                              child: _PillButton(
+                                label: 'My Posts',
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const MyPostsScreen(),
+                                  ),
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: _PillButton(
