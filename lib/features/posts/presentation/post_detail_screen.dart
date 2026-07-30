@@ -51,9 +51,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   Uint8List? _newPhotoBytes;
 
   late String? _photoUrl = widget.post.photoUrl;
+  late String? _sessionName = widget.post.sessionName;
   late String _stageName = widget.post.stage ?? kSessionStages.first;
   late List<String> _toolsUsed = List.of(widget.post.toolsUsed);
   late int _difficulty = widget.post.difficulty ?? 5;
+
+  String get _title {
+    final name = _sessionName;
+    return (name != null && name.isNotEmpty) ? name : widget.post.projectTitle;
+  }
 
   String get _description =>
       'Working on: $_stageName';
@@ -133,6 +139,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _submitDetails(
+    String name,
     String stage,
     List<String> toolsUsed,
     int difficulty,
@@ -146,11 +153,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         stage: stage,
         toolsUsed: toolsUsed,
         difficulty: difficulty,
+        name: name,
       );
       if (!mounted) return;
       ref.invalidate(feedPostsProvider);
       ref.invalidate(myPostsProvider);
+      ref.invalidate(sessionsListProvider(widget.post.projectId));
       setState(() {
+        _sessionName = name;
         _stageName = stage;
         _toolsUsed = toolsUsed;
         _difficulty = difficulty;
@@ -227,9 +237,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            post.projectTitle,
+            _title,
             style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 26),
           ),
+          if (_title != post.projectTitle) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Part of ${post.projectTitle}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -320,6 +337,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         body = SessionDetailsFillOutScreen(
           title: 'Edit Details',
           submitLabel: 'Save Changes',
+          initialName: _sessionName,
           initialStage: _stageName,
           initialTools: _toolsUsed,
           initialDifficulty: _difficulty,

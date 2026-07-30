@@ -341,7 +341,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                mostRecentPost?.projectTitle ?? 'No recent posts',
+                                mostRecentPost?.displayTitle ?? 'No recent posts',
                                 style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
                               ),
                               const SizedBox(height: 4),

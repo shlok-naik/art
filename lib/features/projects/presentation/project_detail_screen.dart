@@ -10,11 +10,13 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../feed/domain/feed_post.dart';
+import '../../posts/presentation/post_detail_screen.dart';
+import '../../profile/providers.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'session_capture.dart';
 import 'session_details_form.dart';
-import 'session_detail_screen.dart';
 
 const _monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -121,6 +123,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   Future<void> _submit({
+    required String name,
     required String stage,
     required List<String> toolsUsed,
     required int difficulty,
@@ -155,6 +158,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         stage: stage,
         toolsUsed: toolsUsed,
         difficulty: difficulty,
+        name: name,
       );
       try {
         await ref.read(projectsRepositoryProvider).updateCompletion(_projectId, projectCompletion);
@@ -292,12 +296,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
+                      final username = ref.read(currentProfileProvider).value?.username ?? 'you';
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => SessionDetailScreen(
-                            session: session,
-                            projectId: _projectId,
-                            project: widget.project,
+                          builder: (_) => PostDetailScreen(
+                            post: FeedPost.fromRow(
+                              session: session,
+                              project: widget.project,
+                              artist: username,
+                            ),
                           ),
                         ),
                       );
@@ -394,7 +401,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           showProjectCompletion: true,
           isSubmitting: _stage == _SessionStage.submitting,
           onBack: () => setState(() => _stage = _SessionStage.review),
-          onSubmit: (stage, toolsUsed, difficulty, projectCompletion) => _submit(
+          onSubmit: (name, stage, toolsUsed, difficulty, projectCompletion) => _submit(
+            name: name,
             stage: stage,
             toolsUsed: toolsUsed,
             difficulty: difficulty,

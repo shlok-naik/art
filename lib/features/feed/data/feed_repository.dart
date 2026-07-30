@@ -50,45 +50,13 @@ class FeedRepository {
       };
     }
 
-    return [for (final session in sessions) _toPost(session, usernames)];
-  }
-
-  FeedPost _toPost(Map<String, dynamic> session, Map<String, String> usernames) {
-    final project = (session['projects'] as Map?)?.cast<String, dynamic>() ?? const {};
-    final projectId = project['id']?.toString() ?? session['project_id'].toString();
-    final projectTitle = project['title']?.toString() ?? projectId;
-    final ownerId = project['user_id']?.toString() ?? '';
-
-    final durationSeconds = int.tryParse(session['duration']?.toString() ?? '') ?? 0;
-    final stage = session['stage']?.toString();
-    final toolsUsedRaw = session['tools_used'];
-
-    return FeedPost(
-      id: session['id'].toString(),
-      type: FeedPostType.session,
-      projectId: projectId,
-      projectTitle: projectTitle,
-      userId: ownerId,
-      artist: usernames[ownerId] ?? 'unknown',
-      slideCount: 1,
-      views: 0,
-      datePosted: DateTime.tryParse(session['created_at']?.toString() ?? '') ?? DateTime.now(),
-      description: stage != null ? 'Working on: $stage' : 'A session from "$projectTitle".',
-      toolsUsed: toolsUsedRaw is List
-          ? toolsUsedRaw.map((tool) => tool.toString()).toList()
-          : const <String>[],
-      timeTaken: _formatTimeTaken(durationSeconds),
-      photoUrl: session['photo_url']?.toString(),
-      stage: stage,
-      difficulty: int.tryParse(session['difficulty']?.toString() ?? ''),
-    );
-  }
-
-  static String _formatTimeTaken(int totalSeconds) {
-    final duration = Duration(seconds: totalSeconds);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours > 0) return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
-    return '${minutes}m';
+    return [
+      for (final session in sessions)
+        FeedPost.fromRow(
+          session: session,
+          project: (session['projects'] as Map?)?.cast<String, dynamic>() ?? const {},
+          artist: usernames[(session['projects'] as Map?)?['user_id']?.toString()] ?? 'unknown',
+        ),
+    ];
   }
 }
