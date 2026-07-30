@@ -1,36 +1,20 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ReactionsRepository {
-  ReactionsRepository(this._client, this._backendUrl);
+  ReactionsRepository(this._client);
 
   final SupabaseClient _client;
-  final String _backendUrl;
-
-  Map<String, String> get _headers {
-    final token = _client.auth.currentSession?.accessToken;
-    return {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
-  }
 
   String? get currentUserId => _client.auth.currentUser?.id;
 
   /// Reaction counts for a session, as {reaction_type: count}.
   Future<Map<String, int>> fetchCounts(String sessionId) async {
-    final uri = Uri.parse('$_backendUrl/api/reaction_counts').replace(queryParameters: {
-      'session_id': 'eq.$sessionId',
-    });
-    final response = await http.get(uri, headers: _headers);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load reaction counts (${response.statusCode}): ${response.body}');
-    }
-    final decoded = jsonDecode(response.body) as List;
+    final rows = await _client
+        .from('reaction_counts')
+        .select('reaction_type, count')
+        .eq('session_id', sessionId);
     return {
-      for (final row in decoded.cast<Map<String, dynamic>>())
+      for (final row in List<Map<String, dynamic>>.from(rows))
         row['reaction_type'].toString(): int.tryParse(row['count'].toString()) ?? 0,
     };
   }
@@ -39,54 +23,36 @@ class ReactionsRepository {
   /// (up/down) row and one 'emoji' row, per the table's unique constraint.
   Future<List<Map<String, dynamic>>> fetchMyReactions(String sessionId) async {
     final userId = currentUserId;
-    if (userId == null) return [];
-    final uri = Uri.parse('$_backendUrl/api/reactions').replace(queryParameters: {
-      'session_id': 'eq.$sessionId',
-      'user_id': 'eq.$userId',
-    });
-    final response = await http.get(uri, headers: _headers);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load your reactions (${response.statusCode}): ${response.body}');
-    }
-    final decoded = jsonDecode(response.body) as List;
-    return decoded.cast<Map<String, dynamic>>();
+    if (userId == null) return const [];
+    final rows = await _client
+        .from('reactions')
+        .select()
+        .eq('session_id', sessionId)
+        .eq('user_id', userId);
+    return List<Map<String, dynamic>>.from(rows);
   }
 
-  Future<void> createReaction({required String sessionId, required String reactionType}) async {
+  /// Inserts a reaction and returns the created row, so callers immediately
+  /// have the real row id for follow-up updates/deletes.
+  Future<Map<String, dynamic>> createReaction({
+    required String sessionId,
+    required String reactionType,
+  }) async {
     final userId = currentUserId;
     if (userId == null) throw Exception('Not signed in');
-    final response = await http.post(
-      Uri.parse('$_backendUrl/api/reactions'),
-      headers: _headers,
-      body: jsonEncode({
-        'session_id': sessionId,
-        'user_id': userId,
-        'reaction_type': reactionType,
-      }),
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to react (${response.statusCode}): ${response.body}');
-    }
+    final rows = await _client.from('reactions').insert({
+      'session_id': sessionId,
+      'user_id': userId,
+      'reaction_type': reactionType,
+    }).select();
+    return Map<String, dynamic>.from(rows.first);
   }
 
   Future<void> updateReaction({required String reactionId, required String reactionType}) async {
-    final response = await http.patch(
-      Uri.parse('$_backendUrl/api/reactions/$reactionId'),
-      headers: _headers,
-      body: jsonEncode({'reaction_type': reactionType}),
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to update reaction (${response.statusCode}): ${response.body}');
-    }
+    await _client.from('reactions').update({'reaction_type': reactionType}).eq('id', reactionId);
   }
 
   Future<void> deleteReaction(String reactionId) async {
-    final response = await http.delete(
-      Uri.parse('$_backendUrl/api/reactions/$reactionId'),
-      headers: _headers,
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Failed to remove reaction (${response.statusCode}): ${response.body}');
-    }
+    await _client.from('reactions').delete().eq('id', reactionId);
   }
 }

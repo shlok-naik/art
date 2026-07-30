@@ -1,100 +1,126 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/providers.dart';
-import '../profile/providers.dart';
-import '../projects/providers.dart';
+import 'data/feed_repository.dart';
 import 'data/reactions_repository.dart';
 import 'domain/feed_post.dart';
+import 'domain/reactions.dart';
 
-String _resolveBackendUrl() {
-  final url = dotenv.env['BACKEND_URL'] ?? 'http://localhost:8000';
-  // The Android emulator can't reach the host machine via localhost; it
-  // needs the special 10.0.2.2 alias instead.
-  if (!kIsWeb && Platform.isAndroid) {
-    return url
-        .replaceFirst('localhost', '10.0.2.2')
-        .replaceFirst('127.0.0.1', '10.0.2.2');
-  }
-  return url;
-}
+final feedRepositoryProvider = Provider<FeedRepository>((ref) {
+  return FeedRepository(ref.watch(supabaseClientProvider));
+});
 
 final reactionsRepositoryProvider = Provider<ReactionsRepository>((ref) {
-  return ReactionsRepository(ref.watch(supabaseClientProvider), _resolveBackendUrl());
+  return ReactionsRepository(ref.watch(supabaseClientProvider));
 });
 
-/// Reaction counts for a session, as {reaction_type: count}.
-final reactionCountsProvider =
-    FutureProvider.autoDispose.family<Map<String, int>, String>((ref, sessionId) {
-  return ref.watch(reactionsRepositoryProvider).fetchCounts(sessionId);
+/// Every posted session across all users, newest first.
+final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {
+  return ref.watch(feedRepositoryProvider).fetchAllPosts();
 });
 
-/// The current user's own reactions for a session (raw rows, so callers can
-/// see both the reaction_type and the row id needed to update/delete it).
-final myReactionsProvider =
-    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, sessionId) {
-  return ref.watch(reactionsRepositoryProvider).fetchMyReactions(sessionId);
+/// Only the signed-in user's own posts — drives Home's "Most Recent Post"
+/// card and the My Posts screen.
+final myPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {
+  return ref.watch(feedRepositoryProvider).fetchMyPosts();
 });
 
-String _formatTimeTaken(int totalSeconds) {
-  final duration = Duration(seconds: totalSeconds);
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  if (hours > 0) return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
-  return '${minutes}m';
-}
+/// Reaction counts + the user's own reactions for one session, with fully
+/// optimistic mutations: [SessionReactionsNotifier.react] updates state
+/// synchronously (add, switch, or remove), fires the write in the
+/// background, and reverts only if the write fails. No refetch is needed for
+/// the user to see their own tap.
+final sessionReactionsProvider = AsyncNotifierProvider.autoDispose
+    .family<SessionReactionsNotifier, SessionReactions, String>(SessionReactionsNotifier.new);
 
-/// Builds the feed from the current user's real projects and sessions,
-/// newest first. Each session with a photo becomes one feed post.
-final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) async {
-  final projectsRepo = ref.watch(projectsRepositoryProvider);
-  final sessionsRepo = ref.watch(sessionsRepositoryProvider);
-  final username = ref.watch(currentProfileProvider).value?.username ?? 'you';
+class SessionReactionsNotifier extends AsyncNotifier<SessionReactions> {
+  SessionReactionsNotifier(this._sessionId);
 
-  final projects = await projectsRepo.fetchProjects();
-  final posts = <FeedPost>[];
+  final String _sessionId;
 
-  for (final project in projects) {
-    final projectId = project['id'].toString();
-    final projectTitle = project['title']?.toString() ?? projectId;
-    final sessions = await sessionsRepo.fetchSessions(projectId);
-
-    for (final session in sessions) {
-      final photoUrl = session['photo_url']?.toString();
-      if (photoUrl == null || photoUrl.isEmpty) continue;
-
-      final durationSeconds = int.tryParse(session['duration']?.toString() ?? '') ?? 0;
-      final stage = session['stage']?.toString();
-      final difficulty = int.tryParse(session['difficulty']?.toString() ?? '');
-      final toolsUsedRaw = session['tools_used'];
-      final toolsUsed = toolsUsedRaw is List
-          ? toolsUsedRaw.map((tool) => tool.toString()).toList()
-          : const <String>[];
-      final createdAt =
-          DateTime.tryParse(session['created_at']?.toString() ?? '') ?? DateTime.now();
-
-      posts.add(FeedPost(
-        id: session['id'].toString(),
-        type: FeedPostType.session,
-        projectId: projectId,
-        projectTitle: projectTitle,
-        artist: username,
-        slideCount: 1,
-        views: 0,
-        datePosted: createdAt,
-        description: stage != null ? 'Working on: $stage' : 'A session from "$projectTitle".',
-        toolsUsed: toolsUsed,
-        timeTaken: _formatTimeTaken(durationSeconds),
-        photoUrl: photoUrl,
-        stage: stage,
-        difficulty: difficulty,
-      ));
-    }
+  @override
+  Future<SessionReactions> build() async {
+    final repo = ref.watch(reactionsRepositoryProvider);
+    final results =
+        await Future.wait([repo.fetchCounts(_sessionId), repo.fetchMyReactions(_sessionId)]);
+    return SessionReactions(
+      counts: results[0] as Map<String, int>,
+      mine: results[1] as List<Map<String, dynamic>>,
+    );
   }
 
-  posts.sort((a, b) => b.datePosted.compareTo(a.datePosted));
-  return posts;
-});
+  static bool _isPlaceholderId(dynamic id) => id.toString().startsWith('_optimistic_');
+
+  /// Applies a tap on [reactionType] instantly: a new reaction is added, a
+  /// tap on the currently-selected one removes it, and a tap on a different
+  /// type in the same group (vote vs emoji) switches to it. The network
+  /// write runs after the state change; on failure the change is reverted
+  /// and the error rethrown for the caller to surface.
+  Future<void> react(String reactionType) async {
+    final current = state.value;
+    if (current == null) return; // Initial load hasn't finished yet.
+
+    final existing = isVoteReactionType(reactionType) ? current.myVote : current.myEmoji;
+    // A previous tap's insert is still in flight (we only have a placeholder
+    // id, so we can't update/delete the row yet). Ignore this tap rather
+    // than desync from the server.
+    if (existing != null && _isPlaceholderId(existing['id'])) return;
+
+    final isRemoving = existing != null && existing['reaction_type'] == reactionType;
+    final isSwitching = existing != null && !isRemoving;
+
+    final counts = Map<String, int>.of(current.counts);
+    final mine = List<Map<String, dynamic>>.of(current.mine);
+    String? placeholderId;
+
+    if (isRemoving) {
+      counts[reactionType] = (counts[reactionType] ?? 1) - 1;
+      mine.removeWhere((r) => r['id'] == existing['id']);
+    } else if (isSwitching) {
+      final oldType = existing['reaction_type'].toString();
+      counts[oldType] = (counts[oldType] ?? 1) - 1;
+      counts[reactionType] = (counts[reactionType] ?? 0) + 1;
+      mine
+        ..removeWhere((r) => r['id'] == existing['id'])
+        ..add({...existing, 'reaction_type': reactionType});
+    } else {
+      placeholderId = '_optimistic_${DateTime.now().microsecondsSinceEpoch}';
+      counts[reactionType] = (counts[reactionType] ?? 0) + 1;
+      mine.add({'id': placeholderId, 'session_id': _sessionId, 'reaction_type': reactionType});
+    }
+
+    state = AsyncData(SessionReactions(counts: counts, mine: mine));
+
+    final repo = ref.read(reactionsRepositoryProvider);
+    try {
+      if (isRemoving) {
+        await repo.deleteReaction(existing['id'].toString());
+      } else if (isSwitching) {
+        await repo.updateReaction(
+          reactionId: existing['id'].toString(),
+          reactionType: reactionType,
+        );
+      } else {
+        final row = await repo.createReaction(
+          sessionId: _sessionId,
+          reactionType: reactionType,
+        );
+        // Swap the placeholder for the real row so the next tap can
+        // update/delete it by its server id.
+        final latest = state.value;
+        if (latest != null) {
+          state = AsyncData(SessionReactions(
+            counts: latest.counts,
+            mine: [
+              for (final r in latest.mine)
+                if (r['id'] == placeholderId) row else r,
+            ],
+          ));
+        }
+      }
+    } catch (e) {
+      state = AsyncData(current);
+      rethrow;
+    }
+  }
+}

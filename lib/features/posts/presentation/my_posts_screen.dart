@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -6,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../feed/domain/feed_post.dart';
-import '../../feed/domain/reactions.dart';
 import '../../feed/providers.dart';
 import '../../shell/main_shell.dart';
 import 'post_detail_screen.dart';
@@ -26,7 +26,7 @@ class MyPostsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final postsAsync = ref.watch(feedPostsProvider);
+    final postsAsync = ref.watch(myPostsProvider);
     final isGrid = ref.watch(_isGridViewProvider);
 
     return DefaultTextStyle(
@@ -131,8 +131,7 @@ class _PostTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final counts = ref.watch(reactionCountsProvider(post.id)).value ?? const <String, int>{};
-    final total = ReactionCounts.fromCountsMap(counts).total;
+    final total = ref.watch(sessionReactionsProvider(post.id)).value?.total ?? 0;
     final photoUrl = post.photoUrl;
 
     return GestureDetector(
@@ -158,10 +157,10 @@ class _PostTile extends ConsumerWidget {
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          photoUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: photoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+                          errorWidget: (context, url, error) => Container(
                             color: Colors.grey.shade200,
                             alignment: Alignment.center,
                             child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),

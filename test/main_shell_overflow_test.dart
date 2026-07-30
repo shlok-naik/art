@@ -22,9 +22,11 @@ void main() {
           ),
           lastOpenedProjectProvider.overrideWith((ref) async => null),
           // The IndexedStack in MainShell builds all four tabs up front,
-          // including Feed, so its provider needs overriding too or it'll
-          // try to reach Supabase, which isn't initialized in tests.
+          // including Feed and Home's posts card, so their providers need
+          // overriding too or they'll try to reach Supabase, which isn't
+          // initialized in tests.
           feedPostsProvider.overrideWith((ref) async => []),
+          myPostsProvider.overrideWith((ref) async => []),
         ],
         // MainShell (not HomeScreen alone) so the test reflects the real
         // available height: the shared bottom nav reserves 104px, which

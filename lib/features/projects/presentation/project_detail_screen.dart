@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -301,7 +302,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                     color: Colors.grey.shade200,
                                     child: const Icon(Icons.image_not_supported, color: Colors.black38),
                                   )
-                                : Image.network(photoUrl, width: 52, height: 52, fit: BoxFit.cover),
+                                : CachedNetworkImage(
+                                    imageUrl: photoUrl,
+                                    width: 52,
+                                    height: 52,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

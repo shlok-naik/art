@@ -8,6 +8,7 @@ class FeedPost {
     required this.type,
     required this.projectId,
     required this.projectTitle,
+    required this.userId,
     required this.artist,
     required this.slideCount,
     required this.views,
@@ -24,6 +25,9 @@ class FeedPost {
   final FeedPostType type;
   final String projectId;
   final String projectTitle;
+
+  /// The id of the user (project owner) who posted this.
+  final String userId;
   final String artist;
   final int slideCount;
   final int views;

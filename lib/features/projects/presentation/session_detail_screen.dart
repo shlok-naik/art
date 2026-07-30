@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -160,7 +161,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     alignment: Alignment.center,
                     child: const Icon(Icons.image_not_supported, size: 64, color: Colors.black38),
                   )
-                : Image.network(_photoUrl!, width: double.infinity, height: 240, fit: BoxFit.cover),
+                : CachedNetworkImage(
+                    imageUrl: _photoUrl!,
+                    width: double.infinity,
+                    height: 240,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(height: 12),
           SizedBox(

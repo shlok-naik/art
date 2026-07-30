@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,19 +8,6 @@ import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
 import '../providers.dart';
-
-bool _isVoteType(String reactionType) => reactionType == 'up' || reactionType == 'down';
-
-Map<String, dynamic>? _findReaction(
-  List<Map<String, dynamic>> reactions,
-  bool Function(String reactionType) matches,
-) {
-  for (final reaction in reactions) {
-    final type = reaction['reaction_type']?.toString();
-    if (type != null && matches(type)) return reaction;
-  }
-  return null;
-}
 
 const _monthNames = [
   'January',
@@ -47,7 +35,8 @@ String _formatCount(int count) {
 
 /// Full-screen scrollable feed of posted slideshows and sessions, styled
 /// like YT Shorts / Instagram Reels: vertical swipe between posts, and
-/// (for slideshows) horizontal swipe through a project's session photos.
+/// (for slideshows) horizontal swipe through a post's slide photos. The
+/// vertical feed loops — swiping past the last post wraps back to the first.
 class FeedScreen extends ConsumerWidget {
   const FeedScreen({super.key});
 
@@ -68,10 +57,12 @@ class FeedScreen extends ConsumerWidget {
               ),
             );
           }
+          // No itemCount: the builder is unbounded, so the feed never
+          // dead-ends — indexes wrap back onto the post list.
           return PageView.builder(
             scrollDirection: Axis.vertical,
-            itemCount: posts.length,
-            itemBuilder: (context, index) => _FeedPostCard(post: posts[index]),
+            itemBuilder: (context, index) =>
+                _FeedPostCard(post: posts[index % posts.length]),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -98,95 +89,22 @@ class _FeedPostCard extends ConsumerStatefulWidget {
 
 class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
-  bool _isReacting = false;
-
-  // Local overrides shown instantly on tap, before the network round-trip
-  // completes, so reacting never has to wait for a refetch to "feel" like it
-  // worked. Cleared once fresh data confirming the change has landed (or
-  // reset to the pre-tap values if the request fails).
-  Map<String, int>? _optimisticCounts;
-  List<Map<String, dynamic>>? _optimisticMyReactions;
 
   String get _sessionId => widget.post.id;
 
-  Future<void> _react(String reactionType, Map<String, dynamic>? existing) async {
-    if (_isReacting) return;
-
-    final previousCounts = _optimisticCounts ?? ref.read(reactionCountsProvider(_sessionId)).value ?? const {};
-    final previousMyReactions =
-        _optimisticMyReactions ?? ref.read(myReactionsProvider(_sessionId)).value ?? const [];
-
-    final isRemoving = existing != null && existing['reaction_type'] == reactionType;
-    final isSwitching = existing != null && !isRemoving;
-
-    final optimisticCounts = Map<String, int>.of(previousCounts);
-    final optimisticMyReactions = List<Map<String, dynamic>>.of(previousMyReactions);
-
-    if (isRemoving) {
-      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 1) - 1;
-      optimisticMyReactions.removeWhere((r) => r['id'] == existing['id']);
-    } else if (isSwitching) {
-      final oldType = existing['reaction_type']?.toString();
-      if (oldType != null) {
-        optimisticCounts[oldType] = (optimisticCounts[oldType] ?? 1) - 1;
-      }
-      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 0) + 1;
-      optimisticMyReactions
-        ..removeWhere((r) => r['id'] == existing['id'])
-        ..add({...existing, 'reaction_type': reactionType});
-    } else {
-      optimisticCounts[reactionType] = (optimisticCounts[reactionType] ?? 0) + 1;
-      optimisticMyReactions.add({
-        'id': '_optimistic_$reactionType',
-        'session_id': _sessionId,
-        'reaction_type': reactionType,
-      });
-    }
-
-    setState(() {
-      _isReacting = true;
-      _optimisticCounts = optimisticCounts;
-      _optimisticMyReactions = optimisticMyReactions;
-    });
-
-    final repo = ref.read(reactionsRepositoryProvider);
-    try {
-      if (isRemoving) {
-        await repo.deleteReaction(existing['id'].toString());
-      } else if (isSwitching) {
-        await repo.updateReaction(reactionId: existing['id'].toString(), reactionType: reactionType);
-      } else {
-        await repo.createReaction(sessionId: _sessionId, reactionType: reactionType);
-      }
-      ref.invalidate(reactionCountsProvider(_sessionId));
-      ref.invalidate(myReactionsProvider(_sessionId));
-      try {
-        // Wait for the real data before dropping the optimistic override,
-        // so the UI never flashes back to the stale pre-tap counts while
-        // the refetch is still in flight.
-        await ref.read(reactionCountsProvider(_sessionId).future);
-        await ref.read(myReactionsProvider(_sessionId).future);
-      } catch (_) {
-        // If the refetch itself fails, just keep showing the optimistic
-        // value rather than surface a second, confusing error.
-      }
+  /// Fires the optimistic reaction and returns immediately — the provider
+  /// updates state synchronously, so the UI reflects the tap before the
+  /// network write completes. Failures revert the state and surface here.
+  void _react(String reactionType) {
+    ref
+        .read(sessionReactionsProvider(_sessionId).notifier)
+        .react(reactionType)
+        .catchError((Object e) {
       if (!mounted) return;
-      setState(() {
-        _optimisticCounts = null;
-        _optimisticMyReactions = null;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _optimisticCounts = null;
-        _optimisticMyReactions = null;
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to react: $e')),
       );
-    } finally {
-      if (mounted) setState(() => _isReacting = false);
-    }
+    });
   }
 
   void _showDetails() {
@@ -311,17 +229,11 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
-    // Prefer the optimistic local override (set instantly on tap) over
-    // whatever's currently in the provider, so reacting never waits on a
-    // network round-trip to be reflected on screen.
-    final counts = _optimisticCounts ??
-        ref.watch(reactionCountsProvider(_sessionId)).value ??
-        const <String, int>{};
-    final myReactions = _optimisticMyReactions ??
-        ref.watch(myReactionsProvider(_sessionId)).value ??
-        const <Map<String, dynamic>>[];
-    final myVote = _findReaction(myReactions, _isVoteType);
-    final myEmoji = _findReaction(myReactions, (type) => !_isVoteType(type));
+    final reactions =
+        ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
+    final counts = reactions.counts;
+    final myVote = reactions.myVote;
+    final myEmoji = reactions.myEmoji;
 
     final thumbsUp = switch (myVote?['reaction_type']) {
       'up' => true,
@@ -359,16 +271,36 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                 ),
               );
             }
-            return Image.network(
-              photoUrl,
+            return CachedNetworkImage(
+              imageUrl: photoUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
+              placeholder: (context, url) => Container(color: Colors.grey.shade900),
+              errorWidget: (context, url, error) => Container(
                 color: Colors.grey.shade200,
                 alignment: Alignment.center,
                 child: const Icon(Icons.image_not_supported, size: 54, color: Colors.black38),
               ),
             );
           },
+        ),
+        // Bottom gradient scrim so the caption/actions stay legible over any
+        // photo, instead of relying on plain text-shadows alone.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 280,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withValues(alpha: 0), Colors.black.withValues(alpha: 0.78)],
+                ),
+              ),
+            ),
+          ),
         ),
         SafeArea(
           child: Padding(
@@ -423,8 +355,8 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     thumbsUp: thumbsUp,
                     upCount: counts['up'] ?? 0,
                     downCount: counts['down'] ?? 0,
-                    onThumbUp: () => _react('up', myVote),
-                    onThumbDown: () => _react('down', myVote),
+                    onThumbUp: () => _react('up'),
+                    onThumbDown: () => _react('down'),
                     onMore: _showDetails,
                   ),
                 ),
@@ -434,10 +366,11 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   bottom: 0,
                   child: _EmojiReactionRow(
                     counts: {
-                      for (final reaction in EmojiReaction.values) reaction: counts[reaction.name] ?? 0,
+                      for (final reaction in EmojiReaction.values)
+                        reaction: counts[reaction.name] ?? 0,
                     },
                     selected: selectedEmoji,
-                    onSelect: (reaction) => _react(reaction.name, myEmoji),
+                    onSelect: (reaction) => _react(reaction.name),
                   ),
                 ),
               ],
@@ -463,32 +396,27 @@ class _PostCaption extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
             decoration: BoxDecoration(
               color: kAccentColor,
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               post.type == FeedPostType.slideshow ? 'SLIDESHOW' : 'SESSION',
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.white,
-              ),
+              style: GoogleFonts.chewy(fontSize: 12, color: Colors.white),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '@${post.artist}',
-            style: GoogleFonts.chewy(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              shadows: _shadow,
-            ),
+            style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
           ),
+          const SizedBox(height: 2),
           Text(
             post.projectTitle,
-            style: GoogleFonts.chewy(fontSize: 16, shadows: _shadow),
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
+                .copyWith(shadows: _shadow),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -553,32 +481,26 @@ class _RightActionColumn extends StatelessWidget {
           glyph: '👍',
           isActive: thumbsUp == true,
           onTap: onThumbUp,
+          baseSize: 56,
         ),
         Text(
           _formatCount(upCount),
-          style: GoogleFonts.chewy(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            shadows: _shadow,
-          ),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
+              .copyWith(shadows: _shadow),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         _ReactionCircle(
           glyph: '👎',
           isActive: thumbsUp == false,
           onTap: onThumbDown,
+          baseSize: 56,
         ),
         Text(
           _formatCount(downCount),
-          style: GoogleFonts.chewy(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            shadows: _shadow,
-          ),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
+              .copyWith(shadows: _shadow),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         _CircleIconButton(icon: Icons.more_vert, onTap: onMore),
       ],
     );
@@ -609,16 +531,13 @@ class _EmojiReactionRow extends StatelessWidget {
                 glyph: emojiGlyphs[reaction]!,
                 isActive: selected == reaction,
                 onTap: () => onSelect(reaction),
+                baseSize: 44,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 _formatCount(counts[reaction]!),
-                style: GoogleFonts.chewy(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  shadows: _shadow,
-                ),
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)
+                    .copyWith(shadows: _shadow),
               ),
             ],
           ),
@@ -632,20 +551,23 @@ class _ReactionCircle extends StatelessWidget {
     required this.glyph,
     required this.isActive,
     required this.onTap,
+    this.baseSize = 40,
   });
 
   final String glyph;
   final bool isActive;
   final VoidCallback onTap;
+  final double baseSize;
 
   @override
   Widget build(BuildContext context) {
+    final size = isActive ? baseSize + 6 : baseSize;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: isActive ? 46 : 40,
-        height: isActive ? 46 : 40,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
@@ -655,7 +577,7 @@ class _ReactionCircle extends StatelessWidget {
           ),
         ),
         alignment: Alignment.center,
-        child: Text(glyph, style: TextStyle(fontSize: isActive ? 22 : 18)),
+        child: Text(glyph, style: TextStyle(fontSize: size * 0.5)),
       ),
     );
   }

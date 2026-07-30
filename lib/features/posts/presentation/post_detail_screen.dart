@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,6 +117,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       await repo.updateSessionPhoto(widget.post.id, photoUrl);
       if (!mounted) return;
       ref.invalidate(feedPostsProvider);
+      ref.invalidate(myPostsProvider);
       setState(() {
         _photoUrl = photoUrl;
         _newPhotoBytes = null;
@@ -142,6 +144,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       );
       if (!mounted) return;
       ref.invalidate(feedPostsProvider);
+      ref.invalidate(myPostsProvider);
       setState(() {
         _stageName = stage;
         _toolsUsed = toolsUsed;
@@ -159,7 +162,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   Widget _buildViewingBody() {
     final post = widget.post;
-    final countsMap = ref.watch(reactionCountsProvider(post.id)).value ?? const <String, int>{};
+    final countsMap =
+        ref.watch(sessionReactionsProvider(post.id)).value?.counts ?? const <String, int>{};
     final counts = ReactionCounts.fromCountsMap(countsMap);
 
     return SingleChildScrollView(
@@ -177,7 +181,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     alignment: Alignment.center,
                     child: const Icon(Icons.image_not_supported, size: 64, color: Colors.black38),
                   )
-                : Image.network(_photoUrl!, width: double.infinity, height: 260, fit: BoxFit.cover),
+                : CachedNetworkImage(
+                    imageUrl: _photoUrl!,
+                    width: double.infinity,
+                    height: 260,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(height: 12),
           Row(

@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.generic import router
-
+# The Flutter app talks to Supabase directly (supabase_flutter + RLS); this
+# backend no longer proxies CRUD. It exists for server-side work that can't
+# live in the app: the RevenueCat webhook and the league promotion/relegation
+# job, both still to come.
 app = FastAPI(title="art backend")
 
 app.add_middleware(
@@ -11,8 +13,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(router, prefix="/api")
 
 
 @app.get("/health")

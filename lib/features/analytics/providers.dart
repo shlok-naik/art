@@ -70,29 +70,29 @@ double? _asDouble(dynamic value) {
 }
 
 /// Every session across every project, flattened into one list. Fetched
-/// once here so `difficultyAnalyticsProvider` and `progressOverTimeProvider`
-/// don't each re-fetch the same data.
+/// once here (a single batched query, not one request per project) so the
+/// analytics providers below don't each re-fetch the same data.
 final allSessionsProvider = FutureProvider.autoDispose<List<SessionRecord>>((ref) async {
   final projects = await ref.watch(projectsListProvider.future);
   final sessionsRepo = ref.watch(sessionsRepositoryProvider);
 
-  final records = <SessionRecord>[];
-  for (final project in projects) {
-    final id = project['id'].toString();
-    final title = project['title']?.toString() ?? id;
-    final sessions = await sessionsRepo.fetchSessions(id);
+  final projectsById = {for (final project in projects) project['id'].toString(): project};
+  final sessions = await sessionsRepo.fetchSessionsForProjects(projectsById.keys.toList());
 
-    for (final session in sessions) {
-      records.add(SessionRecord(
-        project: project,
-        projectTitle: title,
-        difficulty: _asDouble(session['difficulty']),
-        durationSeconds: _asDouble(session['duration']),
-        stage: session['stage']?.toString(),
-        toolsUsed: (session['tools_used'] as List?)?.map((t) => t.toString()).toList() ?? const [],
-        createdAt: DateTime.tryParse(session['created_at']?.toString() ?? ''),
-      ));
-    }
+  final records = <SessionRecord>[];
+  for (final session in sessions) {
+    final project = projectsById[session['project_id'].toString()];
+    if (project == null) continue;
+
+    records.add(SessionRecord(
+      project: project,
+      projectTitle: project['title']?.toString() ?? project['id'].toString(),
+      difficulty: _asDouble(session['difficulty']),
+      durationSeconds: _asDouble(session['duration']),
+      stage: session['stage']?.toString(),
+      toolsUsed: (session['tools_used'] as List?)?.map((t) => t.toString()).toList() ?? const [],
+      createdAt: DateTime.tryParse(session['created_at']?.toString() ?? ''),
+    ));
   }
   return records;
 });
