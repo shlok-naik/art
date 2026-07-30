@@ -229,8 +229,9 @@ class _ProjectCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final title = project['title']?.toString() ?? project['id'].toString();
     final createdAt = _formatCreatedAt(project['created_at']);
-    final finishedStatus = project['finished_status']?.toString() ?? '—';
-    final isFinished = finishedStatus.toLowerCase() == 'finished';
+    final completionPercent =
+        int.tryParse(project['completion_percent']?.toString() ?? '') ?? 0;
+    final isFinished = completionPercent == 100;
     final sessionCount = ref.watch(sessionsListProvider(project['id'].toString())).value?.length;
 
     return InkWell(

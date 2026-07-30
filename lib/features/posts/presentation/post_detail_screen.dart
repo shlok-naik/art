@@ -132,7 +132,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
   }
 
-  Future<void> _submitDetails(String stage, List<String> toolsUsed, int difficulty) async {
+  Future<void> _submitDetails(
+    String stage,
+    List<String> toolsUsed,
+    int difficulty,
+    int _,
+  ) async {
     setState(() => _stage = _Stage.savingDetails);
     final repo = ref.read(sessionsRepositoryProvider);
     try {
