@@ -7,17 +7,25 @@ import '../../../shared/app_styles.dart';
 
 const _clockNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
 
+// Leaves room for the tick marks and the bold hour numbers outside the data
+// area. Shared between the painter (drawing) and the widget (hit-testing).
+const _dataInset = 38.0;
+
 /// Two 12-hour rose/coxcomb clocks (AM and PM) showing session activity by
 /// hour of day, styled like an analogue clock face (tick marks, bold
 /// numerals, black bezel) — minus the hands, since this shows a
 /// distribution rather than a single time. Each wedge's length scales
 /// relative to your single busiest hour across the whole day, so the two
-/// clocks stay comparable to each other.
+/// clocks stay comparable to each other. Hover (or tap, on touch devices)
+/// a wedge to see the time spent working during that hour.
 class HourlyRoseChart extends StatelessWidget {
-  const HourlyRoseChart({super.key, required this.hourly});
+  const HourlyRoseChart({super.key, required this.hourly, required this.minutes});
 
   /// Session count by hour of day, index 0-23.
   final List<int> hourly;
+
+  /// Total minutes spent working, index 0-23.
+  final List<double> minutes;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +36,7 @@ class HourlyRoseChart extends StatelessWidget {
         Expanded(
           child: _SingleClockRose(
             hours: hourly.sublist(0, 12),
+            minutes: minutes.sublist(0, 12),
             maxCount: maxCount,
             label: 'AM',
           ),
@@ -36,6 +45,7 @@ class HourlyRoseChart extends StatelessWidget {
         Expanded(
           child: _SingleClockRose(
             hours: hourly.sublist(12, 24),
+            minutes: minutes.sublist(12, 24),
             maxCount: maxCount,
             label: 'PM',
           ),
@@ -45,20 +55,76 @@ class HourlyRoseChart extends StatelessWidget {
   }
 }
 
-class _SingleClockRose extends StatelessWidget {
-  const _SingleClockRose({required this.hours, required this.maxCount, required this.label});
+class _SingleClockRose extends StatefulWidget {
+  const _SingleClockRose({
+    required this.hours,
+    required this.minutes,
+    required this.maxCount,
+    required this.label,
+  });
 
   /// 12 session counts, index 0 = the clock's "12" position.
   final List<int> hours;
+
+  /// 12 minute totals, matching [hours].
+  final List<double> minutes;
   final int maxCount;
   final String label;
+
+  @override
+  State<_SingleClockRose> createState() => _SingleClockRoseState();
+}
+
+class _SingleClockRoseState extends State<_SingleClockRose> {
+  int? _hoveredIndex;
+  Offset? _hoverPosition;
+
+  void _updateHover(Offset localPosition, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final faceRadius = math.min(size.width, size.height) / 2;
+    final dataRadius = faceRadius - _dataInset;
+
+    final delta = localPosition - center;
+    final distance = delta.distance;
+    if (distance > dataRadius) {
+      if (_hoveredIndex != null) setState(() => _hoveredIndex = null);
+      return;
+    }
+
+    final angle = math.atan2(delta.dy, delta.dx) + math.pi / 2;
+    final normalized = (angle + 2 * math.pi) % (2 * math.pi);
+    const sliceAngle = 2 * math.pi / 12;
+    final index = (normalized / sliceAngle).floor() % 12;
+
+    setState(() {
+      _hoveredIndex = index;
+      _hoverPosition = localPosition;
+    });
+  }
+
+  void _clearHover() {
+    if (_hoveredIndex != null) setState(() => _hoveredIndex = null);
+  }
+
+  String _hourLabel(int index) {
+    final displayHour = _clockNumbers[index];
+    return '$displayHour ${widget.label}';
+  }
+
+  String _formatMinutes(double totalMinutes) {
+    final minutes = totalMinutes.round();
+    if (minutes < 60) return '$minutes min';
+    final hours = minutes ~/ 60;
+    final remainder = minutes % 60;
+    return remainder == 0 ? '${hours}h' : '${hours}h ${remainder}m';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Text(
-          label,
+          widget.label,
           style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
         ),
         const SizedBox(height: 6),
@@ -77,15 +143,31 @@ class _SingleClockRose extends StatelessWidget {
                 final faceRadius = math.min(size.width, size.height) / 2;
                 final numberRadius = faceRadius - 20;
 
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      size: size,
-                      painter: _ClockRosePainter(hours: hours, maxCount: maxCount),
+                return MouseRegion(
+                  onHover: (event) => _updateHover(event.localPosition, size),
+                  onExit: (_) => _clearHover(),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapDown: (details) => _updateHover(details.localPosition, size),
+                    onTapUp: (_) => _clearHover(),
+                    onTapCancel: _clearHover,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          size: size,
+                          painter: _ClockRosePainter(
+                            hours: widget.hours,
+                            maxCount: widget.maxCount,
+                            hoveredIndex: _hoveredIndex,
+                          ),
+                        ),
+                        for (var i = 0; i < 12; i++) _buildHourLabel(i, center, numberRadius),
+                        if (_hoveredIndex != null && _hoverPosition != null)
+                          _buildTooltip(_hoveredIndex!, size),
+                      ],
                     ),
-                    for (var i = 0; i < 12; i++) _hourLabel(i, center, numberRadius),
-                  ],
+                  ),
                 );
               },
             ),
@@ -95,10 +177,11 @@ class _SingleClockRose extends StatelessWidget {
     );
   }
 
-  Widget _hourLabel(int index, Offset center, double radius) {
+  Widget _buildHourLabel(int index, Offset center, double radius) {
     final angle = (-math.pi / 2) + (2 * math.pi * index / 12);
     final x = center.dx + radius * math.cos(angle);
     final y = center.dy + radius * math.sin(angle);
+    final isHovered = _hoveredIndex == index;
     return Positioned(
       left: x - 12,
       top: y - 10,
@@ -106,22 +189,59 @@ class _SingleClockRose extends StatelessWidget {
       child: Text(
         _clockNumbers[index],
         textAlign: TextAlign.center,
-        style: GoogleFonts.chewy(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+        style: GoogleFonts.chewy(
+          fontSize: isHovered ? 18 : 16,
+          fontWeight: FontWeight.bold,
+          color: isHovered ? kAccentColor : Colors.black,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTooltip(int index, Size size) {
+    final sessionCount = widget.hours[index];
+    final sessionLabel = sessionCount == 1 ? '1 session' : '$sessionCount sessions';
+    final text = '${_hourLabel(index)}\n${_formatMinutes(widget.minutes[index])} · $sessionLabel';
+    // Keep the tooltip near the wedge but clamped inside the circle so it
+    // never gets clipped by the clock's bezel.
+    const tooltipWidth = 96.0;
+    const tooltipHeight = 50.0;
+    final position = _hoverPosition!;
+    var left = position.dx - tooltipWidth / 2;
+    var top = position.dy - tooltipHeight - 14;
+    left = left.clamp(0.0, math.max(0.0, size.width - tooltipWidth));
+    top = top.clamp(0.0, math.max(0.0, size.height - tooltipHeight));
+
+    return Positioned(
+      left: left,
+      top: top,
+      child: IgnorePointer(
+        child: Container(
+          width: tooltipWidth,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.chewy(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
       ),
     );
   }
 }
 
 class _ClockRosePainter extends CustomPainter {
-  _ClockRosePainter({required this.hours, required this.maxCount});
+  _ClockRosePainter({required this.hours, required this.maxCount, this.hoveredIndex});
 
   final List<int> hours;
   final int maxCount;
+  final int? hoveredIndex;
 
   static const _rings = 3;
-  // Leaves room for the tick marks and the bold hour numbers outside the
-  // data area.
-  static const _dataInset = 38.0;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -173,13 +293,17 @@ class _ClockRosePainter extends CustomPainter {
         ..arcTo(Rect.fromCircle(center: center, radius: wedgeRadius), startAngle, sliceAngle, false)
         ..close();
 
+      final isHovered = hoveredIndex == i;
       final intensity = count == 0 ? 0.12 : 0.35 + (fraction * 0.65);
-      canvas.drawPath(path, Paint()..color = kAccentColor.withValues(alpha: intensity));
+      canvas.drawPath(
+        path,
+        Paint()..color = kAccentColor.withValues(alpha: isHovered ? math.min(1.0, intensity + 0.25) : intensity),
+      );
       canvas.drawPath(
         path,
         Paint()
           ..color = Colors.white
-          ..strokeWidth = 1
+          ..strokeWidth = isHovered ? 2 : 1
           ..style = PaintingStyle.stroke,
       );
     }
@@ -187,5 +311,7 @@ class _ClockRosePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ClockRosePainter oldDelegate) =>
-      oldDelegate.hours != hours || oldDelegate.maxCount != maxCount;
+      oldDelegate.hours != hours ||
+      oldDelegate.maxCount != maxCount ||
+      oldDelegate.hoveredIndex != hoveredIndex;
 }
