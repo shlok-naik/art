@@ -83,6 +83,7 @@ class ProfileViewScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
                               width: 72,
@@ -96,7 +97,7 @@ class ProfileViewScreen extends ConsumerWidget {
                               child: const Icon(Icons.person, size: 36, color: Colors.black26),
                             ),
                             const SizedBox(width: 14),
-                            Flexible(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -113,6 +114,20 @@ class ProfileViewScreen extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: kBorderColor, width: kBorderWidth),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Icon(Icons.edit, size: 18, color: Colors.black),
                               ),
                             ),
                           ],
@@ -180,24 +195,6 @@ class ProfileViewScreen extends ConsumerWidget {
                           locked: achievement['locked'] as bool,
                         ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color.fromARGB(255, 228, 91, 12), width: kBorderWidth),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: hardShadow(offset: 3),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text('Edit Profile', style: GoogleFonts.chewy(fontSize: 16, color: const Color.fromARGB(255, 246, 240, 240))),
-                    ),
                   ),
                 ],
               ),

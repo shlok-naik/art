@@ -24,8 +24,8 @@ class FollowedScreen extends ConsumerWidget {
             children: [
               Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
               const SizedBox(height: 20),
-              if (followingAsync.isLoading)
-                const Center(child: CircularProgressIndicator())
+              if (followingAsync.hasError)
+                AppErrorText('Failed to load followed artists: ${followingAsync.error}')
               else if (following.isEmpty)
                 Container(
                   width: double.infinity,
@@ -78,7 +78,10 @@ class FollowedScreen extends ConsumerWidget {
                           ],
                         ],
                       ),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => Text(
+                  'No suggestions right now.',
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                ),
                 error: (error, _) => AppErrorText('Failed to load suggestions: $error'),
               ),
             ],
