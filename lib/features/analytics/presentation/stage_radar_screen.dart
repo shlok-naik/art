@@ -6,8 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/sparkline.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
+import 'hourly_rose_chart.dart';
 import 'stage_radar_chart.dart';
 import 'tool_bar_row.dart';
 
@@ -20,12 +22,14 @@ class StageRadarScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsAsync = ref.watch(difficultyAnalyticsProvider);
     final insightsAsync = ref.watch(projectsProInsightsProvider);
+    final difficultyInsightsAsync = ref.watch(difficultyProInsightsProvider);
+    final overviewAsync = ref.watch(projectsOverviewProvider);
 
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: appThemedAppBar(context, 'Stage Difficulty'),
+        appBar: appThemedAppBar(context, '👑 Pro-exclusive  Analytics'),
         body: SafeArea(
           child: analyticsAsync.when(
             data: (analytics) {
@@ -69,8 +73,18 @@ class StageRadarScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
+                    difficultyInsightsAsync.when(
+                      data: (insights) => _DifficultyProInsights(insights: insights),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (error, _) => AppErrorText('Failed to load insights: $error'),
+                    ),
+                    const SizedBox(height: 24),
                     insightsAsync.when(
-                      data: (insights) => _ProInsights(insights: insights),
+                      data: (insights) => overviewAsync.when(
+                        data: (overview) => _ProInsights(insights: insights, overview: overview),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (error, _) => AppErrorText('Failed to load insights: $error'),
+                      ),
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (error, _) => AppErrorText('Failed to load insights: $error'),
                     ),
@@ -93,10 +107,132 @@ class StageRadarScreen extends ConsumerWidget {
   }
 }
 
+class _DifficultyProInsights extends StatelessWidget {
+  const _DifficultyProInsights({required this.insights});
+
+  final DifficultyProInsights insights;
+
+  @override
+  Widget build(BuildContext context) {
+    final comparison = insights.radarComparison;
+    final monthly = insights.monthly;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (comparison != null) ...[
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium, color: kAccentColor, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Then vs. now',
+                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Older sessions (grey) vs. your more recent half (orange).',
+            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: appCardDecoration(),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: StageRadarChart(stages: comparison.recent, compareStages: comparison.older),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+        if (monthly.length >= 2) ...[
+          Row(
+            children: [
+              const Icon(Icons.trending_up, color: kAccentColor, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Growth curve',
+                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Average difficulty tackled per month.',
+            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: appCardDecoration(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Sparkline(
+                        values: [for (final m in monthly) m.average],
+                        width: double.infinity,
+                        height: 40,
+                        color: kAccentColor,
+                        minValue: 1,
+                        maxValue: 10,
+                      ),
+                    ),
+                    if (insights.growthPercent != null) ...[
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: insights.growthPercent! >= 0 ? kAccentColor : Colors.black12,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${insights.growthPercent! >= 0 ? '+' : ''}'
+                          '${insights.growthPercent!.toStringAsFixed(0)}%',
+                          style: GoogleFonts.chewy(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: insights.growthPercent! >= 0 ? Colors.white : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      monthly.first.label,
+                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                    ),
+                    const Spacer(),
+                    Text(
+                      monthly.last.label,
+                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ProInsights extends StatelessWidget {
-  const _ProInsights({required this.insights});
+  const _ProInsights({required this.insights, required this.overview});
 
   final ProjectsProInsights insights;
+  final ProjectsOverview overview;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +305,82 @@ class _ProInsights extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: appCardDecoration(),
-          child: _HourlyActivityChart(hourly: insights.hourlyActivity),
+          child: HourlyRoseChart(hourly: insights.hourlyActivity),
+        ),
+        if (insights.durationTrendMinutes.length > 1) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Session length trend',
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Are your sessions getting longer or shorter?',
+            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: appCardDecoration(),
+            child: _SessionLengthTrend(minutes: insights.durationTrendMinutes),
+          ),
+        ],
+        if (overview.perProject.any((p) => p.createdAt != null)) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Project timeline',
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'When each project was active — see what overlapped.',
+            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: appCardDecoration(),
+            child: _ProjectTimeline(projects: overview.perProject),
+          ),
+        ],
+        const SizedBox(height: 24),
+        Text(
+          'Needs attention',
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Unfinished projects you haven't touched in a while.",
+          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: appCardDecoration(),
+          child: insights.needsAttention.isEmpty
+              ? Row(
+                  children: [
+                    const Text('✅', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "No old unfinished projects right now!",
+                        style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    for (final project in insights.needsAttention) ...[
+                      _NeedsAttentionRow(project: project),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
         ),
       ],
     );
@@ -237,66 +448,183 @@ class _ActivityHeatmap extends StatelessWidget {
   }
 }
 
-class _HourlyActivityChart extends StatelessWidget {
-  const _HourlyActivityChart({required this.hourly});
+/// Percent change between the average of the first half of [values] and
+/// the average of the second half — falls back to first-vs-last when
+/// there aren't enough points for a stable half-split.
+double? _trendDeltaPercent(List<double> values) {
+  if (values.length < 2) return null;
 
-  /// Session count by hour of day, index 0-23.
-  final List<int> hourly;
+  if (values.length < 4) {
+    final first = values.first;
+    final last = values.last;
+    if (first == 0) return null;
+    return (last - first) / first * 100;
+  }
+
+  final mid = values.length ~/ 2;
+  final firstHalf = values.sublist(0, mid);
+  final secondHalf = values.sublist(mid);
+  final firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
+  final secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
+  if (firstAvg == 0) return null;
+  return (secondAvg - firstAvg) / firstAvg * 100;
+}
+
+class _SessionLengthTrend extends StatelessWidget {
+  const _SessionLengthTrend({required this.minutes});
+
+  final List<double> minutes;
 
   @override
   Widget build(BuildContext context) {
-    final maxCount = hourly.fold<int>(0, (max, c) => c > max ? c : max);
-    return SizedBox(
-      height: 80,
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var hour = 0; hour < 24; hour++)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.bottomCenter,
-                        heightFactor: maxCount == 0 ? 0 : hourly[hour] / maxCount,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: hourly[hour] == 0 ? Colors.grey.shade200 : kAccentColor,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+    final delta = _trendDeltaPercent(minutes);
+    // Shorter sessions read as "more efficient", so a negative delta is
+    // the "improvement" framing here.
+    final isShorter = delta != null && delta < 0;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Sparkline(values: minutes, width: double.infinity, height: 40, color: kAccentColor),
+        ),
+        if (delta != null) ...[
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: isShorter ? kAccentColor : Colors.black12,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${delta > 0 ? '+' : ''}${delta.toStringAsFixed(0)}%',
+              style: GoogleFonts.chewy(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: isShorter ? Colors.white : Colors.black54,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+        ],
+      ],
+    );
+  }
+}
+
+class _ProjectTimeline extends StatelessWidget {
+  const _ProjectTimeline({required this.projects});
+
+  final List<ProjectStats> projects;
+
+  @override
+  Widget build(BuildContext context) {
+    final withDates = projects.where((p) => p.createdAt != null).toList();
+    if (withDates.isEmpty) return const SizedBox.shrink();
+
+    final now = DateTime.now();
+    final rangeStart = withDates.map((p) => p.createdAt!).reduce((a, b) => a.isBefore(b) ? a : b);
+    final rangeEnd = withDates
+        .map((p) => p.lastActiveAt ?? p.createdAt!)
+        .fold(rangeStart, (latest, d) => d.isAfter(latest) ? d : latest);
+    final totalSpan = rangeEnd.difference(rangeStart).inMilliseconds;
+
+    return Column(
+      children: [
+        for (final project in withDates) ...[
           Row(
             children: [
-              Expanded(
-                child: Text('12am', style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
-              ),
-              Expanded(
+              SizedBox(
+                width: 92,
                 child: Text(
-                  '12pm',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                  project.title,
+                  style: GoogleFonts.chewy(fontSize: 13, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Expanded(
-                child: Text(
-                  '11pm',
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final end = project.lastActiveAt ?? project.createdAt!;
+                    final startFraction = totalSpan == 0
+                        ? 0.0
+                        : project.createdAt!.difference(rangeStart).inMilliseconds / totalSpan;
+                    final endFraction =
+                        totalSpan == 0 ? 1.0 : end.difference(rangeStart).inMilliseconds / totalSpan;
+                    final barWidth = math.max(
+                      (endFraction - startFraction) * constraints.maxWidth,
+                      6.0,
+                    );
+                    return Stack(
+                      children: [
+                        Container(
+                          height: 10,
+                          width: constraints.maxWidth,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        Positioned(
+                          left: startFraction * constraints.maxWidth,
+                          child: Container(
+                            height: 10,
+                            width: barWidth,
+                            decoration: BoxDecoration(
+                              color: kAccentColor,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 10),
         ],
-      ),
+        Row(
+          children: [
+            Text(_shortDate(rangeStart), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+            const Spacer(),
+            Text(_shortDate(now), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+const _timelineMonths = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+String _shortDate(DateTime date) => '${_timelineMonths[date.month - 1]} ${date.day}';
+
+class _NeedsAttentionRow extends StatelessWidget {
+  const _NeedsAttentionRow({required this.project});
+
+  final NeedsAttentionProject project;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.hourglass_bottom, color: kAccentColor, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            project.title,
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Text(
+          '${project.daysSinceActive}d idle',
+          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+        ),
+      ],
     );
   }
 }
