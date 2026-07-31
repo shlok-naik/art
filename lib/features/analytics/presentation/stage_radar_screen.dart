@@ -305,7 +305,10 @@ class _ProInsights extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: appCardDecoration(),
-          child: HourlyRoseChart(hourly: insights.hourlyActivity),
+          child: HourlyRoseChart(
+            hourly: insights.hourlyActivity,
+            minutes: insights.hourlyMinutes,
+          ),
         ),
         if (insights.durationTrendMinutes.length > 1) ...[
           const SizedBox(height: 24),

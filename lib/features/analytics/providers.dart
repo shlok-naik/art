@@ -562,6 +562,7 @@ class ProjectsProInsights {
     required this.topTools,
     required this.activity,
     required this.hourlyActivity,
+    required this.hourlyMinutes,
     required this.durationTrendMinutes,
     required this.needsAttention,
   });
@@ -575,6 +576,9 @@ class ProjectsProInsights {
 
   /// Session count by hour of day (index 0-23) — when you actually work.
   final List<int> hourlyActivity;
+
+  /// Total minutes spent working, bucketed by hour of day (index 0-23).
+  final List<double> hourlyMinutes;
 
   /// Duration (minutes) of every session, chronological (oldest first).
   final List<double> durationTrendMinutes;
@@ -605,10 +609,14 @@ final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsigh
   final startDay = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 83));
   final dayCounts = <DateTime, int>{};
   final hourlyActivity = List<int>.filled(24, 0);
+  final hourlyMinutes = List<double>.filled(24, 0);
   for (final session in sessions) {
     final createdAt = session.createdAt;
     if (createdAt == null) continue;
     hourlyActivity[createdAt.hour]++;
+    if (session.durationSeconds != null) {
+      hourlyMinutes[createdAt.hour] += session.durationSeconds! / 60;
+    }
 
     final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
     if (day.isBefore(startDay)) continue;
@@ -643,6 +651,7 @@ final projectsProInsightsProvider = FutureProvider.autoDispose<ProjectsProInsigh
     topTools: topTools.take(6).toList(),
     activity: activity,
     hourlyActivity: hourlyActivity,
+    hourlyMinutes: hourlyMinutes,
     durationTrendMinutes: durationTrendMinutes,
     needsAttention: needsAttention,
   );
