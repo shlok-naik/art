@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../profile/providers.dart';
 import '../../projects/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
@@ -375,13 +376,15 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   }
 }
 
-class _PostCaption extends StatelessWidget {
+class _PostCaption extends ConsumerWidget {
   const _PostCaption({required this.post});
 
   final FeedPost post;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFollowing = ref.watch(isFollowingProvider(post.userId)).value ?? false;
+
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.white),
       child: Column(
@@ -401,9 +404,29 @@ class _PostCaption extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '@${post.artist}',
-            style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '@${post.artist}',
+                style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
+              ),
+              if (isFollowing) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    border: Border.all(color: Colors.white, width: 1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Following',
+                    style: GoogleFonts.chewy(fontSize: 11, color: Colors.white),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 2),
           Text(

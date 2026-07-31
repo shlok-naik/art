@@ -156,30 +156,11 @@ class ProfileViewScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: appHardCardDecoration(radius: 18, color: kAccentTintColor),
-                    child: Row(
-                      children: [
-                        Image.asset('assets/branding/mascot.png', height: 56),
-                        const SizedBox(width: 12),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('$_streakDays-day streak! 🔥', style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
-                              const SizedBox(height: 2),
-                              Text(
-                                "You're on fire — keep posting to grow your rank.",
-                                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  Text('$_streakDays-day streak! 🔥', style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
+                  const SizedBox(height: 2),
+                  Text(
+                    "You're on fire — keep posting to grow your rank.",
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
                   ),
                   const SizedBox(height: 16),
                   Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),

@@ -180,7 +180,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _isFollowing ? 'Following' : 'Follow',
+                _isFollowing ? 'Unfollow' : 'Follow',
                 style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
               ),
             ),
