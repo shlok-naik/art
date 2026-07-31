@@ -44,11 +44,12 @@ class StageRadarChart extends StatelessWidget {
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         final center = Offset(size.width / 2, size.height / 2);
-        final labelInset = 34.0;
+        final labelInset = _RadarChartPainter._labelInset;
         final radius = math.min(size.width, size.height) / 2 - labelInset;
 
         return Stack(
           alignment: Alignment.center,
+          clipBehavior: Clip.none,
           children: [
             if (showChart)
               CustomPaint(
@@ -109,7 +110,11 @@ class StageRadarChart extends StatelessWidget {
     double labelInset,
   ) {
     final angle = (-math.pi / 2) + (2 * math.pi * index / total);
-    final labelRadius = radius + labelInset - 6;
+    // NB: previously `radius + labelInset - 6` — since radius is already
+    // `half - labelInset`, that simplified to `half - 6`, placing labels
+    // right at the outer edge regardless of labelInset, so they got clipped.
+    // A fixed, smaller offset keeps real margin before the edge.
+    final labelRadius = radius + 14;
     final x = center.dx + labelRadius * math.cos(angle);
     final y = center.dy + labelRadius * math.sin(angle);
 
@@ -135,7 +140,7 @@ class _RadarChartPainter extends CustomPainter {
   final List<StageDifficulty>? compareStages;
 
   static const _rings = 4;
-  static const _labelInset = 34.0;
+  static const _labelInset = 46.0;
 
   Path _polygonPath(List<StageDifficulty> data, Offset center, double radius, int count) {
     final path = Path();

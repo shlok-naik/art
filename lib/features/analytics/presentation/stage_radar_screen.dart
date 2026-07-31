@@ -345,32 +345,43 @@ class _ProInsights extends StatelessWidget {
             child: _ProjectTimeline(projects: overview.perProject),
           ),
         ],
-        if (insights.needsAttention.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            'Needs attention',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Unfinished projects you haven't touched in a while.",
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: appCardDecoration(),
-            child: Column(
-              children: [
-                for (final project in insights.needsAttention) ...[
-                  _NeedsAttentionRow(project: project),
-                  const SizedBox(height: 12),
-                ],
-              ],
-            ),
-          ),
-        ],
+        const SizedBox(height: 24),
+        Text(
+          'Needs attention',
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Unfinished projects you haven't touched in a while.",
+          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: appCardDecoration(),
+          child: insights.needsAttention.isEmpty
+              ? Row(
+                  children: [
+                    const Text('✅', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "No old unfinished projects right now!",
+                        style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    for (final project in insights.needsAttention) ...[
+                      _NeedsAttentionRow(project: project),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
+        ),
       ],
     );
   }
