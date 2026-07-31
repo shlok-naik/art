@@ -15,7 +15,7 @@ const kSuccessTextColor = Color(0xFF2E9E4E);
 const kSuccessBgColor = Color(0xFFE8F7EC);
 
 TextStyle appHeadlineStyle({double fontSize = 56, Color color = kAccentColor}) {
-  return GoogleFonts.fredoka(fontSize: fontSize, height: 1.05, fontWeight: FontWeight.w900, color: color);
+  return GoogleFonts.chewy(fontSize: fontSize, height: 1.05, color: color);
 }
 
 /// Nunito is used for body copy, stats, numbers and meta text so Chewy stays

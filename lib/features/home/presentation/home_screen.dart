@@ -78,7 +78,7 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 18),
                     Padding(
                       padding: _sidePadding,
                       child: Row(
@@ -125,7 +125,7 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: _sidePadding,
                       child: Center(
@@ -137,19 +137,18 @@ class HomeScreen extends ConsumerWidget {
                                 'WELCOME',
                                 maxLines: 1,
                                 softWrap: false,
-                                style: GoogleFonts.fredoka(
-                                  fontSize: 58,
-                                  fontWeight: FontWeight.w900,
+                                style: GoogleFonts.chewy(
+                                  fontSize: 68,
                                   letterSpacing: 1,
                                   height: 1.0,
                                   color: kAccentColor,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
                               '@$username',
-                              style: GoogleFonts.rubikMonoOne(fontSize: 26, color: Colors.black),
+                              style: GoogleFonts.rubikMonoOne(fontSize: 30, color: Colors.black),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -161,7 +160,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
                     Padding(
                       padding: _sidePadding,
                       child: InkWell(
@@ -240,7 +239,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
                     Padding(
                       padding: _sidePadding,
                       child: Row(
@@ -269,7 +268,7 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: _sidePadding,
                       child: InkWell(

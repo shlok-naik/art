@@ -50,6 +50,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   _Stage _stage = _Stage.viewing;
   Uint8List? _newPhotoBytes;
 
+  @override
+  void initState() {
+    super.initState();
+    // Fire-and-forget: opening the full detail view is a view event. Safe
+    // to also fire from the feed card — the server upsert dedupes by
+    // (session_id, viewer_id).
+    ref.read(sessionsRepositoryProvider).recordView(widget.post.id);
+  }
+
   late String? _photoUrl = widget.post.photoUrl;
   late String? _sessionName = widget.post.sessionName;
   late String _stageName = widget.post.stage ?? kSessionStages.first;

@@ -39,6 +39,7 @@ class FeedPost {
     required Map<String, dynamic> session,
     required Map<String, dynamic> project,
     required String artist,
+    int views = 0,
   }) {
     final projectId = project['id']?.toString() ?? session['project_id'].toString();
     final projectTitle = project['title']?.toString() ?? projectId;
@@ -56,7 +57,7 @@ class FeedPost {
       userId: project['user_id']?.toString() ?? '',
       artist: artist,
       slideCount: 1,
-      views: 0,
+      views: views,
       datePosted: DateTime.tryParse(session['created_at']?.toString() ?? '') ?? DateTime.now(),
       description: stage != null ? 'Working on: $stage' : 'A session from "$projectTitle".',
       toolsUsed: toolsUsedRaw is List

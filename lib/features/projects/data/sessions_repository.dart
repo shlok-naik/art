@@ -79,4 +79,31 @@ class SessionsRepository {
       'name': name,
     }).eq('id', sessionId);
   }
+
+  /// Records that the signed-in user viewed [sessionId]. Upserts on the
+  /// (session_id, viewer_id) primary key so repeat views of the same post
+  /// by the same viewer don't inflate the count.
+  Future<void> recordView(String sessionId) async {
+    final viewerId = _client.auth.currentUser?.id;
+    if (viewerId == null) return;
+    await _client.from('session_views').upsert(
+      {'session_id': sessionId, 'viewer_id': viewerId},
+      onConflict: 'session_id,viewer_id',
+      ignoreDuplicates: true,
+    );
+  }
+
+  /// Batched view counts for a set of sessions, as {session_id: count}.
+  /// Sessions with zero views are simply absent from the map.
+  Future<Map<String, int>> fetchViewCounts(List<String> sessionIds) async {
+    if (sessionIds.isEmpty) return const {};
+    final rows = await _client
+        .from('session_view_counts')
+        .select('session_id, view_count')
+        .inFilter('session_id', sessionIds);
+    return {
+      for (final row in List<Map<String, dynamic>>.from(rows))
+        row['session_id'].toString(): int.tryParse(row['view_count'].toString()) ?? 0,
+    };
+  }
 }

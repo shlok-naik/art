@@ -4,15 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../feed/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 
-// Placeholder stats/achievements — replace once the backend exposes real
-// follower counts, league standing and streak/achievement data.
-const _postsCount = '142';
-const _followersCount = '3.8K';
+// League rank and streak have no backing data yet — league standing needs
+// the future league feature, and streaks need day-over-day session-date
+// tracking that doesn't exist. Posts and Followers below are real.
 const _leagueRank = '#3';
 const _streakDays = 7;
+
+String _formatCount(int count) {
+  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
+  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
+  return count.toString();
+}
 
 const _achievements = [
   {'emoji': '🥇', 'label': 'Top 10', 'locked': false},
@@ -39,6 +45,8 @@ class ProfileViewScreen extends ConsumerWidget {
                 child: Text('No profile found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
               );
             }
+            final postsCount = ref.watch(myPostsProvider).value?.length;
+            final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -75,6 +83,7 @@ class ProfileViewScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
                               width: 72,
@@ -88,7 +97,7 @@ class ProfileViewScreen extends ConsumerWidget {
                               child: const Icon(Icons.person, size: 36, color: Colors.black26),
                             ),
                             const SizedBox(width: 14),
-                            Flexible(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -107,14 +116,38 @@ class ProfileViewScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            InkWell(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: kBorderColor, width: kBorderWidth),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            Expanded(child: _StatColumn(value: _postsCount, label: 'Posts')),
+                            Expanded(
+                              child: _StatColumn(
+                                value: postsCount == null ? '—' : _formatCount(postsCount),
+                                label: 'Posts',
+                              ),
+                            ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
-                            Expanded(child: _StatColumn(value: _followersCount, label: 'Followers')),
+                            Expanded(
+                              child: _StatColumn(
+                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                                label: 'Followers',
+                              ),
+                            ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
                             Expanded(child: _StatColumn(value: _leagueRank, label: 'League rank')),
                           ],
@@ -123,30 +156,11 @@ class ProfileViewScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: appHardCardDecoration(radius: 18, color: kAccentTintColor),
-                    child: Row(
-                      children: [
-                        Image.asset('assets/branding/mascot.png', height: 56),
-                        const SizedBox(width: 12),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('$_streakDays-day streak! 🔥', style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
-                              const SizedBox(height: 2),
-                              Text(
-                                "You're on fire — keep posting to grow your rank.",
-                                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  Text('$_streakDays-day streak! 🔥', style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
+                  const SizedBox(height: 2),
+                  Text(
+                    "You're on fire — keep posting to grow your rank.",
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
                   ),
                   const SizedBox(height: 16),
                   Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
@@ -162,24 +176,6 @@ class ProfileViewScreen extends ConsumerWidget {
                           locked: achievement['locked'] as bool,
                         ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => EditProfileScreen(profile: profile)),
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color.fromARGB(255, 228, 91, 12), width: kBorderWidth),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: hardShadow(offset: 3),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text('Edit Profile', style: GoogleFonts.chewy(fontSize: 16, color: const Color.fromARGB(255, 246, 240, 240))),
-                    ),
                   ),
                 ],
               ),

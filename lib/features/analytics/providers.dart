@@ -366,8 +366,7 @@ final projectsOverviewProvider = FutureProvider.autoDispose<ProjectsOverview>((r
     final timestamps = [for (final s in projectSessions) s.createdAt].whereType<DateTime>().toList()
       ..sort();
 
-    final status = project['finished_status']?.toString();
-    final normalizedStatus = (status == null || status.isEmpty) ? 'Unknown' : status;
+    final normalizedStatus = project['finished_status'] == true ? 'Finished' : 'In Progress';
     statusTotals[normalizedStatus] = (statusTotals[normalizedStatus] ?? 0) + 1;
 
     perProject.add(ProjectStats(
