@@ -2,8 +2,9 @@
 -- Unfinished — full schema reset
 --
 -- Drops and recreates profiles, projects, sessions, reactions,
--- and the reaction_counts view with tightened types/constraints
--- and RLS policies matching what the Flutter client actually does.
+-- follows, session_views, and their supporting views, with
+-- tightened types/constraints and RLS policies matching what the
+-- Flutter client actually does.
 --
 -- DESTROYS ALL EXISTING DATA IN THESE TABLES. Run only in the
 -- Supabase SQL Editor after confirming that's acceptable.
@@ -11,7 +12,11 @@
 
 begin;
 
+drop view if exists public.follow_counts;
+drop view if exists public.session_view_counts;
 drop view if exists public.reaction_counts;
+drop table if exists public.follows;
+drop table if exists public.session_views;
 drop table if exists public.reactions;
 drop table if exists public.sessions;
 drop table if exists public.projects;
@@ -149,5 +154,71 @@ create view public.reaction_counts
   select session_id, reaction_type, count(*) as count
   from public.reactions
   group by session_id, reaction_type;
+
+-- ---------- follows ----------
+create table public.follows (
+  follower_id uuid not null references auth.users (id) on delete cascade,
+  followee_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (follower_id, followee_id),
+  check (follower_id <> followee_id)
+);
+
+alter table public.follows enable row level security;
+
+create policy "follows are publicly readable"
+  on public.follows for select
+  using (true);
+
+create policy "users create their own follows"
+  on public.follows for insert
+  with check (auth.uid() = follower_id);
+
+create policy "users delete their own follows"
+  on public.follows for delete
+  using (auth.uid() = follower_id);
+
+-- Per-profile follower/following counts. Left-joined off profiles so a
+-- profile with zero of either still gets a row with count 0.
+create view public.follow_counts
+  with (security_invoker = true) as
+  select
+    p.id as profile_id,
+    coalesce(followers.count, 0) as followers_count,
+    coalesce(following.count, 0) as following_count
+  from public.profiles p
+  left join (
+    select followee_id, count(*) as count from public.follows group by followee_id
+  ) followers on followers.followee_id = p.id
+  left join (
+    select follower_id, count(*) as count from public.follows group by follower_id
+  ) following on following.follower_id = p.id;
+
+-- ---------- session_views ----------
+-- One row per (session, viewer): re-viewing the same session doesn't
+-- inflate the count. The app upserts with ignoreDuplicates so a repeat
+-- view is a silent no-op rather than an error.
+create table public.session_views (
+  session_id uuid not null references public.sessions (id) on delete cascade,
+  viewer_id uuid not null references auth.users (id) on delete cascade,
+  viewed_at timestamptz not null default now(),
+  primary key (session_id, viewer_id)
+);
+
+alter table public.session_views enable row level security;
+
+create policy "session views are publicly readable"
+  on public.session_views for select
+  using (true);
+
+create policy "users record their own views"
+  on public.session_views for insert
+  with check (auth.uid() = viewer_id);
+
+create view public.session_view_counts
+  with (security_invoker = true) as
+  select session_id, count(*) as view_count
+  from public.session_views
+  group by session_id;
 
 commit;

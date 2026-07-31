@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../projects/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
@@ -91,6 +92,15 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   int _slideIndex = 0;
 
   String get _sessionId => widget.post.id;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fire-and-forget: the card entering the tree is the view event. The
+    // (session_id, viewer_id) upsert on the server means repeat views by
+    // the same viewer are a silent no-op, not double-counted.
+    ref.read(sessionsRepositoryProvider).recordView(_sessionId);
+  }
 
   /// Fires the optimistic reaction and returns immediately — the provider
   /// updates state synchronously, so the UI reflects the tap before the

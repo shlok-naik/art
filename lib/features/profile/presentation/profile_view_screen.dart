@@ -4,15 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../feed/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 
-// Placeholder stats/achievements — replace once the backend exposes real
-// follower counts, league standing and streak/achievement data.
-const _postsCount = '142';
-const _followersCount = '3.8K';
+// League rank and streak have no backing data yet — league standing needs
+// the future league feature, and streaks need day-over-day session-date
+// tracking that doesn't exist. Posts and Followers below are real.
 const _leagueRank = '#3';
 const _streakDays = 7;
+
+String _formatCount(int count) {
+  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
+  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
+  return count.toString();
+}
 
 const _achievements = [
   {'emoji': '🥇', 'label': 'Top 10', 'locked': false},
@@ -39,6 +45,8 @@ class ProfileViewScreen extends ConsumerWidget {
                 child: Text('No profile found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
               );
             }
+            final postsCount = ref.watch(myPostsProvider).value?.length;
+            final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -112,9 +120,19 @@ class ProfileViewScreen extends ConsumerWidget {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            Expanded(child: _StatColumn(value: _postsCount, label: 'Posts')),
+                            Expanded(
+                              child: _StatColumn(
+                                value: postsCount == null ? '—' : _formatCount(postsCount),
+                                label: 'Posts',
+                              ),
+                            ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
-                            Expanded(child: _StatColumn(value: _followersCount, label: 'Followers')),
+                            Expanded(
+                              child: _StatColumn(
+                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                                label: 'Followers',
+                              ),
+                            ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
                             Expanded(child: _StatColumn(value: _leagueRank, label: 'League rank')),
                           ],
