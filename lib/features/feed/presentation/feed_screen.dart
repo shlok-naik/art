@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../auth/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
@@ -365,13 +366,16 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   }
 }
 
-class _PostCaption extends StatelessWidget {
+class _PostCaption extends ConsumerWidget {
   const _PostCaption({required this.post});
 
   final FeedPost post;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final isOwnPost = post.userId.isEmpty || post.userId == currentUserId;
+
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.white),
       child: Column(
@@ -391,9 +395,21 @@ class _PostCaption extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '@${post.artist}',
-            style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  '@${post.artist}',
+                  style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (!isOwnPost) ...[
+                const SizedBox(width: 8),
+                _FollowButton(userId: post.userId),
+              ],
+            ],
           ),
           const SizedBox(height: 2),
           Text(
@@ -403,6 +419,47 @@ class _PostCaption extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Follow/unfollow toggle shown next to the artist's username, for anyone
+/// else's post. Optimistic like the reaction buttons: tapping flips the
+/// label immediately and reverts only if the write fails.
+class _FollowButton extends ConsumerWidget {
+  const _FollowButton({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final followingAsync = ref.watch(isFollowingProvider(userId));
+    final isFollowing = followingAsync.value ?? false;
+
+    void handleTap() {
+      ref.read(isFollowingProvider(userId).notifier).toggle().catchError((Object e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update follow: $e')),
+        );
+      });
+    }
+
+    return GestureDetector(
+      onTap: followingAsync.isLoading ? null : handleTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
+        decoration: BoxDecoration(
+          color: isFollowing ? Colors.transparent : kAccentColor,
+          border: Border.all(color: isFollowing ? Colors.white : kBorderColor, width: kBorderWidth),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          isFollowing ? 'Following' : 'Follow',
+          style: GoogleFonts.chewy(fontSize: 12, color: Colors.white, shadows: _shadow),
+        ),
       ),
     );
   }
