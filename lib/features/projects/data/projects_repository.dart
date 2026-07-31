@@ -36,7 +36,7 @@ class ProjectsRepository {
   Future<void> finishProject(String id) async {
     await _client
         .from('projects')
-        .update({'completion_percent': 100, 'finished_status': 'Finished'}).eq('id', id);
+        .update({'completion_percent': 100, 'finished_status': true}).eq('id', id);
   }
 
   Future<void> deleteProject(String id) async {

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/reactions.dart';
+
 class ReactionsRepository {
   ReactionsRepository(this._client);
 
@@ -44,6 +46,7 @@ class ReactionsRepository {
       'session_id': sessionId,
       'user_id': userId,
       'reaction_type': reactionType,
+      'kind': isVoteReactionType(reactionType) ? 'vote' : 'emoji',
     }).select();
     return Map<String, dynamic>.from(rows.first);
   }
