@@ -8,6 +8,7 @@ import 'features/profile/presentation/onboarding_screen.dart';
 import 'features/profile/presentation/profile_setup_screen.dart';
 import 'features/profile/providers.dart';
 import 'features/shell/main_shell.dart';
+import 'shared/splash_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -42,9 +43,7 @@ class AuthGate extends ConsumerWidget {
         }
         return const _ProfileGate();
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const SplashScreen(),
       error: (error, stack) => Scaffold(
         body: Center(child: Text('Error: $error')),
       ),
@@ -74,9 +73,7 @@ class _ProfileGateState extends ConsumerState<_ProfileGate> {
         }
         return const MainShell();
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const SplashScreen(),
       error: (error, stack) => Scaffold(
         body: Center(child: Text('Error: $error')),
       ),
