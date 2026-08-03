@@ -49,6 +49,7 @@ class FollowedScreen extends ConsumerWidget {
               else
                 for (final profile in following) ...[
                   _ArtistTile(
+                    key: ValueKey('following-${profile['id']}'),
                     userId: profile['id'].toString(),
                     handle: profile['username']?.toString() ?? '',
                     subtitle: profile['display_name']?.toString() ?? '',
@@ -69,6 +70,7 @@ class FollowedScreen extends ConsumerWidget {
                         children: [
                           for (final profile in suggested) ...[
                             _ArtistTile(
+                              key: ValueKey('suggested-${profile['id']}'),
                               userId: profile['id'].toString(),
                               handle: profile['username']?.toString() ?? '',
                               subtitle: profile['display_name']?.toString() ?? '',
@@ -94,6 +96,7 @@ class FollowedScreen extends ConsumerWidget {
 
 class _ArtistTile extends ConsumerStatefulWidget {
   const _ArtistTile({
+    super.key,
     required this.userId,
     required this.handle,
     required this.subtitle,
@@ -130,6 +133,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
       ref.invalidate(followingListProvider);
       ref.invalidate(suggestedArtistsProvider);
       ref.invalidate(followCountsProvider(widget.userId));
+      ref.invalidate(isFollowingProvider(widget.userId));
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
