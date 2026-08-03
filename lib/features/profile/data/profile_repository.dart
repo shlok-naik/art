@@ -39,4 +39,11 @@ class ProfileRepository {
       'display_name': displayName,
     }).eq('id', userId);
   }
+
+  Future<void> updateVisibleStats({
+    required String userId,
+    required List<String> visibleStats,
+  }) async {
+    await _client.from('profiles').update({'visible_stats': visibleStats}).eq('id', userId);
+  }
 }

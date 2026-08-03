@@ -25,6 +25,12 @@ final myPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {
   return ref.watch(feedRepositoryProvider).fetchMyPosts();
 });
 
+/// A given user's posts, newest first — drives the public profile screen's
+/// post grid.
+final userPostsProvider = FutureProvider.autoDispose.family<List<FeedPost>, String>((ref, userId) {
+  return ref.watch(feedRepositoryProvider).fetchPostsByUser(userId);
+});
+
 /// Reaction counts + the user's own reactions for one session, with fully
 /// optimistic mutations: [SessionReactionsNotifier.react] updates state
 /// synchronously (add, switch, or remove), fires the write in the

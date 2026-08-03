@@ -27,6 +27,9 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade default auth.uid(),
   username text not null unique,
   display_name text not null,
+  -- Stat keys (see StatKey in the Flutter client) the user has opted to
+  -- show on their public Stats page.
+  visible_stats text[] not null default '{posts,followers,following}',
   created_at timestamptz not null default now()
 );
 

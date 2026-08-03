@@ -18,7 +18,12 @@ void main() {
       ProviderScope(
         overrides: [
           currentProfileProvider.overrideWith(
-            (ref) async => const Profile(id: 'u1', username: 'testuser', displayName: 'Test User'),
+            (ref) async => const Profile(
+              id: 'u1',
+              username: 'testuser',
+              displayName: 'Test User',
+              visibleStats: [],
+            ),
           ),
           lastOpenedProjectProvider.overrideWith((ref) async => null),
           // The IndexedStack in MainShell builds all four tabs up front,

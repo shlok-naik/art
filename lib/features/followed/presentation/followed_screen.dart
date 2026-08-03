@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 
 class FollowedScreen extends ConsumerWidget {
@@ -150,27 +151,37 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey.shade200,
-              border: Border.all(color: kBorderColor, width: kBorderWidth),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: widget.userId)),
             ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.person, size: 22, color: Colors.black26),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.grey.shade200,
+                border: Border.all(color: kBorderColor, width: kBorderWidth),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.person, size: 22, color: Colors.black26),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: Colors.black), overflow: TextOverflow.ellipsis),
-                if (widget.subtitle.isNotEmpty)
-                  Text(widget.subtitle, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
-              ],
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: widget.userId)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: Colors.black), overflow: TextOverflow.ellipsis),
+                  if (widget.subtitle.isNotEmpty)
+                    Text(widget.subtitle, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
+                ],
+              ),
             ),
           ),
           InkWell(
