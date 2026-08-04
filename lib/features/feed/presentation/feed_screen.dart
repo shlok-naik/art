@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/providers.dart';
 import '../../shell/main_shell.dart';
@@ -412,29 +413,34 @@ class _PostCaption extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '@${post.artist}',
-                style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
-              ),
-              if (isFollowing) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    border: Border.all(color: Colors.white, width: 1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Following',
-                    style: GoogleFonts.chewy(fontSize: 11, color: Colors.white),
-                  ),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: post.userId)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '@${post.artist}',
+                  style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
                 ),
+                if (isFollowing) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      border: Border.all(color: Colors.white, width: 1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Following',
+                      style: GoogleFonts.chewy(fontSize: 11, color: Colors.white),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
           const SizedBox(height: 2),
           Text(

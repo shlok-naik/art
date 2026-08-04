@@ -4,6 +4,7 @@ import '../auth/providers.dart';
 import 'data/follows_repository.dart';
 import 'data/profile_model.dart';
 import 'data/profile_repository.dart';
+import 'data/stats_repository.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(ref.watch(supabaseClientProvider));
@@ -13,11 +14,21 @@ final followsRepositoryProvider = Provider<FollowsRepository>((ref) {
   return FollowsRepository(ref.watch(supabaseClientProvider));
 });
 
+final statsRepositoryProvider = Provider<StatsRepository>((ref) {
+  return StatsRepository(ref.watch(supabaseClientProvider));
+});
+
 final currentProfileProvider = FutureProvider.autoDispose<Profile?>((ref) async {
   final authState = ref.watch(authStateChangesProvider);
   final user = authState.value?.session?.user;
   if (user == null) return null;
   return ref.watch(profileRepositoryProvider).fetchProfile(user.id);
+});
+
+/// Any profile by id — used by the public profile screen, unlike
+/// [currentProfileProvider] which is pinned to the signed-in user.
+final profileByIdProvider = FutureProvider.autoDispose.family<Profile?, String>((ref, userId) {
+  return ref.watch(profileRepositoryProvider).fetchProfile(userId);
 });
 
 /// Follower/following counts for a given profile id.
@@ -39,4 +50,9 @@ final followingListProvider = FutureProvider.autoDispose<List<Map<String, dynami
 /// Profiles the signed-in user doesn't yet follow, for "Suggested artists".
 final suggestedArtistsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
   return ref.watch(followsRepositoryProvider).fetchSuggested();
+});
+
+/// Time-spent/session-count/streak aggregates for a given user's Stats page.
+final sessionStatsProvider = FutureProvider.autoDispose.family<SessionStats, String>((ref, userId) {
+  return ref.watch(statsRepositoryProvider).fetchSessionStats(userId);
 });

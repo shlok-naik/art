@@ -17,6 +17,9 @@ class FeedRepository {
     return _fetchPosts(ownerId: userId);
   }
 
+  /// A given user's posted sessions, newest first — used by public profile pages.
+  Future<List<FeedPost>> fetchPostsByUser(String userId) => _fetchPosts(ownerId: userId);
+
   /// One query for the sessions (with their project embedded for the title
   /// and owner), then one batched profiles lookup to resolve artist names.
   /// Ownership is read off the embedded project row, which RLS guarantees is
