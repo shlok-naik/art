@@ -61,9 +61,26 @@ final mutualFollowersProvider = FutureProvider.autoDispose
   return ref.watch(followsRepositoryProvider).fetchMutualFollowers(userId);
 });
 
-/// Time-spent/session-count/streak aggregates for a given user's Stats page.
+/// Time-spent/session-count/streak/difficulty/work-style aggregates for a
+/// given user's Stats page.
 final sessionStatsProvider = FutureProvider.autoDispose.family<SessionStats, String>((ref, userId) {
   return ref.watch(statsRepositoryProvider).fetchSessionStats(userId);
+});
+
+/// Project-count/finished-count aggregates for a given user's Stats page.
+final projectStatsProvider = FutureProvider.autoDispose.family<ProjectStats, String>((ref, userId) {
+  return ref.watch(statsRepositoryProvider).fetchProjectStats(userId);
+});
+
+/// Per-stage time totals for a given user's "Time per stage" chart.
+final stageMinutesProvider = FutureProvider.autoDispose.family<List<StageMinutes>, String>((ref, userId) {
+  return ref.watch(statsRepositoryProvider).fetchStageMinutes(userId);
+});
+
+/// Session count per difficulty rating for a given user's "Difficulty
+/// spread" chart.
+final difficultyHistogramProvider = FutureProvider.autoDispose.family<List<int>, String>((ref, userId) {
+  return ref.watch(statsRepositoryProvider).fetchDifficultyHistogram(userId);
 });
 
 /// A user's projects paired with their photographed sessions, for the
