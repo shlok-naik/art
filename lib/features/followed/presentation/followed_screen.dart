@@ -117,6 +117,47 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
   late bool _isFollowing = widget.isFollowing;
   bool _isSubmitting = false;
 
+  void _openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: widget.userId)),
+    );
+  }
+
+  Future<void> _confirmToggleFollow() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          _isFollowing ? 'Unfollow @${widget.handle}?' : 'Follow @${widget.handle}?',
+          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+        ),
+        content: Text(
+          'Are you sure you want to ${_isFollowing ? 'unfollow' : 'follow'} @${widget.handle}?',
+          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel', style: appBodyStyle(fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              _isFollowing ? 'Unfollow' : 'Follow',
+              style: appBodyStyle(fontWeight: FontWeight.w800, color: kAccentColor),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _toggleFollow();
+  }
+
   Future<void> _toggleFollow() async {
     setState(() => _isSubmitting = true);
     final repo = ref.read(followsRepositoryProvider);
@@ -146,16 +187,18 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: widget.userId)),
-            ),
-            child: Container(
+    // The whole card navigates to the profile — the Follow/Unfollow button
+    // is a nested InkWell, so Flutter's gesture arena routes taps on it to
+    // the button alone rather than also bubbling up to this outer tap.
+    return InkWell(
+      onTap: _openProfile,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
+        child: Row(
+          children: [
+            Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
@@ -166,13 +209,8 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
               alignment: Alignment.center,
               child: const Icon(Icons.person, size: 22, color: Colors.black26),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: widget.userId)),
-              ),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -183,24 +221,24 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
                 ],
               ),
             ),
-          ),
-          InkWell(
-            onTap: _isSubmitting ? null : _toggleFollow,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: _isFollowing ? kAccentTintColor : null,
-                border: Border.all(color: kBorderColor, width: kBorderWidth),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _isFollowing ? 'Unfollow' : 'Follow',
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+            InkWell(
+              onTap: _isSubmitting ? null : _confirmToggleFollow,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _isFollowing ? kAccentTintColor : null,
+                  border: Border.all(color: kBorderColor, width: kBorderWidth),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _isFollowing ? 'Unfollow' : 'Follow',
+                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
