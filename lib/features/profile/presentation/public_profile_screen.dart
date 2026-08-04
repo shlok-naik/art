@@ -611,22 +611,23 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
             Text('Posts', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
             const Spacer(),
             if (projectTitles.length > 1)
-              PopupMenuButton<String?>(
-                initialValue: _projectFilter,
-                onSelected: (value) => setState(() => _projectFilter = value),
-                icon: const Icon(Icons.filter_list, size: 20, color: Colors.black),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: null, child: Text('All projects')),
-                  for (final title in projectTitles) PopupMenuItem(value: title, child: Text(title)),
+              _ThemedMenuButton<String?>(
+                icon: Icons.filter_list,
+                label: 'Filter',
+                value: _projectFilter,
+                items: [
+                  (value: null, label: 'All projects'),
+                  for (final title in projectTitles) (value: title, label: title),
                 ],
+                onSelected: (value) => setState(() => _projectFilter = value),
               ),
-            PopupMenuButton<_PostSort>(
-              initialValue: _sort,
+            const SizedBox(width: 10),
+            _ThemedMenuButton<_PostSort>(
+              icon: Icons.sort,
+              label: 'Sort',
+              value: _sort,
+              items: [for (final sort in _PostSort.values) (value: sort, label: sort.label)],
               onSelected: (value) => setState(() => _sort = value),
-              icon: const Icon(Icons.sort, size: 20, color: Colors.black),
-              itemBuilder: (context) => [
-                for (final sort in _PostSort.values) PopupMenuItem(value: sort, child: Text(sort.label)),
-              ],
             ),
           ],
         ),
@@ -723,6 +724,76 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
             },
           ),
       ],
+    );
+  }
+}
+
+/// A sort/filter trigger + dropdown menu styled like the rest of the app —
+/// flat black border, rounded pill trigger, Chewy-labelled options with a
+/// checkmark on the current selection — instead of the default Material
+/// popup menu look.
+class _ThemedMenuButton<T> extends StatelessWidget {
+  const _ThemedMenuButton({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final IconData icon;
+  final String label;
+  final T value;
+  final List<({T value, String label})> items;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<T>(
+      initialValue: value,
+      onSelected: onSelected,
+      position: PopupMenuPosition.under,
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+      ),
+      itemBuilder: (context) => [
+        for (final item in items)
+          PopupMenuItem<T>(
+            value: item.value,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: GoogleFonts.chewy(
+                      fontSize: 15,
+                      color: item.value == value ? kAccentColor : Colors.black,
+                    ),
+                  ),
+                ),
+                if (item.value == value) const Icon(Icons.check, size: 18, color: kAccentColor),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: Colors.black),
+            const SizedBox(width: 4),
+            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+          ],
+        ),
+      ),
     );
   }
 }
