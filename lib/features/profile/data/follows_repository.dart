@@ -91,4 +91,35 @@ class FollowsRepository {
     final rows = await _client.from('follows').select('followee_id').eq('follower_id', userId);
     return [for (final row in List<Map<String, dynamic>>.from(rows)) row['followee_id'].toString()];
   }
+
+  /// Profiles the signed-in user follows who *also* follow [targetUserId] —
+  /// the "Followed by X, Y and N others" social-proof line on a profile.
+  /// [profiles] is capped at [limit] for display; [totalCount] is the full
+  /// mutual count so the UI can show "and N others" accurately.
+  Future<({List<Map<String, dynamic>> profiles, int totalCount})> fetchMutualFollowers(
+    String targetUserId, {
+    int limit = 3,
+  }) async {
+    final me = _currentUserId;
+    if (me == null || me == targetUserId) return (profiles: const <Map<String, dynamic>>[], totalCount: 0);
+
+    final myFollowingIds = await _fetchFollowingIds(me);
+    if (myFollowingIds.isEmpty) return (profiles: const <Map<String, dynamic>>[], totalCount: 0);
+
+    final targetFollowerRows = await _client
+        .from('follows')
+        .select('follower_id')
+        .eq('followee_id', targetUserId)
+        .inFilter('follower_id', myFollowingIds);
+    final mutualIds = [
+      for (final row in List<Map<String, dynamic>>.from(targetFollowerRows)) row['follower_id'].toString(),
+    ];
+    if (mutualIds.isEmpty) return (profiles: const <Map<String, dynamic>>[], totalCount: 0);
+
+    final profileRows = await _client
+        .from('profiles')
+        .select('id, username, display_name')
+        .inFilter('id', mutualIds.take(limit).toList());
+    return (profiles: List<Map<String, dynamic>>.from(profileRows), totalCount: mutualIds.length);
+  }
 }

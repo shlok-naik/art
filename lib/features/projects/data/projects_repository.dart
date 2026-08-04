@@ -23,6 +23,18 @@ class ProjectsRepository {
     return List<Map<String, dynamic>>.from(rows);
   }
 
+  /// A given user's projects, newest first — used by the public profile's
+  /// project circles, which need any user's projects, not just the
+  /// signed-in user's (project rows are publicly readable).
+  Future<List<Map<String, dynamic>>> fetchProjectsByUser(String userId) async {
+    final rows = await _client
+        .from('projects')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
   Future<void> createProject(Map<String, dynamic> values) async {
     await _client.from('projects').insert(values);
   }

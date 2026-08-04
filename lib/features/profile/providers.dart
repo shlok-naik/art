@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/providers.dart';
+import '../projects/providers.dart';
 import 'data/follows_repository.dart';
 import 'data/profile_model.dart';
 import 'data/profile_repository.dart';
 import 'data/stats_repository.dart';
+import 'domain/project_gallery.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(ref.watch(supabaseClientProvider));
@@ -52,7 +54,40 @@ final suggestedArtistsProvider = FutureProvider.autoDispose<List<Map<String, dyn
   return ref.watch(followsRepositoryProvider).fetchSuggested();
 });
 
+/// People the signed-in user follows who also follow [userId] — drives the
+/// "Followed by X, Y and N others" line on a profile.
+final mutualFollowersProvider = FutureProvider.autoDispose
+    .family<({List<Map<String, dynamic>> profiles, int totalCount}), String>((ref, userId) {
+  return ref.watch(followsRepositoryProvider).fetchMutualFollowers(userId);
+});
+
 /// Time-spent/session-count/streak aggregates for a given user's Stats page.
 final sessionStatsProvider = FutureProvider.autoDispose.family<SessionStats, String>((ref, userId) {
   return ref.watch(statsRepositoryProvider).fetchSessionStats(userId);
+});
+
+/// A user's projects paired with their photographed sessions, for the
+/// "Projects" circles row on a profile. Only projects with at least one
+/// photographed session are included — an empty circle has nothing to
+/// preview or open.
+final userProjectGalleriesProvider =
+    FutureProvider.autoDispose.family<List<ProjectGallery>, String>((ref, userId) async {
+  final projects = await ref.watch(projectsRepositoryProvider).fetchProjectsByUser(userId);
+  if (projects.isEmpty) return const [];
+
+  final projectIds = [for (final project in projects) project['id'].toString()];
+  final sessions = await ref.watch(sessionsRepositoryProvider).fetchSessionsForProjects(projectIds);
+
+  final sessionsByProject = <String, List<Map<String, dynamic>>>{};
+  for (final session in sessions) {
+    final photoUrl = session['photo_url']?.toString();
+    if (photoUrl == null || photoUrl.isEmpty) continue;
+    sessionsByProject.putIfAbsent(session['project_id'].toString(), () => []).add(session);
+  }
+
+  return [
+    for (final project in projects)
+      if (sessionsByProject[project['id'].toString()] case final projectSessions?)
+        ProjectGallery(project: project, sessions: projectSessions),
+  ];
 });
