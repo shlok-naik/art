@@ -62,7 +62,14 @@ class SessionsRepository {
   }
 
   Future<void> updateSessionPhoto(String sessionId, String photoUrl) async {
-    await _client.from('sessions').update({'photo_url': photoUrl}).eq('id', sessionId);
+    // .select() so a zero-row result (RLS silently filtered the write,
+    // e.g. this isn't your session) surfaces as an error instead of the
+    // caller believing the save succeeded — same pattern as deleteProject.
+    final updated =
+        await _client.from('sessions').update({'photo_url': photoUrl}).eq('id', sessionId).select('id');
+    if (updated.isEmpty) {
+      throw Exception('Photo was not saved (session not found, or not permitted)');
+    }
   }
 
   Future<void> updateSessionDetails({
@@ -72,12 +79,15 @@ class SessionsRepository {
     required int difficulty,
     required String name,
   }) async {
-    await _client.from('sessions').update({
+    final updated = await _client.from('sessions').update({
       'stage': stage,
       'tools_used': toolsUsed,
       'difficulty': difficulty,
       'name': name,
-    }).eq('id', sessionId);
+    }).eq('id', sessionId).select('id');
+    if (updated.isEmpty) {
+      throw Exception('Details were not saved (session not found, or not permitted)');
+    }
   }
 
   /// Records that the signed-in user viewed [sessionId]. Upserts on the
