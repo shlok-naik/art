@@ -10,6 +10,7 @@ import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
 import '../providers.dart';
+import 'comments_sheet.dart';
 
 const _monthNames = [
   'January',
@@ -116,6 +117,10 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
         SnackBar(content: Text('Failed to react: $e')),
       );
     });
+  }
+
+  void _openComments() {
+    showCommentsSheet(context, sessionId: _sessionId, postOwnerUserId: widget.post.userId);
   }
 
   void _showDetails() {
@@ -243,6 +248,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     final reactions =
         ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
     final counts = reactions.counts;
+    final commentCount = ref.watch(sessionCommentsProvider(_sessionId)).value?.length ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -350,8 +356,10 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   child: _RightActionColumn(
                     upCount: counts['up'] ?? 0,
                     downCount: counts['down'] ?? 0,
+                    commentCount: commentCount,
                     onThumbUp: () => _react('up'),
                     onThumbDown: () => _react('down'),
+                    onComment: _openComments,
                     onMore: _showDetails,
                   ),
                 ),
@@ -475,15 +483,19 @@ class _RightActionColumn extends StatelessWidget {
   const _RightActionColumn({
     required this.upCount,
     required this.downCount,
+    required this.commentCount,
     required this.onThumbUp,
     required this.onThumbDown,
+    required this.onComment,
     required this.onMore,
   });
 
   final int upCount;
   final int downCount;
+  final int commentCount;
   final VoidCallback onThumbUp;
   final VoidCallback onThumbDown;
+  final VoidCallback onComment;
   final VoidCallback onMore;
 
   @override
@@ -509,6 +521,16 @@ class _RightActionColumn extends StatelessWidget {
         ),
         Text(
           _formatCount(downCount),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
+              .copyWith(shadows: _shadow),
+        ),
+        const SizedBox(height: 18),
+        GestureDetector(
+          onTap: onComment,
+          child: const Icon(Icons.mode_comment_outlined, color: Colors.white, size: 34, shadows: _shadow),
+        ),
+        Text(
+          _formatCount(commentCount),
           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
               .copyWith(shadows: _shadow),
         ),
