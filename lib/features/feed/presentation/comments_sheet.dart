@@ -65,16 +65,29 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
 
     setState(() => _isSubmitting = true);
     try {
-      if (await containsFlaggedContent(text)) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please remove inappropriate language before posting.')),
+      final result = await moderateText(text);
+      if (result.flagged && mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Profanity detected', style: GoogleFonts.chewy(fontWeight: FontWeight.bold)),
+            content: Text(
+              'Some words in your comment were censored before posting.',
+              style: GoogleFonts.chewy(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK', style: GoogleFonts.chewy(color: kAccentColor)),
+              ),
+            ],
+          ),
         );
-        return;
       }
+      if (!mounted) return;
       await ref
           .read(commentsRepositoryProvider)
-          .createComment(sessionId: widget.sessionId, body: text);
+          .createComment(sessionId: widget.sessionId, body: result.censored);
       if (!mounted) return;
       ref.invalidate(sessionCommentsProvider(widget.sessionId));
       _controller.clear();
