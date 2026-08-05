@@ -7,6 +7,7 @@ import '../../auth/providers.dart';
 import '../../feed/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
+import 'public_profile_screen.dart';
 import 'stats_visibility_screen.dart';
 
 // League rank and streak have no backing data yet — league standing needs
@@ -177,6 +178,33 @@ class ProfileViewScreen extends ConsumerWidget {
                           const SizedBox(width: 6),
                           Text(
                             'Choose stats to show',
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: profile.id)),
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: kBorderColor, width: kBorderWidth),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.remove_red_eye, size: 18, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Preview public profile',
                             style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
                           ),
                         ],
