@@ -250,6 +250,15 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
         ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
     final counts = reactions.counts;
     final commentCount = ref.watch(sessionCommentsProvider(_sessionId)).value?.length ?? 0;
+    final myVoteType = reactions.myVote?['reaction_type']?.toString();
+    final myEmojiType = reactions.myEmoji?['reaction_type']?.toString();
+    EmojiReaction? selectedEmoji;
+    for (final reaction in EmojiReaction.values) {
+      if (reaction.name == myEmojiType) {
+        selectedEmoji = reaction;
+        break;
+      }
+    }
 
     return Stack(
       fit: StackFit.expand,
@@ -358,6 +367,8 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     upCount: counts['up'] ?? 0,
                     downCount: counts['down'] ?? 0,
                     commentCount: commentCount,
+                    isUpSelected: myVoteType == 'up',
+                    isDownSelected: myVoteType == 'down',
                     onThumbUp: () => _react('up'),
                     onThumbDown: () => _react('down'),
                     onComment: _showComments,
@@ -373,6 +384,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       for (final reaction in EmojiReaction.values)
                         reaction: counts[reaction.name] ?? 0,
                     },
+                    selected: selectedEmoji,
                     onSelect: (reaction) => _react(reaction.name),
                   ),
                 ),
@@ -490,6 +502,8 @@ class _RightActionColumn extends StatelessWidget {
     required this.upCount,
     required this.downCount,
     required this.commentCount,
+    required this.isUpSelected,
+    required this.isDownSelected,
     required this.onThumbUp,
     required this.onThumbDown,
     required this.onComment,
@@ -499,6 +513,8 @@ class _RightActionColumn extends StatelessWidget {
   final int upCount;
   final int downCount;
   final int commentCount;
+  final bool isUpSelected;
+  final bool isDownSelected;
   final VoidCallback onThumbUp;
   final VoidCallback onThumbDown;
   final VoidCallback onComment;
@@ -509,8 +525,10 @@ class _RightActionColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _ReactionEmoji(
-          glyph: '👍',
+        _ThumbButton(
+          outlineIcon: Icons.thumb_up_outlined,
+          filledIcon: Icons.thumb_up,
+          selected: isUpSelected,
           onTap: onThumbUp,
           baseSize: 64,
         ),
@@ -520,8 +538,10 @@ class _RightActionColumn extends StatelessWidget {
               .copyWith(shadows: _shadow),
         ),
         const SizedBox(height: 18),
-        _ReactionEmoji(
-          glyph: '👎',
+        _ThumbButton(
+          outlineIcon: Icons.thumb_down_outlined,
+          filledIcon: Icons.thumb_down,
+          selected: isDownSelected,
           onTap: onThumbDown,
           baseSize: 64,
         ),
@@ -555,10 +575,12 @@ class _RightActionColumn extends StatelessWidget {
 class _EmojiReactionRow extends StatelessWidget {
   const _EmojiReactionRow({
     required this.counts,
+    required this.selected,
     required this.onSelect,
   });
 
   final Map<EmojiReaction, int> counts;
+  final EmojiReaction? selected;
   final ValueChanged<EmojiReaction> onSelect;
 
   @override
@@ -570,10 +592,27 @@ class _EmojiReactionRow extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ReactionEmoji(
-                glyph: emojiGlyphs[reaction]!,
+              _BouncyTap(
                 onTap: () => onSelect(reaction),
-                baseSize: 48,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: reaction == selected
+                      ? BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white24,
+                          border: Border.all(color: Colors.white, width: 2),
+                        )
+                      : null,
+                  child: Text(
+                    emojiGlyphs[reaction]!,
+                    style: const TextStyle(
+                      fontSize: 48 * 0.62,
+                      shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 3),
               Text(
@@ -588,25 +627,58 @@ class _EmojiReactionRow extends StatelessWidget {
   }
 }
 
-/// A floating emoji reaction button — no background chip, just the glyph
-/// itself (with a soft drop shadow for legibility over any photo). Tapping
-/// gives it a springy overshoot-and-settle bounce.
-class _ReactionEmoji extends StatefulWidget {
-  const _ReactionEmoji({
-    required this.glyph,
+/// A YouTube-style like/dislike button: an outlined icon that swaps to its
+/// filled variant (accent-colored) when selected, with the same bounce as
+/// [_BouncyTap].
+class _ThumbButton extends StatelessWidget {
+  const _ThumbButton({
+    required this.outlineIcon,
+    required this.filledIcon,
+    required this.selected,
     required this.onTap,
     this.baseSize = 40,
   });
 
-  final String glyph;
+  final IconData outlineIcon;
+  final IconData filledIcon;
+  final bool selected;
   final VoidCallback onTap;
   final double baseSize;
 
   @override
-  State<_ReactionEmoji> createState() => _ReactionEmojiState();
+  Widget build(BuildContext context) {
+    return _BouncyTap(
+      onTap: onTap,
+      child: SizedBox(
+        width: baseSize,
+        height: baseSize,
+        child: Center(
+          child: Icon(
+            selected ? filledIcon : outlineIcon,
+            size: baseSize * 0.62,
+            color: selected ? kAccentColor : Colors.white,
+            shadows: _shadow,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProviderStateMixin {
+/// Wraps [child] in a tappable target that plays a springy
+/// overshoot-and-settle bounce on tap — shared by the emoji reactions and
+/// the like/dislike buttons.
+class _BouncyTap extends StatefulWidget {
+  const _BouncyTap({required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  State<_BouncyTap> createState() => _BouncyTapState();
+}
+
+class _BouncyTapState extends State<_BouncyTap> with SingleTickerProviderStateMixin {
   late final _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 450),
@@ -642,19 +714,7 @@ class _ReactionEmojiState extends State<_ReactionEmoji> with SingleTickerProvide
           angle: _wiggle.value,
           child: Transform.scale(scale: _bounce.value, child: child),
         ),
-        child: SizedBox(
-          width: widget.baseSize,
-          height: widget.baseSize,
-          child: Center(
-            child: Text(
-              widget.glyph,
-              style: TextStyle(
-                fontSize: widget.baseSize * 0.62,
-                shadows: const [Shadow(color: Colors.black45, blurRadius: 8)],
-              ),
-            ),
-          ),
-        ),
+        child: widget.child,
       ),
     );
   }
