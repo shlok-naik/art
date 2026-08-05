@@ -12,6 +12,7 @@ import '../providers.dart';
 import 'project_gallery_screen.dart';
 import 'session_photo_viewer_screen.dart';
 import 'stats_screen.dart';
+import 'stats_visibility_screen.dart';
 
 String _formatCount(int count) {
   if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
@@ -76,6 +77,23 @@ class PublicProfileScreen extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (isOwnProfile) ...[
+                        const SizedBox(width: 12),
+                        InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => StatsVisibilityScreen(profile: profile)),
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: kBorderColor, width: kBorderWidth),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 16),

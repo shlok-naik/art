@@ -8,7 +8,6 @@ import '../../feed/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
-import 'stats_visibility_screen.dart';
 
 // League rank and streak have no backing data yet — league standing needs
 // the future league feature, and streaks need day-over-day session-date
@@ -158,33 +157,6 @@ class ProfileViewScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => StatsVisibilityScreen(profile: profile)),
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: kBorderColor, width: kBorderWidth),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.bar_chart, size: 18, color: Colors.black),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Choose stats to show',
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: profile.id)),
