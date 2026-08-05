@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-/// Checks comment text against OpenAI's moderation endpoint via the backend
-/// (so the API key stays server-side). Not a security boundary — anything
-/// calling Supabase directly could bypass it — it only nudges the poster
-/// before submission; real enforcement is the report flow plus owner/self
-/// delete on the comments table.
+/// Checks comment text against the backend's local profanity classifier.
+/// Not a security boundary — anything calling Supabase directly could
+/// bypass it — it only nudges the poster before submission; real
+/// enforcement is the report flow plus owner/self delete on the comments
+/// table.
 ///
 /// Returns false (allow) if the backend can't be reached, so a moderation
 /// outage never blocks posting.

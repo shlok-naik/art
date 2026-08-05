@@ -1,16 +1,15 @@
-import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
+from profanity_check import predict, predict_prob
 
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.config import OPENAI_API_KEY
 
 # The Flutter app talks to Supabase directly (supabase_flutter + RLS); this
 # backend no longer proxies CRUD. It exists for server-side work that can't
 # live in the app: the RevenueCat webhook and the league promotion/relegation
-# job, plus anything that needs a secret key kept off the client — currently
-# just comment moderation via OpenAI.
+# job, plus anything better run server-side — currently comment moderation,
+# via a local scikit-learn classifier (alt-profanity-check) rather than a
+# paid/keyed external API.
 app = FastAPI(title="art backend")
 
 app.add_middleware(
@@ -32,27 +31,16 @@ class ModerationRequest(BaseModel):
 
 class ModerationResponse(BaseModel):
     flagged: bool
-    categories: list[str]
+    score: float
 
 
 @app.post("/moderate", response_model=ModerationResponse)
-async def moderate(body: ModerationRequest):
-    if not OPENAI_API_KEY:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY is not configured")
-
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.openai.com/v1/moderations",
-            headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
-            json={"model": "omni-moderation-latest", "input": body.text},
-            timeout=10,
-        )
-    if response.status_code != 200:
-        raise HTTPException(status_code=502, detail="Moderation request failed")
-
-    result = response.json()["results"][0]
-    categories = [name for name, flagged in result["categories"].items() if flagged]
-    return ModerationResponse(flagged=result["flagged"], categories=categories)
+def moderate(body: ModerationRequest):
+    # predict() is a trained linear classifier (not substring matching), so
+    # it catches obfuscation like "f u c k" or "sh1t" that a wordlist misses.
+    flagged = bool(predict([body.text])[0])
+    score = float(predict_prob([body.text])[0])
+    return ModerationResponse(flagged=flagged, score=score)
 
 
 if __name__ == "__main__":
