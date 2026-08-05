@@ -11,6 +11,7 @@ import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/domain/reactions.dart';
+import '../../feed/presentation/comments_sheet.dart';
 import '../../feed/providers.dart';
 import '../../projects/presentation/session_capture.dart';
 import '../../projects/presentation/session_details_form.dart';
@@ -308,6 +309,25 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           Text('Reactions', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 10),
           _ReactionBreakdown(counts: counts),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Comments', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18)),
+              TextButton.icon(
+                onPressed: () => showCommentsSheet(
+                  context,
+                  sessionId: post.id,
+                  postOwnerUserId: post.userId,
+                ),
+                icon: const Icon(Icons.mode_comment_outlined, size: 18, color: kAccentColor),
+                label: Text(
+                  'View (${ref.watch(sessionCommentsProvider(post.id)).value?.length ?? 0})',
+                  style: GoogleFonts.chewy(fontSize: 14, color: kAccentColor),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
