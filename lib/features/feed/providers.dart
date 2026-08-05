@@ -34,6 +34,12 @@ final feedPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {
   return ref.watch(feedRepositoryProvider).fetchAllPosts();
 });
 
+/// Total reactions received across all of a user's posts — feeds the
+/// "reactions received" achievement.
+final receivedReactionsCountProvider = FutureProvider.autoDispose.family<int, String>((ref, userId) {
+  return ref.watch(reactionsRepositoryProvider).fetchTotalReceivedByUser(userId);
+});
+
 /// Only the signed-in user's own posts — drives Home's "Most Recent Post"
 /// card and the My Posts screen.
 final myPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {

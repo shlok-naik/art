@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../shared/app_bottom_nav.dart';
+import '../achievements/domain/achievement.dart';
+import '../achievements/presentation/achievement_celebration_screen.dart';
+import '../achievements/providers.dart';
 import '../feed/presentation/feed_screen.dart';
 import '../followed/presentation/followed_screen.dart';
 import '../home/presentation/home_screen.dart';
@@ -40,6 +43,13 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(mainTabIndexProvider);
 
+    ref.listen<AsyncValue<List<Achievement>>>(newlyUnlockedAchievementsProvider, (previous, next) {
+      final achievements = next.value;
+      if (achievements != null && achievements.isNotEmpty) {
+        _celebrate(context, achievements);
+      }
+    });
+
     return Scaffold(
       body: IndexedStack(index: index, children: _tabs),
       bottomNavigationBar: AppBottomNav(
@@ -47,5 +57,19 @@ class MainShell extends ConsumerWidget {
         onTap: (i) => ref.read(mainTabIndexProvider.notifier).state = i,
       ),
     );
+  }
+
+  /// Pushes a celebration screen per newly-unlocked achievement, one after
+  /// another — rare to have more than one at once, but possible (e.g. the
+  /// first check after a lot of existing activity).
+  void _celebrate(BuildContext context, List<Achievement> achievements) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    Future(() async {
+      for (final achievement in achievements) {
+        await navigator.push(
+          MaterialPageRoute(builder: (_) => AchievementCelebrationScreen(achievement: achievement)),
+        );
+      }
+    });
   }
 }

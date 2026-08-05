@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../achievements/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
@@ -179,6 +180,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       }
       if (!mounted) return;
       ref.invalidate(sessionsListProvider(_projectId));
+      ref.invalidate(newlyUnlockedAchievementsProvider);
       setState(() {
         _stage = _SessionStage.idle;
         _elapsed = Duration.zero;

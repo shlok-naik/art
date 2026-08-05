@@ -58,4 +58,15 @@ class ReactionsRepository {
   Future<void> deleteReaction(String reactionId) async {
     await _client.from('reactions').delete().eq('id', reactionId);
   }
+
+  /// Total reactions (of any type) received across every session owned by
+  /// [userId] — used for the "reactions received" achievement, which has no
+  /// other existing aggregate to draw on.
+  Future<int> fetchTotalReceivedByUser(String userId) async {
+    final rows = await _client
+        .from('reactions')
+        .select('id, sessions!inner(user_id)')
+        .eq('sessions.user_id', userId);
+    return List<Map<String, dynamic>>.from(rows).length;
+  }
 }

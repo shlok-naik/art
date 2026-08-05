@@ -3,30 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../achievements/domain/achievement.dart';
+import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
 
-// League rank and streak have no backing data yet — league standing needs
-// the future league feature, and streaks need day-over-day session-date
-// tracking that doesn't exist. Posts and Followers below are real.
+// League standing has no backing data yet — it needs the future league
+// feature. Posts, Followers, streak, and achievements below are all real.
 const _leagueRank = '#3';
-const _streakDays = 7;
 
 String _formatCount(int count) {
   if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
   if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
   return count.toString();
 }
-
-const _achievements = [
-  {'emoji': '🥇', 'label': 'Top 10', 'locked': false},
-  {'emoji': '🎨', 'label': '50 Posts', 'locked': false},
-  {'emoji': '⚡', 'label': 'Streak 7', 'locked': false},
-  {'emoji': '🔒', 'label': '???', 'locked': true},
-];
 
 class ProfileViewScreen extends ConsumerWidget {
   const ProfileViewScreen({super.key});
@@ -48,6 +41,8 @@ class ProfileViewScreen extends ConsumerWidget {
             }
             final postsCount = ref.watch(myPostsProvider).value?.length;
             final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
+            final streakDays = ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
+            final unlockedAchievements = ref.watch(unlockedAchievementsProvider(profile.id)).value;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -184,24 +179,37 @@ class ProfileViewScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('$_streakDays-day streak! 🔥', style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
+                  Text(
+                    streakDays > 0 ? '$streakDays-day streak! 🔥' : 'No active streak',
+                    style: GoogleFonts.chewy(fontSize: 17, color: Colors.black),
+                  ),
                   const SizedBox(height: 2),
                   Text(
-                    "You're on fire — keep posting to grow your rank.",
+                    streakDays > 0
+                        ? "You're on fire — keep posting to grow your rank."
+                        : 'Log a session today to start a streak.',
                     style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
                   ),
                   const SizedBox(height: 16),
-                  Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                  Row(
+                    children: [
+                      Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (final achievement in _achievements)
+                      for (final achievement in achievementCatalog)
                         _AchievementChip(
-                          emoji: achievement['emoji'] as String,
-                          label: achievement['label'] as String,
-                          locked: achievement['locked'] as bool,
+                          achievement: achievement,
+                          locked: !(unlockedAchievements?.containsKey(achievement.key) ?? false),
                         ),
                     ],
                   ),
@@ -241,43 +249,56 @@ class _StatColumn extends StatelessWidget {
 }
 
 class _AchievementChip extends StatelessWidget {
-  const _AchievementChip({required this.emoji, required this.label, required this.locked});
+  const _AchievementChip({required this.achievement, required this.locked});
 
-  final String emoji;
-  final String label;
+  final Achievement achievement;
   final bool locked;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 78,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-      decoration: locked
-          ? BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              border: Border.all(color: const Color(0xFFCCCCCC), width: kBorderWidth),
-              borderRadius: BorderRadius.circular(14),
-            )
-          : appHardCardDecoration(radius: 14, shadowOffset: 2),
-      child: Opacity(
-        opacity: locked ? 0.6 : 1,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: appBodyStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                color: locked ? const Color(0xFF888888) : Colors.black,
+    return Tooltip(
+      message: achievement.description,
+      child: Container(
+        width: 78,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: locked
+            ? BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                border: Border.all(color: const Color(0xFFCCCCCC), width: kBorderWidth),
+                borderRadius: BorderRadius.circular(14),
+              )
+            : appHardCardDecoration(radius: 14, shadowOffset: 2),
+        child: Opacity(
+          opacity: locked ? 0.5 : 1,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
+                  if (locked)
+                    const Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Icon(Icons.lock, size: 12, color: Color(0xFF888888)),
+                    ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              Text(
+                achievement.title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: appBodyStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: locked ? const Color(0xFF888888) : Colors.black,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
