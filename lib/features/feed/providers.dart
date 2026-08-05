@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/providers.dart';
+import 'data/comments_repository.dart';
 import 'data/feed_repository.dart';
 import 'data/reactions_repository.dart';
+import 'domain/comment.dart';
 import 'domain/feed_post.dart';
 import 'domain/reactions.dart';
 
@@ -12,6 +14,19 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
 
 final reactionsRepositoryProvider = Provider<ReactionsRepository>((ref) {
   return ReactionsRepository(ref.watch(supabaseClientProvider));
+});
+
+final commentsRepositoryProvider = Provider<CommentsRepository>((ref) {
+  return CommentsRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Comments on a session, oldest first. Mutations (add/delete) just
+/// invalidate this rather than applying optimistic state — comments aren't
+/// as tap-latency-sensitive as reactions, so a plain refetch keeps this
+/// simple.
+final sessionCommentsProvider =
+    FutureProvider.autoDispose.family<List<Comment>, String>((ref, sessionId) {
+  return ref.watch(commentsRepositoryProvider).fetchComments(sessionId);
 });
 
 /// Every posted session across all users, newest first.
