@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
-import '../../../shared/profanity_filter.dart';
+import '../../../shared/moderation_service.dart';
 import '../../profile/providers.dart';
 import '../domain/comment.dart';
 import '../providers.dart';
@@ -62,15 +62,16 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
   Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    if (containsProfanity(text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please remove inappropriate language before posting.')),
-      );
-      return;
-    }
 
     setState(() => _isSubmitting = true);
     try {
+      if (await containsFlaggedContent(text)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please remove inappropriate language before posting.')),
+        );
+        return;
+      }
       await ref
           .read(commentsRepositoryProvider)
           .createComment(sessionId: widget.sessionId, body: text);
