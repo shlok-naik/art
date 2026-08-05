@@ -2,6 +2,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'profile_model.dart';
 
+/// Thrown when an update touches a column that doesn't exist yet on this
+/// database — i.e. one of the additive migrations in supabase/add_*.sql
+/// hasn't been applied. Callers can catch this to show a friendlier message
+/// than the raw Postgres error, and to know whether anything still saved.
+class MissingColumnException implements Exception {
+  const MissingColumnException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+bool _isUndefinedColumn(Object error) => error is PostgrestException && error.code == '42703';
+
 class ProfileRepository {
   ProfileRepository(this._client);
 
@@ -33,11 +48,27 @@ class ProfileRepository {
     required String userId,
     required String username,
     required String displayName,
+    required String? bio,
   }) async {
-    await _client.from('profiles').update({
-      'username': username,
-      'display_name': displayName,
-    }).eq('id', userId);
+    try {
+      await _client.from('profiles').update({
+        'username': username,
+        'display_name': displayName,
+        'bio': bio,
+      }).eq('id', userId);
+    } catch (e) {
+      if (!_isUndefinedColumn(e)) rethrow;
+      // The `bio` column isn't on this database yet — save what we can
+      // (username/display name) rather than let an unrelated pending
+      // migration block basic profile edits.
+      await _client.from('profiles').update({
+        'username': username,
+        'display_name': displayName,
+      }).eq('id', userId);
+      throw const MissingColumnException(
+        'Your name and username were saved, but bio support needs a pending database update.',
+      );
+    }
   }
 
   Future<void> updateVisibleStats({
@@ -45,5 +76,19 @@ class ProfileRepository {
     required List<String> visibleStats,
   }) async {
     await _client.from('profiles').update({'visible_stats': visibleStats}).eq('id', userId);
+  }
+
+  /// Sets or clears (pass null) the post pinned to the top of a profile's
+  /// post grid.
+  Future<void> updatePinnedPost({
+    required String userId,
+    required String? postId,
+  }) async {
+    try {
+      await _client.from('profiles').update({'pinned_post_id': postId}).eq('id', userId);
+    } catch (e) {
+      if (!_isUndefinedColumn(e)) rethrow;
+      throw const MissingColumnException('Pinning needs a pending database update.');
+    }
   }
 }

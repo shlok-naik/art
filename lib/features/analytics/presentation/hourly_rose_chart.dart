@@ -11,13 +11,15 @@ const _clockNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 
 // area. Shared between the painter (drawing) and the widget (hit-testing).
 const _dataInset = 38.0;
 
-/// Two 12-hour rose/coxcomb clocks (AM and PM) showing session activity by
-/// hour of day, styled like an analogue clock face (tick marks, bold
-/// numerals, black bezel) — minus the hands, since this shows a
-/// distribution rather than a single time. Each wedge's length scales
-/// relative to your single busiest hour across the whole day, so the two
-/// clocks stay comparable to each other. Hover (or tap, on touch devices)
-/// a wedge to see the time spent working during that hour.
+/// Two 12-hour rose/coxcomb clocks (AM, stacked above PM) showing session
+/// activity by hour of day, styled like an analogue clock face (tick marks,
+/// bold numerals, black bezel) — minus the hands, since this shows a
+/// distribution rather than a single time. Stacked rather than side by side
+/// so each clock gets the full width — bigger, more exaggerated wedges.
+/// Each wedge's length scales relative to your single busiest hour across
+/// the whole day, so the two clocks stay comparable to each other. Hover
+/// (desktop) or tap (touch) a wedge to see the time spent working during
+/// that hour — on touch, the tooltip stays until you tap elsewhere.
 class HourlyRoseChart extends StatelessWidget {
   const HourlyRoseChart({super.key, required this.hourly, required this.minutes});
 
@@ -30,25 +32,23 @@ class HourlyRoseChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxCount = hourly.fold<int>(0, (max, c) => c > max ? c : max);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // Stacked rather than side by side so each clock gets the full available
+    // width — bigger wedges, easier to read and to tap accurately.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: _SingleClockRose(
-            hours: hourly.sublist(0, 12),
-            minutes: minutes.sublist(0, 12),
-            maxCount: maxCount,
-            label: 'AM',
-          ),
+        _SingleClockRose(
+          hours: hourly.sublist(0, 12),
+          minutes: minutes.sublist(0, 12),
+          maxCount: maxCount,
+          label: 'AM',
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _SingleClockRose(
-            hours: hourly.sublist(12, 24),
-            minutes: minutes.sublist(12, 24),
-            maxCount: maxCount,
-            label: 'PM',
-          ),
+        const SizedBox(height: 20),
+        _SingleClockRose(
+          hours: hourly.sublist(12, 24),
+          minutes: minutes.sublist(12, 24),
+          maxCount: maxCount,
+          label: 'PM',
         ),
       ],
     );
@@ -148,8 +148,11 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
                   onExit: (_) => _clearHover(),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
+                    // Tapping a wedge selects it and the tooltip stays put
+                    // (rather than flashing and vanishing on release) since
+                    // there's no hover on touch devices — tap elsewhere on
+                    // the face, or outside the data ring, to dismiss it.
                     onTapDown: (details) => _updateHover(details.localPosition, size),
-                    onTapUp: (_) => _clearHover(),
                     onTapCancel: _clearHover,
                     child: Stack(
                       alignment: Alignment.center,

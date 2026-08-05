@@ -71,7 +71,16 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
       setState(() => _nameError = 'Give this session a name');
       return;
     }
-    widget.onSubmit(name, _stage, List.of(_tools), _difficulty, _projectCompletion);
+    // Auto-commit whatever's still typed in the "add a tool" field, the same
+    // way the name field is saved even without pressing Enter first —
+    // otherwise a tool typed but not explicitly added (via + or Enter) is
+    // silently dropped instead of saved.
+    final pendingTool = _toolController.text.trim();
+    final tools = List.of(_tools);
+    if (pendingTool.isNotEmpty && !tools.contains(pendingTool)) {
+      tools.add(pendingTool);
+    }
+    widget.onSubmit(name, _stage, tools, _difficulty, _projectCompletion);
   }
 
   void _addTool() {

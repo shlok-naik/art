@@ -27,9 +27,13 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade default auth.uid(),
   username text not null unique,
   display_name text not null,
+  bio text,
   -- Stat keys (see StatKey in the Flutter client) the user has opted to
   -- show on their public Stats page.
   visible_stats text[] not null default '{posts,followers,following}',
+  -- References sessions(id), added via alter table below once that table
+  -- exists — sessions is created after profiles in this script.
+  pinned_post_id uuid,
   created_at timestamptz not null default now()
 );
 
@@ -119,6 +123,10 @@ create policy "users update their own sessions"
 create policy "users delete their own sessions"
   on public.sessions for delete
   using (auth.uid() = user_id);
+
+alter table public.profiles
+  add constraint profiles_pinned_post_id_fkey
+  foreign key (pinned_post_id) references public.sessions (id) on delete set null;
 
 -- ---------- reactions ----------
 create table public.reactions (

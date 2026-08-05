@@ -13,6 +13,7 @@ import '../../feed/domain/feed_post.dart';
 import '../../feed/domain/reactions.dart';
 import '../../feed/presentation/comments_sheet.dart';
 import '../../feed/providers.dart';
+import '../../profile/providers.dart' as profile_providers;
 import '../../projects/presentation/session_capture.dart';
 import '../../projects/presentation/session_details_form.dart';
 import '../../projects/providers.dart';
@@ -132,8 +133,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     try {
       await repo.updateSessionPhoto(widget.post.id, photoUrl);
       if (!mounted) return;
-      ref.invalidate(feedPostsProvider);
-      ref.invalidate(myPostsProvider);
+      _invalidateEverywhere();
       setState(() {
         _photoUrl = photoUrl;
         _newPhotoBytes = null;
@@ -166,9 +166,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         name: name,
       );
       if (!mounted) return;
-      ref.invalidate(feedPostsProvider);
-      ref.invalidate(myPostsProvider);
       ref.invalidate(sessionsListProvider(widget.post.projectId));
+      _invalidateEverywhere();
       setState(() {
         _sessionName = name;
         _stageName = stage;
@@ -183,6 +182,22 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         SnackBar(content: Text('Failed to save details: $e')),
       );
     }
+  }
+
+  /// Every other place this session's data is cached and displayed — the
+  /// feed, the owner's own post grid, the public profile grid (same
+  /// provider, keyed by user id), and the Stats page charts that derive
+  /// from difficulty/duration/stage. A photo or detail edit here needs to
+  /// show up in all of them, not just this screen.
+  void _invalidateEverywhere() {
+    final userId = widget.post.userId;
+    ref.invalidate(feedPostsProvider);
+    ref.invalidate(myPostsProvider);
+    ref.invalidate(userPostsProvider(userId));
+    ref.invalidate(profile_providers.sessionStatsProvider(userId));
+    ref.invalidate(profile_providers.stageMinutesProvider(userId));
+    ref.invalidate(profile_providers.difficultyHistogramProvider(userId));
+    ref.invalidate(profile_providers.userProjectGalleriesProvider(userId));
   }
 
   Widget _buildViewingBody() {

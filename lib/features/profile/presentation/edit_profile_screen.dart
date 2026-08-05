@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../data/profile_model.dart';
+import '../data/profile_repository.dart';
 import '../providers.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _displayNameController;
   late final TextEditingController _usernameController;
+  late final TextEditingController _bioController;
   final _passwordController = TextEditingController();
   bool _isSaving = false;
   String? _errorText;
@@ -29,12 +31,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     _displayNameController = TextEditingController(text: widget.profile.displayName);
     _usernameController = TextEditingController(text: widget.profile.username);
+    _bioController = TextEditingController(text: widget.profile.bio ?? '');
   }
 
   @override
   void dispose() {
     _displayNameController.dispose();
     _usernameController.dispose();
+    _bioController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -63,17 +67,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _errorText = null;
     });
     try {
+      final bio = _bioController.text.trim();
       await ref.read(profileRepositoryProvider).updateProfile(
             userId: userId,
             username: username,
             displayName: displayName,
+            bio: bio.isEmpty ? null : bio,
           );
       if (password.isNotEmpty) {
         await ref.read(authRepositoryProvider).updatePassword(password);
       }
       if (!mounted) return;
       ref.invalidate(currentProfileProvider);
+      ref.invalidate(profileByIdProvider(userId));
       Navigator.of(context).pop();
+    } on MissingColumnException catch (e) {
+      // Username/display name still saved (see ProfileRepository.updateProfile)
+      // — only bio couldn't. Don't pop, so the user sees why bio looks
+      // unchanged, but also don't treat this as a full failure.
+      if (!mounted) return;
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(profileByIdProvider(userId));
+      setState(() => _errorText = e.message);
     } on PostgrestException catch (e) {
       if (!mounted) return;
       setState(() => _errorText = e.code == '23505' ? 'That username is already taken.' : e.message);
@@ -114,7 +129,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('Username'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _bioController,
+                enabled: !_isSaving,
+                maxLines: 3,
+                maxLength: 160,
+                decoration: appInputDecoration('Bio (optional)'),
+                style: appBodyStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
               Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
               const SizedBox(height: 4),
               Text(
