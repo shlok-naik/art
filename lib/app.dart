@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/providers.dart';
@@ -10,18 +11,20 @@ import 'features/profile/providers.dart';
 import 'features/shell/main_shell.dart';
 import 'shared/joke_notification_service.dart';
 import 'shared/onesignal_service.dart';
+import 'shared/revenue_cat_service.dart';
 import 'shared/splash_screen.dart';
 
-class App extends StatefulWidget {
+class App extends ConsumerStatefulWidget {
   const App({super.key});
 
   @override
-  State<App> createState() => _AppState();
+  ConsumerState<App> createState() => _AppState();
 }
 
-class _AppState extends State<App> {
+class _AppState extends ConsumerState<App> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   bool _oneSignalDialogShown = false;
+  String? _revenueCatSyncedUserId;
 
   @override
   void initState() {
@@ -40,6 +43,25 @@ class _AppState extends State<App> {
     // Free, on-device notification (not a paid OneSignal send) shown on
     // every app open.
     JokeNotificationService().showRandomJoke();
+
+    // ref.listen (used in build) only fires on subsequent changes, so sync
+    // once here too in case a session is already persisted on cold start.
+    _syncRevenueCatIdentity(null, ref.read(authStateChangesProvider));
+  }
+
+  // Keeps RevenueCat's identity in sync with the authenticated Supabase
+  // user, so entitlements (e.g. Unfinished Pro) follow the account across
+  // devices instead of a per-install anonymous ID.
+  void _syncRevenueCatIdentity(AsyncValue<AuthState>? previous, AsyncValue<AuthState> next) {
+    final userId = next.value?.session?.user.id;
+    if (userId == _revenueCatSyncedUserId) return;
+    _revenueCatSyncedUserId = userId;
+
+    if (userId != null) {
+      RevenueCatService().login(userId);
+    } else {
+      RevenueCatService().logout();
+    }
   }
 
   bool _isRegistered(String? id) => id != null && id.isNotEmpty && !id.startsWith('local-');
@@ -74,6 +96,8 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, _syncRevenueCatIdentity);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         systemNavigationBarColor: Colors.white,

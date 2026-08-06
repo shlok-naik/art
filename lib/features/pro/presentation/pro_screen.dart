@@ -1,17 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/revenue_cat_service.dart';
 import '../../shell/main_shell.dart';
+import '../providers.dart';
 import 'art_wrapped_screen.dart';
+import 'pro_unlocked_screen.dart';
 
-class ProScreen extends StatelessWidget {
+class ProScreen extends ConsumerWidget {
   const ProScreen({super.key});
 
+  Future<void> _presentPaywall(BuildContext context, WidgetRef ref) async {
+    final result = await RevenueCatUI.presentPaywallIfNeeded(proEntitlementId);
+    if (!context.mounted) return;
+
+    switch (result) {
+      case PaywallResult.purchased:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ProUnlockedScreen()),
+        );
+      case PaywallResult.restored:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchases restored — Pro is active.')),
+        );
+      case PaywallResult.error:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Something went wrong. Please try again.")),
+        );
+      case PaywallResult.cancelled:
+      case PaywallResult.notPresented:
+        break;
+    }
+    // customerInfoProvider updates itself via RevenueCat's own listener, so
+    // no manual refresh is needed here.
+  }
+
+  Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+    final outcome = await RevenueCatService().restorePurchases();
+    if (!context.mounted) return;
+
+    switch (outcome) {
+      case PurchaseSuccess():
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchases restored.')),
+        );
+      case PurchaseFailed(:final message):
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      case PurchaseCancelled():
+        break;
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPro = ref.watch(isProProvider);
+    final offeringAsync = ref.watch(currentOfferingProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Go Pro'),
@@ -25,13 +74,13 @@ class ProScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'UPGRADE TO',
+                      isPro ? "YOU'RE" : 'UPGRADE TO',
                       style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
                     ),
                     Text('PRO', style: appHeadlineStyle(fontSize: 52)),
                     const SizedBox(height: 4),
                     Text(
-                      'Unlock the full studio.',
+                      isPro ? "You've got the full studio unlocked." : 'Unlock the full studio.',
                       style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
                     ),
                   ],
@@ -58,24 +107,32 @@ class ProScreen extends StatelessWidget {
                 child: const _ArtWrappedCard(),
               ),
               const SizedBox(height: 16),
-              const _PriceCard(),
-              const SizedBox(height: 16),
-              _UpgradeButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon')),
-                  );
-                },
-              ),
+              if (isPro) ...[
+                _ManageSubscriptionButton(
+                  onPressed: () => RevenueCatUI.presentCustomerCenter(),
+                ),
+              ] else ...[
+                _PriceCard(offeringAsync: offeringAsync),
+                const SizedBox(height: 16),
+                _UpgradeButton(onPressed: () => _presentPaywall(context, ref)),
+                const SizedBox(height: 10),
+                Center(
+                  child: TextButton(
+                    onPressed: () => _restorePurchases(context, ref),
+                    child: Text(
+                      'Restore purchases',
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ),
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, _) => AppBottomNav(
-          currentIndex: -1,
-          onTap: (i) => goToMainTab(context, ref, i),
-        ),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: -1,
+        onTap: (i) => goToMainTab(context, ref, i),
       ),
     );
   }
@@ -187,8 +244,13 @@ class _ArtWrappedCard extends StatelessWidget {
   }
 }
 
+/// Shows live pricing for the monthly/yearly/lifetime packages from the
+/// RevenueCat dashboard's current offering, falling back to a plain label
+/// while offerings are still loading (or if fetching them failed).
 class _PriceCard extends StatelessWidget {
-  const _PriceCard();
+  const _PriceCard({required this.offeringAsync});
+
+  final AsyncValue<Offering?> offeringAsync;
 
   @override
   Widget build(BuildContext context) {
@@ -196,11 +258,50 @@ class _PriceCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
-      child: Column(
+      child: offeringAsync.when(
+        data: (offering) {
+          if (offering == null) {
+            return Text(
+              'Pricing unavailable',
+              style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+            );
+          }
+          return Column(
+            children: [
+              if (offering.monthly case final monthly?) _PriceRow('Monthly', monthly),
+              if (offering.annual case final annual?) _PriceRow('Yearly', annual),
+              if (offering.lifetime case final lifetime?) _PriceRow('Lifetime', lifetime),
+            ],
+          );
+        },
+        loading: () => const SizedBox(height: 28, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+        error: (_, _) => Text(
+          'Pricing unavailable',
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceRow extends StatelessWidget {
+  const _PriceRow(this.label, this.package);
+
+  final String label;
+  final Package package;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('\$4.99/mo', style: appBodyStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.black)),
-          const SizedBox(height: 2),
-          Text('Cancel anytime', style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
+          Text(label, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
+          Text(
+            package.storeProduct.priceString,
+            style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+          ),
         ],
       ),
     );
@@ -228,6 +329,35 @@ class _UpgradeButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text('Upgrade to Pro', style: GoogleFonts.chewy(fontSize: 18, color: Colors.white)),
+      ),
+    );
+  }
+}
+
+/// Entry point for subscribed users to view/cancel their plan or request a
+/// refund via RevenueCat's Customer Center — makes sense here since it's
+/// only shown once the user is already Pro.
+class _ManageSubscriptionButton extends StatelessWidget {
+  const _ManageSubscriptionButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: hardShadow(offset: 4),
+        ),
+        alignment: Alignment.center,
+        child: Text('Manage subscription', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
       ),
     );
   }

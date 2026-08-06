@@ -4,17 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../pro/presentation/pro_screen.dart';
+import '../../pro/providers.dart';
 import '../../shell/main_shell.dart';
 import 'difficulty_analytics_screen.dart';
 import 'projects_analytics_screen.dart';
 import 'stage_radar_screen.dart';
 import 'time_analytics_screen.dart';
 
-class AnalyticsScreen extends StatelessWidget {
+class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPro = ref.watch(isProProvider);
+
     return DefaultTextStyle(
       style: GoogleFonts.chewy(color: Colors.black),
       child: Scaffold(
@@ -52,16 +56,22 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const _AnalyticsBox(locked: true),
+                _AnalyticsBox(
+                  label: isPro ? 'Pro Analytics' : 'Go Pro',
+                  icon: isPro ? Icons.auto_awesome : Icons.lock,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => isPro ? const StageRadarScreen() : const ProScreen(),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        bottomNavigationBar: Consumer(
-          builder: (context, ref, _) => AppBottomNav(
-            currentIndex: -1,
-            onTap: (i) => goToMainTab(context, ref, i),
-          ),
+        bottomNavigationBar: AppBottomNav(
+          currentIndex: -1,
+          onTap: (i) => goToMainTab(context, ref, i),
         ),
       ),
     );
@@ -69,34 +79,30 @@ class AnalyticsScreen extends StatelessWidget {
 }
 
 class _AnalyticsBox extends StatelessWidget {
-  const _AnalyticsBox({this.label = 'Analytics', this.locked = false, this.onTap});
+  const _AnalyticsBox({required this.label, this.icon, this.onTap});
 
   final String label;
-  final bool locked;
+  final IconData? icon;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: locked
-          ? () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const StageRadarScreen()),
-            )
-          : onTap,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
         height: 90,
         decoration: appCardDecoration(),
         alignment: Alignment.center,
-        child: locked
+        child: icon != null
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.lock, color: kAccentColor, size: 24),
+                  Icon(icon, color: kAccentColor, size: 24),
                   const SizedBox(width: 10),
                   Text(
-                    'Go Pro',
+                    label,
                     style: GoogleFonts.chewy(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,

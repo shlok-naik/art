@@ -15,6 +15,7 @@ import '../../projects/presentation/project_detail_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
 import '../../projects/providers.dart';
 import '../../pro/presentation/pro_screen.dart';
+import '../../pro/providers.dart';
 
 const _sidePadding = EdgeInsets.symmetric(horizontal: 16);
 
@@ -71,6 +72,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           _BuyProPill(
+                            isPro: ref.watch(isProProvider),
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const ProScreen()),
                             ),
@@ -368,8 +370,9 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _BuyProPill extends StatelessWidget {
-  const _BuyProPill({required this.onPressed});
+  const _BuyProPill({required this.isPro, required this.onPressed});
 
+  final bool isPro;
   final VoidCallback onPressed;
 
   @override
@@ -390,7 +393,7 @@ class _BuyProPill extends StatelessWidget {
           children: [
             const Text('👑', style: TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
-            Text('Buy Pro', style: GoogleFonts.chewy(fontSize: 15, color: Colors.white)),
+            Text(isPro ? 'Pro' : 'Buy Pro', style: GoogleFonts.chewy(fontSize: 15, color: Colors.white)),
           ],
         ),
       ),
