@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -17,8 +16,9 @@ const _jokes = [
   "What did one canvas say to the other? \"I've got you covered.\"",
 ];
 
-/// Shows a free, on-device notification with the app mascot and a random
-/// joke — no OneSignal send involved, so it never touches the paid quota.
+/// Shows a free, on-device notification with a random joke and the mascot
+/// as the small corner icon — no OneSignal send involved, so it never
+/// touches the paid quota.
 /// Uses the same OS notification permission OneSignal's verification dialog
 /// requests, so it deliberately does not request permission itself.
 class JokeNotificationService {
@@ -59,17 +59,9 @@ class JokeNotificationService {
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       largeIcon: ByteArrayAndroidBitmap(mascotBytes),
-      styleInformation: BigPictureStyleInformation(
-        ByteArrayAndroidBitmap(mascotBytes),
-        largeIcon: ByteArrayAndroidBitmap(mascotBytes),
-        contentTitle: 'Your mascot says...',
-        summaryText: joke,
-      ),
     );
 
-    final iosDetails = DarwinNotificationDetails(
-      attachments: [DarwinNotificationAttachment(await _mascotTempFilePath())],
-    );
+    const iosDetails = DarwinNotificationDetails();
 
     await _plugin.show(
       id: 0,
@@ -82,15 +74,5 @@ class JokeNotificationService {
   Future<Uint8List> _mascotBytes() async {
     final data = await rootBundle.load(_mascotAssetPath);
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  }
-
-  /// iOS notification attachments require a real file on disk (a bundle
-  /// asset path isn't enough), so the mascot image is copied to a temp file.
-  Future<String> _mascotTempFilePath() async {
-    final bytes = await _mascotBytes();
-    final dir = await Directory.systemTemp.createTemp('mascot_joke');
-    final file = File('${dir.path}/mascot.png');
-    await file.writeAsBytes(bytes);
-    return file.path;
   }
 }
