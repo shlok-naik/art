@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
-import '../../pro/presentation/pro_screen.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 
@@ -112,12 +111,6 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                           ],
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _ProTeaser(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ProScreen()),
                       ),
                     ),
                   ],
@@ -274,52 +267,6 @@ class _StageTimeRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ProTeaser extends StatelessWidget {
-  const _ProTeaser({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
-          borderRadius: BorderRadius.circular(12),
-          color: kAccentColor.withValues(alpha: 0.06),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.lock, color: kAccentColor, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'See your session-length trend & Art Wrapped',
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  Text(
-                    'Unlock with Pro',
-                    style: GoogleFonts.chewy(fontSize: 13, color: kAccentColor, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: kAccentColor),
-          ],
-        ),
-      ),
     );
   }
 }

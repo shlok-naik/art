@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,12 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/sparkline.dart';
-import '../../pro/presentation/pro_screen.dart';
 import '../../projects/presentation/project_detail_screen.dart';
-import '../../projects/presentation/session_details_form.dart' show kSessionStages;
 import '../../shell/main_shell.dart';
 import '../providers.dart';
-import 'stage_radar_chart.dart';
 
 class DifficultyAnalyticsScreen extends ConsumerWidget {
   const DifficultyAnalyticsScreen({super.key});
@@ -119,12 +114,6 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                           ],
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _RadarChartTeaser(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ProScreen()),
                       ),
                     ),
                   ],
@@ -438,78 +427,3 @@ class _DifficultyHistogram extends StatelessWidget {
     );
   }
 }
-
-/// Sample values (not the user's real data) with a deliberately wide spread
-/// so the radar chart's shape reads clearly through the blur.
-final _sampleStages = [
-  for (var i = 0; i < kSessionStages.length; i++)
-    StageDifficulty(stage: kSessionStages[i], average: _sampleValues[i % _sampleValues.length]),
-];
-const _sampleValues = [7.5, 3.0, 8.5, 4.5, 9.0, 2.5, 6.0, 5.0];
-
-/// Blurred preview of the Pro-only stage radar chart, with a lock-and-CTA
-/// overlay. Uses sample data (not the user's real numbers) so the shape is
-/// legible without giving away real analytics for free.
-class _RadarChartTeaser extends StatelessWidget {
-  const _RadarChartTeaser({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        decoration: appCardDecoration(),
-        clipBehavior: Clip.antiAlias,
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                  child: IgnorePointer(
-                    child: StageRadarChart(stages: _sampleStages),
-                  ),
-                ),
-              ),
-              Container(color: Colors.white.withValues(alpha: 0.35)),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.lock, color: kAccentColor, size: 28),
-                      const SizedBox(height: 8),
-                      Text(
-                        'See your top tools and practice streak.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Go Pro',
-                        style: GoogleFonts.chewy(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: kAccentColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
