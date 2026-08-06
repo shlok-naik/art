@@ -8,19 +8,19 @@ if (-not (Test-Path "backend\.venv")) {
     python -m venv backend\.venv
 }
 
-# .venv is gitignored (correctly — it's per-machine), so nothing else keeps
+# .venv is gitignored (correctly - it's per-machine), so nothing else keeps
 # it in sync with requirements.txt as dependencies get added. Re-running
 # this each time is a no-op when nothing changed, and self-heals a stale
 # venv (e.g. "ModuleNotFoundError: better_profanity") when it did.
 #
-# $ErrorActionPreference only makes *cmdlet* failures terminating — a
+# $ErrorActionPreference only makes *cmdlet* failures terminating - a
 # non-zero exit code from a native exe like pip is silently ignored unless
 # checked explicitly, so without this check a failed install would fall
 # through and still launch uvicorn against the broken venv.
 Write-Host "Syncing backend dependencies..."
 & backend\.venv\Scripts\pip install -r backend\requirements.txt
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "pip install failed (exit code $LASTEXITCODE) — see output above."
+    Write-Error "pip install failed (exit code $LASTEXITCODE) - see output above."
     exit 1
 }
 
