@@ -68,6 +68,13 @@ class CommentsRepository {
     await _client.from('comments').delete().eq('id', commentId);
   }
 
+  /// Total comments [userId] has posted, across every session — used for
+  /// comment-count achievements.
+  Future<int> fetchCommentCountByUser(String userId) async {
+    final rows = await _client.from('comments').select('id').eq('user_id', userId);
+    return List<Map<String, dynamic>>.from(rows).length;
+  }
+
   Future<void> reportComment(String commentId, {String? reason}) async {
     final userId = currentUserId;
     if (userId == null) throw Exception('Not signed in');

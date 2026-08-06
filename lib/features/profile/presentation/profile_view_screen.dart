@@ -202,17 +202,21 @@ class ProfileViewScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final achievement in achievementCatalog)
-                        _AchievementChip(
-                          achievement: achievement,
-                          locked: !(unlockedAchievements?.containsKey(achievement.key) ?? false),
-                        ),
-                    ],
-                  ),
+                  if (unlockedAchievements == null || unlockedAchievements.isEmpty)
+                    Text(
+                      'No achievements yet — keep creating to earn your first one.',
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final achievement in achievementCatalog)
+                          if (unlockedAchievements.containsKey(achievement.key))
+                            _AchievementChip(achievement: achievement),
+                      ],
+                    ),
                 ],
               ),
             );
@@ -249,10 +253,9 @@ class _StatColumn extends StatelessWidget {
 }
 
 class _AchievementChip extends StatelessWidget {
-  const _AchievementChip({required this.achievement, required this.locked});
+  const _AchievementChip({required this.achievement});
 
   final Achievement achievement;
-  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -261,44 +264,20 @@ class _AchievementChip extends StatelessWidget {
       child: Container(
         width: 78,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-        decoration: locked
-            ? BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                border: Border.all(color: const Color(0xFFCCCCCC), width: kBorderWidth),
-                borderRadius: BorderRadius.circular(14),
-              )
-            : appHardCardDecoration(radius: 14, shadowOffset: 2),
-        child: Opacity(
-          opacity: locked ? 0.5 : 1,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
-                  if (locked)
-                    const Positioned(
-                      right: -4,
-                      bottom: -4,
-                      child: Icon(Icons.lock, size: 12, color: Color(0xFF888888)),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                achievement.title,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  color: locked ? const Color(0xFF888888) : Colors.black,
-                ),
-              ),
-            ],
-          ),
+        decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 3),
+            Text(
+              achievement.title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+            ),
+          ],
         ),
       ),
     );

@@ -45,9 +45,18 @@ class MainShell extends ConsumerWidget {
 
     ref.listen<AsyncValue<List<Achievement>>>(newlyUnlockedAchievementsProvider, (previous, next) {
       final achievements = next.value;
-      if (achievements != null && achievements.isNotEmpty) {
-        _celebrate(context, achievements);
-      }
+      if (achievements == null || achievements.isEmpty) return;
+
+      final celebratedNotifier = ref.read(celebratedAchievementKeysProvider.notifier);
+      final alreadyCelebrated = celebratedNotifier.state;
+      final toCelebrate = [
+        for (final achievement in achievements)
+          if (!alreadyCelebrated.contains(achievement.key)) achievement,
+      ];
+      if (toCelebrate.isEmpty) return;
+
+      celebratedNotifier.state = {...alreadyCelebrated, for (final a in toCelebrate) a.key};
+      _celebrate(context, toCelebrate);
     });
 
     return Scaffold(

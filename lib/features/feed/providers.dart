@@ -40,6 +40,11 @@ final receivedReactionsCountProvider = FutureProvider.autoDispose.family<int, St
   return ref.watch(reactionsRepositoryProvider).fetchTotalReceivedByUser(userId);
 });
 
+/// Total comments a user has posted — feeds comment-count achievements.
+final postedCommentsCountProvider = FutureProvider.autoDispose.family<int, String>((ref, userId) {
+  return ref.watch(commentsRepositoryProvider).fetchCommentCountByUser(userId);
+});
+
 /// Only the signed-in user's own posts — drives Home's "Most Recent Post"
 /// card and the My Posts screen.
 final myPostsProvider = FutureProvider.autoDispose<List<FeedPost>>((ref) {

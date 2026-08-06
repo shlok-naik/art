@@ -7,12 +7,15 @@ class AchievementStats {
     required this.currentStreakDays,
     required this.totalMinutes,
     required this.longestMinutes,
+    required this.totalProjectCount,
     required this.finishedProjectCount,
     required this.averageDifficulty,
     required this.postCount,
     required this.totalViews,
     required this.followerCount,
+    required this.followingCount,
     required this.reactionsReceived,
+    required this.commentsPosted,
     required this.workStyle,
   });
 
@@ -20,12 +23,15 @@ class AchievementStats {
   final int currentStreakDays;
   final double totalMinutes;
   final double longestMinutes;
+  final int totalProjectCount;
   final int finishedProjectCount;
   final double? averageDifficulty;
   final int postCount;
   final int totalViews;
   final int followerCount;
+  final int followingCount;
   final int reactionsReceived;
+  final int commentsPosted;
   final String? workStyle;
 
   static const empty = AchievementStats(
@@ -33,12 +39,15 @@ class AchievementStats {
     currentStreakDays: 0,
     totalMinutes: 0,
     longestMinutes: 0,
+    totalProjectCount: 0,
     finishedProjectCount: 0,
     averageDifficulty: null,
     postCount: 0,
     totalViews: 0,
     followerCount: 0,
+    followingCount: 0,
     reactionsReceived: 0,
+    commentsPosted: 0,
     workStyle: null,
   );
 }
@@ -263,5 +272,176 @@ final achievementCatalog = <Achievement>[
     title: 'Early Bird',
     description: 'Log most of your sessions early in the morning',
     isUnlocked: (s) => s.workStyle == 'Early Bird 🐦',
+  ),
+  Achievement(
+    key: 'daytime_dabbler',
+    emoji: '☀️',
+    title: 'Daytime Dabbler',
+    description: 'Log most of your sessions during the day',
+    isUnlocked: (s) => s.workStyle == 'Daytime Dabbler ☀️',
+  ),
+  Achievement(
+    key: 'evening_artist',
+    emoji: '🌆',
+    title: 'Evening Artist',
+    description: 'Log most of your sessions in the evening',
+    isUnlocked: (s) => s.workStyle == 'Evening Artist 🎨',
+  ),
+  Achievement(
+    key: 'zen_artist',
+    emoji: '🧘',
+    title: 'Zen Artist',
+    description: 'Average difficulty of 3 or under across your sessions',
+    isUnlocked: (s) => s.averageDifficulty != null && s.averageDifficulty! <= 3,
+  ),
+
+  // More session/streak/time tiers
+  Achievement(
+    key: 'quarter_century',
+    emoji: '🎯',
+    title: 'Quarter Century',
+    description: 'Log 25 sessions',
+    isUnlocked: (s) => s.sessionCount >= 25,
+  ),
+  Achievement(
+    key: 'unrelenting',
+    emoji: '🗿',
+    title: 'Unrelenting',
+    description: 'Log 200 sessions',
+    isUnlocked: (s) => s.sessionCount >= 200,
+  ),
+  Achievement(
+    key: 'streak_14',
+    emoji: '🌤️',
+    title: 'Two Weeks Strong',
+    description: 'Reach a 14-day streak',
+    isUnlocked: (s) => s.currentStreakDays >= 14,
+  ),
+  Achievement(
+    key: 'warming_up',
+    emoji: '🌡️',
+    title: 'Warming Up',
+    description: 'Log 5 hours of total session time',
+    isUnlocked: (s) => s.totalMinutes >= 300,
+  ),
+  Achievement(
+    key: 'legend',
+    emoji: '🐉',
+    title: 'Legend',
+    description: 'Log 250 hours of total session time',
+    isUnlocked: (s) => s.totalMinutes >= 15000,
+  ),
+  Achievement(
+    key: 'iron_will',
+    emoji: '🦾',
+    title: 'Iron Will',
+    description: 'Complete a single session of 4+ hours',
+    isUnlocked: (s) => s.longestMinutes >= 240,
+  ),
+
+  // Projects
+  Achievement(
+    key: 'new_canvas',
+    emoji: '🖌️',
+    title: 'New Canvas',
+    description: 'Start your first project',
+    isUnlocked: (s) => s.totalProjectCount >= 1,
+  ),
+  Achievement(
+    key: 'idea_factory',
+    emoji: '💡',
+    title: 'Idea Factory',
+    description: 'Start 10 projects',
+    isUnlocked: (s) => s.totalProjectCount >= 10,
+  ),
+  Achievement(
+    key: 'overflowing_sketchbook',
+    emoji: '📚',
+    title: 'Overflowing Sketchbook',
+    description: 'Start 25 projects',
+    isUnlocked: (s) => s.totalProjectCount >= 25,
+  ),
+  Achievement(
+    key: 'master_craftsman',
+    emoji: '🛠️',
+    title: 'Master Craftsman',
+    description: 'Finish 20 projects',
+    isUnlocked: (s) => s.finishedProjectCount >= 20,
+  ),
+
+  // Posting / views / reactions — fills below and above the existing tiers
+  Achievement(
+    key: 'media_mogul',
+    emoji: '📰',
+    title: 'Media Mogul',
+    description: 'Share 100 posts',
+    isUnlocked: (s) => s.postCount >= 100,
+  ),
+  Achievement(
+    key: 'first_impressions',
+    emoji: '👋',
+    title: 'First Impressions',
+    description: 'Reach 10 total views across your posts',
+    isUnlocked: (s) => s.totalViews >= 10,
+  ),
+  Achievement(
+    key: 'viral_sensation',
+    emoji: '🌐',
+    title: 'Viral Sensation',
+    description: 'Reach 10,000 total views across your posts',
+    isUnlocked: (s) => s.totalViews >= 10000,
+  ),
+  Achievement(
+    key: 'well_liked',
+    emoji: '🙂',
+    title: 'Well Liked',
+    description: 'Receive 10 reactions across your posts',
+    isUnlocked: (s) => s.reactionsReceived >= 10,
+  ),
+  Achievement(
+    key: 'beloved',
+    emoji: '💝',
+    title: 'Beloved',
+    description: 'Receive 200 reactions across your posts',
+    isUnlocked: (s) => s.reactionsReceived >= 200,
+  ),
+  Achievement(
+    key: 'local_celebrity',
+    emoji: '🏙️',
+    title: 'Local Celebrity',
+    description: 'Reach 100 followers',
+    isUnlocked: (s) => s.followerCount >= 100,
+  ),
+
+  // Following / community
+  Achievement(
+    key: 'community_builder',
+    emoji: '🤝',
+    title: 'Community Builder',
+    description: 'Follow 10 other artists',
+    isUnlocked: (s) => s.followingCount >= 10,
+  ),
+  Achievement(
+    key: 'networker',
+    emoji: '🌍',
+    title: 'Networker',
+    description: 'Follow 50 other artists',
+    isUnlocked: (s) => s.followingCount >= 50,
+  ),
+
+  // Comments
+  Achievement(
+    key: 'conversationalist',
+    emoji: '💬',
+    title: 'Conversationalist',
+    description: 'Post your first comment',
+    isUnlocked: (s) => s.commentsPosted >= 1,
+  ),
+  Achievement(
+    key: 'chatterbox',
+    emoji: '🗣️',
+    title: 'Chatterbox',
+    description: 'Post 25 comments',
+    isUnlocked: (s) => s.commentsPosted >= 25,
   ),
 ];

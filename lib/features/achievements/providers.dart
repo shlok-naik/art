@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../auth/providers.dart';
 import '../feed/providers.dart';
@@ -9,6 +10,15 @@ import 'domain/achievement.dart';
 final achievementsRepositoryProvider = Provider<AchievementsRepository>((ref) {
   return AchievementsRepository(ref.watch(supabaseClientProvider));
 });
+
+/// Keys already celebrated (had their confetti screen shown) this app
+/// session — not autoDispose, so it survives for as long as the app is
+/// running. [newlyUnlockedAchievementsProvider] can legitimately report the
+/// same key more than once (e.g. Supabase's auth stream firing twice on
+/// cold start re-triggers the whole check before the first run's DB insert
+/// is reflected back), so the celebration UI filters against this rather
+/// than trusting every emission to be genuinely new.
+final celebratedAchievementKeysProvider = StateProvider<Set<String>>((ref) => {});
 
 /// Achievement keys a given user has actually unlocked, mapped to when —
 /// works for any profile, so a visitor's public profile can show real
@@ -29,6 +39,7 @@ final achievementStatsProvider =
   final followCounts = await ref.watch(followCountsProvider(userId).future);
   final posts = await ref.watch(userPostsProvider(userId).future);
   final reactionsReceived = await ref.watch(receivedReactionsCountProvider(userId).future);
+  final commentsPosted = await ref.watch(postedCommentsCountProvider(userId).future);
 
   final totalViews = posts.fold<int>(0, (sum, post) => sum + post.views);
 
@@ -37,12 +48,15 @@ final achievementStatsProvider =
     currentStreakDays: sessionStats.currentStreakDays,
     totalMinutes: sessionStats.totalMinutes,
     longestMinutes: sessionStats.longestMinutes,
+    totalProjectCount: projectStats.totalCount,
     finishedProjectCount: projectStats.finishedCount,
     averageDifficulty: sessionStats.averageDifficulty,
     postCount: posts.length,
     totalViews: totalViews,
     followerCount: followCounts.followers,
+    followingCount: followCounts.following,
     reactionsReceived: reactionsReceived,
+    commentsPosted: commentsPosted,
     workStyle: sessionStats.workStyle,
   );
 });
