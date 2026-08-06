@@ -56,3 +56,6 @@ backend/venv/
 # Testing related
 .claude/
 .vscode/
+
+# Local Argent MCP config — machine-specific, not part of the app
+.mcp.json
