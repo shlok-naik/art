@@ -29,19 +29,48 @@ void goToMainTab(BuildContext context, WidgetRef ref, int index) {
 /// them. Screens pushed on top via Navigator (project details, league,
 /// settings, etc.) still cover this shell and keep their own back button,
 /// exactly as before.
-class MainShell extends ConsumerWidget {
+///
+/// Tabs live in a [PageView] (not an [IndexedStack]) purely for the slide
+/// transition when switching — swiping is disabled (`NeverScrollableScrollPhysics`)
+/// so the only way to change page is [mainTabIndexProvider], keeping tab
+/// switches exclusively a bottom-nav gesture. All four tabs still stay built
+/// simultaneously, same as IndexedStack, so scroll position/form state in an
+/// inactive tab survives switching away and back.
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
+  @override
+  ConsumerState<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<MainShell> {
+  late final _pageController = PageController(initialPage: ref.read(mainTabIndexProvider));
+
   static const _tabs = [
-    HomeScreen(),
-    FeedScreen(),
-    FollowedScreen(),
-    ProfileViewScreen(),
+    _KeepAliveTab(child: HomeScreen()),
+    _KeepAliveTab(child: FeedScreen()),
+    _KeepAliveTab(child: FollowedScreen()),
+    _KeepAliveTab(child: ProfileViewScreen()),
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final index = ref.watch(mainTabIndexProvider);
+
+    ref.listen<int>(mainTabIndexProvider, (previous, next) {
+      if (!_pageController.hasClients) return;
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    });
 
     ref.listen<AsyncValue<List<Achievement>>>(newlyUnlockedAchievementsProvider, (previous, next) {
       final achievements = next.value;
@@ -60,7 +89,11 @@ class MainShell extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: IndexedStack(index: index, children: _tabs),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: _tabs,
+      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: index,
         onTap: (i) => ref.read(mainTabIndexProvider.notifier).state = i,
@@ -80,5 +113,28 @@ class MainShell extends ConsumerWidget {
         );
       }
     });
+  }
+}
+
+/// Keeps [child] alive while scrolled off-screen in the shell's [PageView] —
+/// without this, an inactive tab can get disposed and rebuilt from scratch
+/// (losing scroll position, form state) the way [IndexedStack] never would.
+class _KeepAliveTab extends StatefulWidget {
+  const _KeepAliveTab({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAliveTab> createState() => _KeepAliveTabState();
+}
+
+class _KeepAliveTabState extends State<_KeepAliveTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

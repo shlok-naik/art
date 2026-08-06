@@ -251,9 +251,18 @@ class _FollowButton extends ConsumerStatefulWidget {
   ConsumerState<_FollowButton> createState() => _FollowButtonState();
 }
 
-class _FollowButtonState extends ConsumerState<_FollowButton> {
+class _FollowButtonState extends ConsumerState<_FollowButton> with SingleTickerProviderStateMixin {
   bool _isSubmitting = false;
   bool? _override;
+
+  late final _glowController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+  late final _glow = CurvedAnimation(parent: _glowController, curve: Curves.easeOut);
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    super.dispose();
+  }
 
   Future<void> _toggleFollow(bool isFollowing) async {
     setState(() => _isSubmitting = true);
@@ -269,6 +278,8 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         _override = !isFollowing;
         _isSubmitting = false;
       });
+      // Only glow on a successful *follow*, not on unfollow.
+      if (!isFollowing) _glowController.forward(from: 0);
       ref.invalidate(isFollowingProvider(widget.userId));
       ref.invalidate(followingListProvider);
       ref.invalidate(suggestedArtistsProvider);
@@ -291,20 +302,36 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
       child: InkWell(
         onTap: _isSubmitting ? null : () => _toggleFollow(isFollowing),
         borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isFollowing ? kAccentTintColor : kAccentColor,
-            border: Border.all(color: kBorderColor, width: kBorderWidth),
-            borderRadius: BorderRadius.circular(20),
+        child: AnimatedBuilder(
+          animation: _glow,
+          builder: (context, child) => Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: kAccentColor.withValues(alpha: 0.55 * (1 - _glow.value)),
+                  blurRadius: 18 * (1 - _glow.value) + 2,
+                  spreadRadius: 3 * (1 - _glow.value),
+                ),
+              ],
+            ),
+            child: child,
           ),
-          child: Text(
-            isFollowing ? 'Unfollow' : 'Follow',
-            style: appBodyStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isFollowing ? Colors.black : Colors.white,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isFollowing ? kAccentTintColor : kAccentColor,
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isFollowing ? 'Unfollow' : 'Follow',
+              style: appBodyStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: isFollowing ? Colors.black : Colors.white,
+              ),
             ),
           ),
         ),
