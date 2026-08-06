@@ -100,38 +100,28 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isActive ? kAccentColor : Colors.black;
+    final child = CircleAvatar(
+      radius: 16,
+      backgroundColor: Colors.transparent,
+      child: Icon(icon, color: color),
+    );
 
     return InkWell(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(end: isActive ? 1.0 : 0.0),
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutBack,
-            builder: (context, t, child) => Transform.scale(
-              scale: 1.0 + t * 0.18,
-              child: child,
-            ),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.transparent,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: Icon(icon, color: color, key: ValueKey(isActive)),
-              ),
-            ),
-          ),
+          child,
           if (label.isNotEmpty)
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 220),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.chewy(
                 fontSize: 12,
                 color: color,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
         ],
       ),
