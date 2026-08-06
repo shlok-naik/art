@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../achievements/domain/achievement.dart';
+import '../../achievements/presentation/achievement_chip.dart';
+import '../../achievements/presentation/all_achievements_screen.dart';
+import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
@@ -213,6 +217,8 @@ class PublicProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   _ProjectsRow(userId: userId, artist: profile.username),
+                  const SizedBox(height: 20),
+                  _AchievementsRow(userId: userId),
                   if (profile.pinnedPostId != null) ...[
                     const SizedBox(height: 20),
                     _PinnedPostCard(pinnedPostId: profile.pinnedPostId!, posts: posts),
@@ -409,6 +415,65 @@ class _ProjectCircle extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Achievements section for any profile — locked/unlocked state is real for
+/// whichever [userId] is passed in, so a visitor sees the same earned badges
+/// the owner does on their own profile, plus a link to the full catalog.
+class _AchievementsRow extends ConsumerWidget {
+  const _AchievementsRow({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unlockedAchievements = ref.watch(unlockedAchievementsProvider(userId)).value;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            const SizedBox(width: 8),
+            Text(
+              '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+            ),
+            const Spacer(),
+            InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AllAchievementsScreen(userId: userId)),
+              ),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Text(
+                  'View all',
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (unlockedAchievements == null || unlockedAchievements.isEmpty)
+          Text(
+            'No achievements yet.',
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final achievement in achievementCatalog)
+                if (unlockedAchievements.containsKey(achievement.key)) AchievementChip(achievement: achievement),
+            ],
+          ),
+      ],
     );
   }
 }

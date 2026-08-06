@@ -17,8 +17,18 @@ if (-not (Test-Path "backend\.venv")) {
 # non-zero exit code from a native exe like pip is silently ignored unless
 # checked explicitly, so without this check a failed install would fall
 # through and still launch uvicorn against the broken venv.
+#
+# pip's own stderr output (even a non-fatal notice, e.g. "a new release of
+# pip is available") gets wrapped by PowerShell 5.1 into a terminating
+# NativeCommandError under $ErrorActionPreference = "Stop", aborting the
+# script before the exit-code check below ever runs - even though pip
+# itself exited 0. Relax to "Continue" for just this call so stderr text
+# doesn't kill the script; $LASTEXITCODE still catches a genuine failure.
 Write-Host "Syncing backend dependencies..."
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 & backend\.venv\Scripts\pip install -r backend\requirements.txt
+$ErrorActionPreference = $previousErrorActionPreference
 if ($LASTEXITCODE -ne 0) {
     Write-Error "pip install failed (exit code $LASTEXITCODE) - see output above."
     exit 1

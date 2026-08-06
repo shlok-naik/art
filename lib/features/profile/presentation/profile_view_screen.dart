@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../achievements/domain/achievement.dart';
+import '../../achievements/presentation/achievement_chip.dart';
+import '../../achievements/presentation/all_achievements_screen.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
@@ -199,6 +201,20 @@ class ProfileViewScreen extends ConsumerWidget {
                         '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
                         style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
                       ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => AllAchievementsScreen(userId: profile.id)),
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          child: Text(
+                            'View all',
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -214,7 +230,7 @@ class ProfileViewScreen extends ConsumerWidget {
                       children: [
                         for (final achievement in achievementCatalog)
                           if (unlockedAchievements.containsKey(achievement.key))
-                            _AchievementChip(achievement: achievement),
+                            AchievementChip(achievement: achievement),
                       ],
                     ),
                 ],
@@ -252,34 +268,3 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-class _AchievementChip extends StatelessWidget {
-  const _AchievementChip({required this.achievement});
-
-  final Achievement achievement;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: achievement.description,
-      child: Container(
-        width: 78,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-        decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 3),
-            Text(
-              achievement.title,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
