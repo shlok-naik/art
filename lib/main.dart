@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'shared/onesignal_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,10 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // Push permission isn't requested here — the verification dialog in App
+  // requests it once the device has actually registered with OneSignal.
+  OneSignalService().initialize(oneSignalAppId);
 
   runApp(const ProviderScope(child: App()));
 }
