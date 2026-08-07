@@ -94,20 +94,11 @@ class LeagueRepository {
   }
 
   /// The winning submission of the most recently *ended* league, if there
-  /// is one yet — used for the "Last Season's Champion" card.
+  /// is one yet — used for the "Last Season's Champion" card. The
+  /// latest-past-league selection lives in the latest_league_champion view
+  /// (see refactor_db_cleanup.sql), so this is a single query.
   Future<LeagueChampion?> fetchLatestChampion() async {
-    final pastLeagues = await _client
-        .from('leagues')
-        .select('id')
-        .lt('ends_at', DateTime.now().toUtc().toIso8601String())
-        .order('ends_at', ascending: false)
-        .limit(1);
-    final pastLeagueRows = List<Map<String, dynamic>>.from(pastLeagues);
-    if (pastLeagueRows.isEmpty) return null;
-    final leagueId = pastLeagueRows.first['id'].toString();
-
-    final row =
-        await _client.from('league_champions').select().eq('league_id', leagueId).maybeSingle();
+    final row = await _client.from('latest_league_champion').select().maybeSingle();
     return row == null ? null : LeagueChampion.fromRow(row);
   }
 }
