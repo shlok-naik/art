@@ -7,9 +7,10 @@ class LeagueRepository {
 
   final SupabaseClient _client;
 
-  /// The current 2-week league, lazily materialized server-side by
-  /// `get_or_create_current_league()` — see add_league_tables.sql for why
-  /// this is a security-definer function rather than a client upsert.
+  /// The current weekly league, lazily materialized server-side by the
+  /// `get_or_create_current_league()` Postgres function — security definer,
+  /// so period boundaries and themes are computed from now() server-side
+  /// rather than trusted from the client.
   Future<League> fetchCurrentLeague() async {
     // The function returns a single `leagues` row (not SETOF), so PostgREST
     // hands it back as one JSON object rather than a one-element array.
@@ -69,8 +70,7 @@ class LeagueRepository {
   }
 
   /// Withdraws the signed-in user's own submission. RLS rejects this once
-  /// the league has ended (see "users delete their own submission while the
-  /// league is open" in add_league_tables.sql).
+  /// the submission phase has closed.
   Future<void> unsubmit(String submissionId) async {
     final deleted = await _client.from('league_submissions').delete().eq('id', submissionId).select('id');
     if (deleted.isEmpty) {
@@ -95,8 +95,8 @@ class LeagueRepository {
 
   /// The winning submission of the most recently *ended* league, if there
   /// is one yet — used for the "Last Season's Champion" card. The
-  /// latest-past-league selection lives in the latest_league_champion view
-  /// (see refactor_db_cleanup.sql), so this is a single query.
+  /// latest-past-league selection lives in the `latest_league_champion`
+  /// database view, so this is a single query.
   Future<LeagueChampion?> fetchLatestChampion() async {
     final row = await _client.from('latest_league_champion').select().maybeSingle();
     return row == null ? null : LeagueChampion.fromRow(row);

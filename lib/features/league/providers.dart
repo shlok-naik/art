@@ -9,10 +9,10 @@ final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
   return LeagueRepository(ref.watch(supabaseClientProvider));
 });
 
-/// The current 2-week league — materialized lazily server-side the first
-/// time anyone asks (see get_or_create_current_league() in
-/// add_league_tables.sql), so this is safe to watch from app start with no
-/// separate "is there a league yet?" check.
+/// The current weekly league — materialized lazily server-side by the
+/// `get_or_create_current_league()` Postgres function the first time anyone
+/// asks, so this is safe to watch from app start with no separate "is there
+/// a league yet?" check.
 final currentLeagueProvider = FutureProvider.autoDispose<League>((ref) {
   return ref.watch(leagueRepositoryProvider).fetchCurrentLeague();
 });
