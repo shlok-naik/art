@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 /// The app's public OneSignal App ID (not a secret — safe to hardcode).
@@ -13,31 +15,48 @@ class OneSignalService {
 
   bool _isInitialized = false;
 
+  // OneSignal only ships native plugin code for Android and iOS — on other
+  // platforms (e.g. Windows desktop) every call throws MissingPluginException.
+  static bool get _isSupported => Platform.isAndroid || Platform.isIOS;
+
   void initialize(String appId) {
-    if (_isInitialized) return;
+    if (_isInitialized || !_isSupported) return;
 
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     OneSignal.initialize(appId);
     _isInitialized = true;
   }
 
-  void login(String externalId) => OneSignal.login(externalId);
+  void login(String externalId) {
+    if (_isSupported) OneSignal.login(externalId);
+  }
 
-  void logout() => OneSignal.logout();
+  void logout() {
+    if (_isSupported) OneSignal.logout();
+  }
 
-  void setEmail(String email) => OneSignal.User.addEmail(email);
+  void setEmail(String email) {
+    if (_isSupported) OneSignal.User.addEmail(email);
+  }
 
-  void setSmsNumber(String number) => OneSignal.User.addSms(number);
+  void setSmsNumber(String number) {
+    if (_isSupported) OneSignal.User.addSms(number);
+  }
 
-  void setTag(String key, String value) => OneSignal.User.addTagWithKey(key, value);
+  void setTag(String key, String value) {
+    if (_isSupported) OneSignal.User.addTagWithKey(key, value);
+  }
 
-  Future<bool> requestPermission() => OneSignal.Notifications.requestPermission(true);
+  Future<bool> requestPermission() =>
+      _isSupported ? OneSignal.Notifications.requestPermission(true) : Future.value(false);
 
-  void setLogLevel(OSLogLevel level) => OneSignal.Debug.setLogLevel(level);
+  void setLogLevel(OSLogLevel level) {
+    if (_isSupported) OneSignal.Debug.setLogLevel(level);
+  }
 
-  String? get pushSubscriptionId => OneSignal.User.pushSubscription.id;
+  String? get pushSubscriptionId => _isSupported ? OneSignal.User.pushSubscription.id : null;
 
   void addPushSubscriptionObserver(void Function(OSPushSubscriptionChangedState state) handler) {
-    OneSignal.User.pushSubscription.addObserver(handler);
+    if (_isSupported) OneSignal.User.pushSubscription.addObserver(handler);
   }
 }

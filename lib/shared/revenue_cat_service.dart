@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -36,8 +38,13 @@ class RevenueCatService {
 
   bool _isInitialized = false;
 
+  // RevenueCat wraps StoreKit/Play Billing — it only ships native plugin code
+  // for Android and iOS, so on other platforms (e.g. Windows desktop) every
+  // call throws MissingPluginException.
+  static bool get _isSupported => Platform.isAndroid || Platform.isIOS;
+
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized || !_isSupported) return;
 
     await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.info);
     await Purchases.configure(PurchasesConfiguration(revenueCatApiKey));
@@ -47,12 +54,12 @@ class RevenueCatService {
   /// Syncs the RevenueCat identity with the app's authenticated user, so
   /// entitlements follow the account rather than a per-device anonymous ID.
   Future<void> login(String appUserId) async {
-    await Purchases.logIn(appUserId);
+    if (_isSupported) await Purchases.logIn(appUserId);
   }
 
   /// Reverts to a new anonymous RevenueCat ID on sign-out.
   Future<void> logout() async {
-    await Purchases.logOut();
+    if (_isSupported) await Purchases.logOut();
   }
 
   Future<CustomerInfo> getCustomerInfo() => Purchases.getCustomerInfo();
@@ -60,16 +67,18 @@ class RevenueCatService {
   bool isProActive(CustomerInfo customerInfo) => customerInfo.entitlements.active.containsKey(proEntitlementId);
 
   void addCustomerInfoUpdateListener(CustomerInfoUpdateListener listener) {
-    Purchases.addCustomerInfoUpdateListener(listener);
+    if (_isSupported) Purchases.addCustomerInfoUpdateListener(listener);
   }
 
   void removeCustomerInfoUpdateListener(CustomerInfoUpdateListener listener) {
-    Purchases.removeCustomerInfoUpdateListener(listener);
+    if (_isSupported) Purchases.removeCustomerInfoUpdateListener(listener);
   }
 
   Future<Offerings> getOfferings() => Purchases.getOfferings();
 
   Future<PurchaseOutcome> purchasePackage(Package package) async {
+    if (!_isSupported) return PurchaseFailed('Purchases are not supported on this platform');
+
     try {
       final result = await Purchases.purchase(PurchaseParams.package(package));
       return PurchaseSuccess(result.customerInfo);
@@ -82,6 +91,8 @@ class RevenueCatService {
   }
 
   Future<PurchaseOutcome> restorePurchases() async {
+    if (!_isSupported) return PurchaseFailed('Purchases are not supported on this platform');
+
     try {
       final customerInfo = await Purchases.restorePurchases();
       return PurchaseSuccess(customerInfo);
