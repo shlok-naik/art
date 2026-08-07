@@ -75,13 +75,17 @@ class CommentsRepository {
     return List<Map<String, dynamic>>.from(rows).length;
   }
 
+  /// Files a report against [commentId]. Upserts with `ignoreDuplicates`
+  /// against the (comment_id, reporter_id) unique constraint, so reporting
+  /// the same comment twice is a silent no-op — same pattern as views and
+  /// achievements — instead of a duplicate-key error.
   Future<void> reportComment(String commentId, {String? reason}) async {
     final userId = currentUserId;
     if (userId == null) throw Exception('Not signed in');
-    await _client.from('comment_reports').insert({
-      'comment_id': commentId,
-      'reporter_id': userId,
-      'reason': reason,
-    });
+    await _client.from('comment_reports').upsert(
+      {'comment_id': commentId, 'reporter_id': userId, 'reason': reason},
+      onConflict: 'comment_id,reporter_id',
+      ignoreDuplicates: true,
+    );
   }
 }
