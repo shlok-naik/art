@@ -34,7 +34,8 @@ class League {
   bool get isOpen => DateTime.now().toUtc().isBefore(endsAt);
 }
 
-/// One artist's entry in a league, with its live vote count.
+/// One artist's entry in a league — a whole project, browsable session by
+/// session — with its live vote count.
 class LeagueSubmission {
   const LeagueSubmission({
     required this.id,
@@ -43,6 +44,10 @@ class LeagueSubmission {
     required this.artistUsername,
     required this.photoUrl,
     required this.votes,
+    required this.projectId,
+    required this.projectTitle,
+    required this.projectCompletionPercent,
+    required this.projectFinishedStatus,
     this.caption,
   });
 
@@ -55,6 +60,10 @@ class LeagueSubmission {
       photoUrl: row['photo_url']?.toString() ?? '',
       caption: row['caption']?.toString(),
       votes: int.tryParse(row['votes']?.toString() ?? '') ?? 0,
+      projectId: row['project_id']?.toString() ?? '',
+      projectTitle: row['project_title']?.toString() ?? '',
+      projectCompletionPercent: int.tryParse(row['project_completion_percent']?.toString() ?? '') ?? 0,
+      projectFinishedStatus: row['project_finished_status'] == true,
     );
   }
 
@@ -65,6 +74,10 @@ class LeagueSubmission {
   final String photoUrl;
   final String? caption;
   final int votes;
+  final String projectId;
+  final String projectTitle;
+  final int projectCompletionPercent;
+  final bool projectFinishedStatus;
 }
 
 /// The top-voted submission from a past (already-ended) league.

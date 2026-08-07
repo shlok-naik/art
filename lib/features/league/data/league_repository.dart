@@ -42,28 +42,15 @@ class LeagueRepository {
     return row?['submission_id']?.toString();
   }
 
-  /// The signed-in user's own submission to [leagueId], if they've entered
-  /// one — one entry per league, enforced by a unique constraint.
-  Future<LeagueSubmission?> fetchMySubmission(String leagueId) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) return null;
-    final row = await _client
-        .from('league_submission_details')
-        .select()
-        .eq('league_id', leagueId)
-        .eq('user_id', userId)
-        .maybeSingle();
-    return row == null ? null : LeagueSubmission.fromRow(row);
-  }
-
-  /// Submits [photoUrl] (usually copied from an existing posted session) as
-  /// the signed-in user's entry to [leagueId]. Replaces any existing
-  /// submission from this user in this league (upsert on the
-  /// league_id+user_id unique constraint) rather than erroring.
-  Future<void> submit({
+  /// Submits [projectId] (with its current cover [photoUrl]) as one of the
+  /// signed-in user's entries to [leagueId]. A user may submit multiple
+  /// projects to the same league; resubmitting the *same* project replaces
+  /// its entry (upsert on the league_id+project_id unique constraint)
+  /// rather than erroring.
+  Future<void> submitProject({
     required String leagueId,
+    required String projectId,
     required String photoUrl,
-    String? sessionId,
     String? caption,
   }) async {
     final userId = _client.auth.currentUser!.id;
@@ -71,12 +58,22 @@ class LeagueRepository {
       {
         'league_id': leagueId,
         'user_id': userId,
-        'session_id': sessionId,
+        'project_id': projectId,
         'photo_url': photoUrl,
         'caption': caption,
       },
-      onConflict: 'league_id,user_id',
+      onConflict: 'league_id,project_id',
     );
+  }
+
+  /// Withdraws the signed-in user's own submission. RLS rejects this once
+  /// the league has ended (see "users delete their own submission while the
+  /// league is open" in add_league_tables.sql).
+  Future<void> unsubmit(String submissionId) async {
+    final deleted = await _client.from('league_submissions').delete().eq('id', submissionId).select('id');
+    if (deleted.isEmpty) {
+      throw Exception('Submission was not removed (not found, or the league has ended)');
+    }
   }
 
   /// Casts (or changes) the signed-in user's vote for [submissionId] in

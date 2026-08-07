@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_styles.dart';
-import '../../feed/providers.dart';
+import '../../auth/providers.dart';
 import '../providers.dart';
 
-/// Lets the signed-in user pick one of their own posted sessions to submit
-/// as their entry to [leagueId]. Submitting again (a different post)
-/// replaces their existing entry, matching the one-submission-per-league
-/// constraint enforced server-side.
+/// Lets the signed-in user submit one or more of their own projects as
+/// entries to [leagueId]. A project can be submitted at most once per
+/// league (submitting it again just replaces that entry), but a user may
+/// submit as many different projects as they like.
 class SubmitToLeagueScreen extends ConsumerStatefulWidget {
   const SubmitToLeagueScreen({super.key, required this.leagueId});
 
@@ -20,23 +20,25 @@ class SubmitToLeagueScreen extends ConsumerStatefulWidget {
 }
 
 class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
-  String? _submittingSessionId;
+  String? _submittingProjectId;
 
-  Future<void> _submit(String sessionId, String photoUrl) async {
-    setState(() => _submittingSessionId = sessionId);
+  Future<void> _submit(String projectId, String photoUrl) async {
+    setState(() => _submittingProjectId = projectId);
     try {
-      await ref.read(leagueRepositoryProvider).submit(
+      await ref.read(leagueRepositoryProvider).submitProject(
             leagueId: widget.leagueId,
-            sessionId: sessionId,
+            projectId: projectId,
             photoUrl: photoUrl,
           );
       ref.invalidate(leagueSubmissionsProvider(widget.leagueId));
-      ref.invalidate(myLeagueSubmissionProvider(widget.leagueId));
       if (!mounted) return;
-      Navigator.of(context).pop();
+      setState(() => _submittingProjectId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Submitted! Tap another project to submit it too.')),
+      );
     } catch (e) {
       if (!mounted) return;
-      setState(() => _submittingSessionId = null);
+      setState(() => _submittingProjectId = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to submit: $e')),
       );
@@ -45,52 +47,73 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final postsAsync = ref.watch(myPostsProvider);
-    final mySubmissionAsync = ref.watch(myLeagueSubmissionProvider(widget.leagueId));
+    final projectsAsync = ref.watch(myProjectsWithCoverProvider);
+    final mySubmissionsAsync = ref.watch(leagueSubmissionsProvider(widget.leagueId));
+    final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
+
+    final submittedProjectIds = {
+      for (final submission in mySubmissionsAsync.value ?? const [])
+        if (submission.userId == myUserId) submission.projectId,
+    };
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Submit to League'),
-      body: postsAsync.when(
-        data: (posts) {
-          final postsWithPhotos = posts.where((p) => (p.photoUrl ?? '').isNotEmpty).toList();
-          if (postsWithPhotos.isEmpty) {
+      body: projectsAsync.when(
+        data: (projectsWithCover) {
+          if (projectsWithCover.isEmpty) {
             return Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                "You don't have any posts with a photo yet — post a session first.",
+                "You don't have any projects with a logged session yet — log a session first.",
                 textAlign: TextAlign.center,
                 style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
               ),
             );
           }
-          final mySubmissionId = mySubmissionAsync.value?.id;
           return GridView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: postsWithPhotos.length,
+            itemCount: projectsWithCover.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
             ),
             itemBuilder: (context, index) {
-              final post = postsWithPhotos[index];
-              final isSubmitting = _submittingSessionId == post.id;
+              final (project, coverPhotoUrl) = projectsWithCover[index];
+              final projectId = project['id'].toString();
+              final isSubmitting = _submittingProjectId == projectId;
+              final isSubmitted = submittedProjectIds.contains(projectId);
               return GestureDetector(
-                onTap: isSubmitting ? null : () => _submit(post.id, post.photoUrl!),
+                onTap: isSubmitting ? null : () => _submit(projectId, coverPhotoUrl),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CachedNetworkImage(imageUrl: post.photoUrl!, fit: BoxFit.cover),
+                      CachedNetworkImage(imageUrl: coverPhotoUrl, fit: BoxFit.cover),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          color: Colors.black54,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          child: Text(
+                            project['title']?.toString() ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                          ),
+                        ),
+                      ),
                       if (isSubmitting)
                         Container(
                           color: Colors.black45,
                           alignment: Alignment.center,
                           child: const CircularProgressIndicator(color: Colors.white),
                         ),
-                      if (mySubmissionId != null && post.id == mySubmissionId)
+                      if (isSubmitted)
                         Positioned(
                           top: 4,
                           right: 4,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,18 +11,8 @@ import '../../auth/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
 import '../providers.dart';
+import 'league_project_sessions_screen.dart';
 import 'submit_to_league_screen.dart';
-
-String _formatTimeRemaining(DateTime endsAt) {
-  final remaining = endsAt.difference(DateTime.now().toUtc());
-  if (remaining.isNegative) return 'Voting closed';
-  final days = remaining.inDays;
-  final hours = remaining.inHours.remainder(24);
-  if (days > 0) return '${days}d ${hours}h left';
-  final minutes = remaining.inMinutes.remainder(60);
-  if (hours > 0) return '${hours}h ${minutes}m left';
-  return '${minutes}m left';
-}
 
 class LeagueScreen extends ConsumerWidget {
   const LeagueScreen({super.key});
@@ -54,13 +46,25 @@ class LeagueScreen extends ConsumerWidget {
   }
 }
 
-class _LeagueBody extends ConsumerWidget {
+/// Which submissions grid the tab toggle below the "Submissions" header is
+/// currently showing.
+enum _SubmissionsTab { mine, everyone }
+
+class _LeagueBody extends ConsumerStatefulWidget {
   const _LeagueBody({required this.league});
 
   final League league;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LeagueBody> createState() => _LeagueBodyState();
+}
+
+class _LeagueBodyState extends ConsumerState<_LeagueBody> {
+  _SubmissionsTab _tab = _SubmissionsTab.mine;
+
+  @override
+  Widget build(BuildContext context) {
+    final league = widget.league;
     final submissionsAsync = ref.watch(leagueSubmissionsProvider(league.id));
     final myVoteAsync = ref.watch(myLeagueVoteProvider(league.id));
     final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
@@ -77,7 +81,15 @@ class _LeagueBody extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _CountdownTimer(endsAt: league.endsAt),
+            const SizedBox(height: 12),
             _ThemeBanner(league: league),
+            const SizedBox(height: 16),
+            submissionsAsync.when(
+              data: (submissions) => _Leaderboard(submissions: submissions, myUserId: myUserId),
+              loading: () => const SizedBox.shrink(),
+              error: (error, stack) => const SizedBox.shrink(),
+            ),
             const SizedBox(height: 16),
             const _PastChampionCard(),
             const SizedBox(height: 20),
@@ -107,15 +119,26 @@ class _LeagueBody extends ConsumerWidget {
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
             ),
             const SizedBox(height: 12),
+            _SubmissionsTabToggle(
+              selected: _tab,
+              onChanged: (tab) => setState(() => _tab = tab),
+            ),
+            const SizedBox(height: 12),
             submissionsAsync.when(
               data: (submissions) {
-                if (submissions.isEmpty) {
+                final visible = submissions.where((s) {
+                  return _tab == _SubmissionsTab.mine ? s.userId == myUserId : s.userId != myUserId;
+                }).toList();
+
+                if (visible.isEmpty) {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
                     decoration: appHardCardDecoration(radius: 18),
                     child: Text(
-                      'No submissions yet — be the first to enter this theme.',
+                      _tab == _SubmissionsTab.mine
+                          ? "You haven't submitted a project yet — tap Submit above."
+                          : 'No other submissions yet.',
                       textAlign: TextAlign.center,
                       style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
                     ),
@@ -125,7 +148,7 @@ class _LeagueBody extends ConsumerWidget {
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: submissions.length,
+                  itemCount: visible.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
@@ -133,7 +156,7 @@ class _LeagueBody extends ConsumerWidget {
                     childAspectRatio: 0.82,
                   ),
                   itemBuilder: (context, index) {
-                    final submission = submissions[index];
+                    final submission = visible[index];
                     return _SubmissionCard(
                       submission: submission,
                       isMine: submission.userId == myUserId,
@@ -180,18 +203,278 @@ class _ThemeBanner extends StatelessWidget {
             league.themeDescription,
             style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
           ),
-          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+}
+
+/// Live countdown to [endsAt], ticking every second so days/hours/minutes/
+/// seconds stay accurate without needing a pull-to-refresh.
+class _CountdownTimer extends StatefulWidget {
+  const _CountdownTimer({required this.endsAt});
+
+  final DateTime endsAt;
+
+  @override
+  State<_CountdownTimer> createState() => _CountdownTimerState();
+}
+
+class _CountdownTimerState extends State<_CountdownTimer> {
+  late Duration _remaining = widget.endsAt.difference(DateTime.now().toUtc());
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _remaining = widget.endsAt.difference(DateTime.now().toUtc()));
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_remaining.isNegative) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: appHardCardDecoration(radius: 18),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.timer_off_outlined, color: Colors.black54, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Voting closed',
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final days = _remaining.inDays;
+    final hours = _remaining.inHours.remainder(24);
+    final minutes = _remaining.inMinutes.remainder(60);
+    final seconds = _remaining.inSeconds.remainder(60);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: appHardCardDecoration(radius: 18),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _CountdownUnit(value: days, label: 'DAYS'),
+          _CountdownUnit(value: hours, label: 'HRS'),
+          _CountdownUnit(value: minutes, label: 'MIN'),
+          _CountdownUnit(value: seconds, label: 'SEC'),
+        ],
+      ),
+    );
+  }
+}
+
+class _CountdownUnit extends StatelessWidget {
+  const _CountdownUnit({required this.value, required this.label});
+
+  final int value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value.toString().padLeft(2, '0'), style: GoogleFonts.chewy(fontSize: 26, color: Colors.black)),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: appBodyStyle(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+        ),
+      ],
+    );
+  }
+}
+
+/// Pill-shaped two-way toggle between "My Submissions" and "Everyone" —
+/// there's no existing TabBar pattern elsewhere in the app, so this follows
+/// the same hand-rolled hard-card look as the rest of the league screen
+/// instead of introducing Flutter's TabBar/TabController.
+class _SubmissionsTabToggle extends StatelessWidget {
+  const _SubmissionsTabToggle({required this.selected, required this.onChanged});
+
+  final _SubmissionsTab selected;
+  final ValueChanged<_SubmissionsTab> onChanged;
+
+  Widget _segment(String label, _SubmissionsTab tab) {
+    final isSelected = tab == selected;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(tab),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? kAccentColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            label,
+            style: appBodyStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? Colors.white : Colors.black54,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F2),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: kBorderColor, width: kBorderWidth),
+      ),
+      child: Row(
+        children: [
+          _segment('My Submissions', _SubmissionsTab.mine),
+          _segment('Everyone', _SubmissionsTab.everyone),
+        ],
+      ),
+    );
+  }
+}
+
+/// The top 10 of the current standings, live off the same vote counts the
+/// submissions grid uses — it updates the moment a vote is cast (or on
+/// pull-to-refresh for votes cast by others), no separate polling needed.
+/// If the signed-in user has a submission, their best one's rank is called
+/// out separately — inline if it's already in the top 10, or in its own
+/// small section below if it isn't.
+class _Leaderboard extends StatelessWidget {
+  const _Leaderboard({required this.submissions, required this.myUserId});
+
+  final List<LeagueSubmission> submissions;
+  final String? myUserId;
+
+  static const _medals = ['🥇', '🥈', '🥉'];
+  static const _topCount = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    if (submissions.isEmpty) return const SizedBox.shrink();
+    // fetchSubmissions already orders by votes descending. A user's "rank"
+    // is their best (first-listed) submission if they've entered more than
+    // one project.
+    final top = submissions.take(_topCount).toList();
+    final myRank = myUserId == null ? -1 : submissions.indexWhere((s) => s.userId == myUserId);
+    final myRowShownInTop = myRank >= 0 && myRank < top.length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: appHardCardDecoration(radius: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Row(
             children: [
-              const Icon(Icons.timer_outlined, color: Colors.black, size: 18),
+              const Icon(Icons.leaderboard, color: kAccentColor, size: 20),
               const SizedBox(width: 6),
-              Text(
-                _formatTimeRemaining(league.endsAt),
-                style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black),
-              ),
+              Text('Current Standings', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
             ],
           ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < top.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            _LeaderboardRow(rank: i, submission: top[i], isMe: i == myRank),
+          ],
+          if (myRank >= 0 && !myRowShownInTop) ...[
+            const SizedBox(height: 12),
+            const Divider(color: kBorderColor, height: 1, thickness: kBorderWidth),
+            const SizedBox(height: 10),
+            Text(
+              'YOUR RANK',
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+            ),
+            const SizedBox(height: 8),
+            _LeaderboardRow(rank: myRank, submission: submissions[myRank], isMe: true),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _LeaderboardRow extends StatelessWidget {
+  const _LeaderboardRow({required this.rank, required this.submission, required this.isMe});
+
+  final int rank;
+  final LeagueSubmission submission;
+  final bool isMe;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: isMe ? kAccentTintColor : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 26,
+              child: Text(
+                rank < _Leaderboard._medals.length ? _Leaderboard._medals[rank] : '#${rank + 1}',
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: submission.photoUrl.isEmpty
+                  ? Container(
+                      width: 36,
+                      height: 36,
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.image_not_supported, size: 16, color: Colors.black26),
+                    )
+                  : CachedNetworkImage(imageUrl: submission.photoUrl, width: 36, height: 36, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
+                style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${submission.votes} vote${submission.votes == 1 ? '' : 's'}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF555555)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -255,6 +538,7 @@ class _SubmissionCard extends ConsumerStatefulWidget {
 
 class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
   bool _isVoting = false;
+  bool _isUnsubmitting = false;
 
   Future<void> _vote() async {
     setState(() => _isVoting = true);
@@ -273,10 +557,51 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     }
   }
 
+  Future<void> _confirmUnsubmit() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('Pulling "${widget.submission.projectTitle}"?', style: GoogleFonts.chewy(fontSize: 20)),
+        content: Text(
+          "Just checking — is this because you found a stronger piece to enter, or because you're being "
+          "harsh on your own work? If it's the second one, leave it up.",
+          style: GoogleFonts.chewy(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Never mind, keep it', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Pull it', style: GoogleFonts.chewy(color: Colors.red.shade700, fontSize: 15)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isUnsubmitting = true);
+    try {
+      await ref.read(leagueRepositoryProvider).unsubmit(widget.submission.id);
+      ref.invalidate(leagueSubmissionsProvider(widget.submission.leagueId));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUnsubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to unsubmit: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final submission = widget.submission;
     final canVote = widget.isVotingOpen && !widget.isMine && !_isVoting;
+    final canUnsubmit = widget.isMine && widget.isVotingOpen;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -285,25 +610,60 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: submission.photoUrl.isEmpty
-                  ? Container(
-                      color: Colors.grey.shade200,
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
-                    )
-                  : CachedNetworkImage(
-                      imageUrl: submission.photoUrl,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      placeholder: (context, url) => Container(color: Colors.grey.shade100),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: submission.photoUrl.isEmpty
+                          ? Container(
+                              color: Colors.grey.shade200,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                            )
+                          : CachedNetworkImage(
+                              imageUrl: submission.photoUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey.shade200,
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                if (canUnsubmit)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: _isUnsubmitting ? null : _confirmUnsubmit,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
+                        ),
+                        child: _isUnsubmitting
+                            ? const SizedBox(
+                                height: 10,
+                                width: 10,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: kAccentColor),
+                              )
+                            : const Icon(Icons.close, size: 12, color: kAccentColor),
                       ),
                     ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
