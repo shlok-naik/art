@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../achievements/domain/achievement.dart';
 import '../../achievements/presentation/achievement_chip.dart';
 import '../../achievements/presentation/all_achievements_screen.dart';
@@ -11,18 +12,12 @@ import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
+import '../../posts/presentation/post_detail_screen.dart';
+import '../../projects/presentation/project_detail_screen.dart';
 import '../domain/project_gallery.dart';
 import '../providers.dart';
-import 'project_gallery_screen.dart';
-import 'session_photo_viewer_screen.dart';
 import 'stats_screen.dart';
 import 'stats_visibility_screen.dart';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 /// Read-only view of another artist's profile — reached by tapping a
 /// username/avatar in the feed or the Followed list. Avatar upload and
@@ -50,7 +45,8 @@ class PublicProfileScreen extends ConsumerWidget {
               );
             }
             final postsAsync = ref.watch(userPostsProvider(userId));
-            final posts = postsAsync.value ?? const [];
+            final posts = postsAsync.value ?? const <FeedPost>[];
+            final postsCount = postsAsync.value?.length;
             final followersCount = ref.watch(followCountsProvider(userId)).value?.followers;
             final followingCount = ref.watch(followCountsProvider(userId)).value?.following;
 
@@ -160,22 +156,22 @@ class PublicProfileScreen extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: _StatColumn(
-                                value: _formatCount(posts.length),
+                              child: AppStatColumn(
+                                value: postsCount == null ? '—' : formatCount(postsCount),
                                 label: 'Posts',
                               ),
                             ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
                             Expanded(
-                              child: _StatColumn(
-                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                              child: AppStatColumn(
+                                value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
                             Expanded(
-                              child: _StatColumn(
-                                value: followingCount == null ? '—' : _formatCount(followingCount),
+                              child: AppStatColumn(
+                                value: followingCount == null ? '—' : formatCount(followingCount),
                                 label: 'Following',
                               ),
                             ),
@@ -236,11 +232,9 @@ class PublicProfileScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(profileByIdProvider(userId)),
           ),
         ),
       ),
@@ -350,7 +344,10 @@ class _ProjectsRow extends ConsumerWidget {
                 gallery: gallery,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => ProjectGalleryScreen(gallery: gallery, artist: artist),
+                    builder: (_) => ProjectDetailScreen(
+                      project: gallery.project,
+                      artistUsername: artist,
+                    ),
                   ),
                 ),
               );
@@ -510,24 +507,6 @@ class _MutualFollowersLine extends ConsumerWidget {
   }
 }
 
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-        const SizedBox(height: 2),
-        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
-      ],
-    );
-  }
-}
-
 /// Featured card for the post the owner has pinned to the top of their
 /// profile — renders nothing if [pinnedPostId] isn't (yet) among [posts].
 class _PinnedPostCard extends StatelessWidget {
@@ -561,7 +540,7 @@ class _PinnedPostCard extends StatelessWidget {
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SessionPhotoViewerScreen(post: pinnedPost!)),
+            MaterialPageRoute(builder: (_) => PostDetailScreen(post: pinnedPost!)),
           ),
           child: Container(
             width: double.infinity,
@@ -715,8 +694,16 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
           ],
         ),
         const SizedBox(height: 8),
-        if (widget.postsAsync.hasError)
-          AppErrorText('Failed to load posts: ${widget.postsAsync.error}')
+        if (widget.postsAsync.isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (widget.postsAsync.hasError)
+          AppErrorState(
+            error: widget.postsAsync.error!,
+            onRetry: () => ref.invalidate(userPostsProvider(widget.userId)),
+          )
         else if (visiblePosts.isEmpty)
           Container(
             width: double.infinity,
@@ -744,7 +731,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
               final isPinned = widget.pinnedPostId == post.id;
               return GestureDetector(
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SessionPhotoViewerScreen(post: post)),
+                  MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
                 ),
                 onLongPress: widget.isOwnProfile ? () => _togglePin(post) : null,
                 child: ClipRRect(
@@ -793,7 +780,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              _formatCount(post.views),
+                              formatCount(post.views),
                               style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)
                                   .copyWith(shadows: const [Shadow(color: Colors.black54, blurRadius: 4)]),
                             ),

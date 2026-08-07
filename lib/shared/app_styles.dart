@@ -161,3 +161,121 @@ class AppErrorText extends StatelessWidget {
     );
   }
 }
+
+/// A human-readable message for a failed request. Network-level failures
+/// (offline, DNS, refused connection, timeout) get a friendly explanation
+/// instead of a raw exception string; anything else falls back to the raw
+/// error so real bugs stay diagnosable.
+String appErrorMessage(Object error) {
+  final text = error.toString();
+  if (text.contains('SocketException') ||
+      text.contains('Failed host lookup') ||
+      text.contains('Connection refused') ||
+      text.contains('Connection failed') ||
+      text.contains('ClientException') ||
+      text.contains('Network is unreachable')) {
+    return 'No internet connection — check your network and try again.';
+  }
+  if (text.contains('TimeoutException') || text.contains('timed out')) {
+    return 'The server took too long to respond — try again in a moment.';
+  }
+  return text;
+}
+
+/// The app-wide terminal error state for a failed async load: friendly
+/// message (via [appErrorMessage]) plus an optional Retry action, so no
+/// screen dead-ends on a raw error string or an endless spinner. Use
+/// [onDark] on black-background screens (feed, voting feed).
+class AppErrorState extends StatelessWidget {
+  const AppErrorState({super.key, required this.error, this.onRetry, this.onDark = false});
+
+  final Object error;
+  final VoidCallback? onRetry;
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 40, color: onDark ? Colors.white38 : Colors.black26),
+            const SizedBox(height: 10),
+            Text(
+              appErrorMessage(error),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.chewy(
+                fontSize: 15,
+                color: onDark ? Colors.white : Colors.red.shade700,
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 14),
+              OutlinedButton(
+                onPressed: onRetry,
+                style: OutlinedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: onDark ? Colors.white : kBorderColor, width: kBorderWidth),
+                  foregroundColor: onDark ? Colors.white : Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Icon + label + value row used by the post detail screen and the feed's
+/// details sheet.
+class AppDetailStat extends StatelessWidget {
+  const AppDetailStat({super.key, required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: kAccentColor),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54)),
+            Text(value, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Big-number-over-label column used by the profile screens' Posts /
+/// Followers / Following (or League rank) strip.
+class AppStatColumn extends StatelessWidget {
+  const AppStatColumn({super.key, required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+        const SizedBox(height: 2),
+        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
+      ],
+    );
+  }
+}

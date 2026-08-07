@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/providers.dart';
@@ -12,30 +13,6 @@ import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
 import '../providers.dart';
 import 'comments_sheet.dart';
-
-const _monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-String _formatDate(DateTime date) =>
-    '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 /// Full-screen scrollable feed of posted slideshows and sessions, styled
 /// like YT Shorts / Instagram Reels: vertical swipe between posts, and
@@ -70,12 +47,10 @@ class FeedScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
-        error: (error, _) => Center(
-          child: Text(
-            'Failed to load feed: $error',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
-          ),
+        error: (error, _) => AppErrorState(
+          error: error,
+          onDark: true,
+          onRetry: () => ref.invalidate(feedPostsProvider),
         ),
       ),
     );
@@ -167,17 +142,17 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                 Row(
                   children: [
                     Expanded(
-                      child: _DetailStat(
+                      child: AppDetailStat(
                         icon: Icons.visibility_outlined,
                         label: 'Views',
-                        value: _formatCount(post.views),
+                        value: formatCount(post.views),
                       ),
                     ),
                     Expanded(
-                      child: _DetailStat(
+                      child: AppDetailStat(
                         icon: Icons.event_outlined,
                         label: 'Date posted',
-                        value: _formatDate(post.datePosted),
+                        value: formatMonthDayYear(post.datePosted),
                       ),
                     ),
                   ],
@@ -533,7 +508,7 @@ class _RightActionColumn extends StatelessWidget {
           baseSize: 64,
         ),
         Text(
-          _formatCount(upCount),
+          formatCount(upCount),
           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
               .copyWith(shadows: _shadow),
         ),
@@ -546,7 +521,7 @@ class _RightActionColumn extends StatelessWidget {
           baseSize: 64,
         ),
         Text(
-          _formatCount(downCount),
+          formatCount(downCount),
           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
               .copyWith(shadows: _shadow),
         ),
@@ -561,7 +536,7 @@ class _RightActionColumn extends StatelessWidget {
           ),
         ),
         Text(
-          _formatCount(commentCount),
+          formatCount(commentCount),
           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
               .copyWith(shadows: _shadow),
         ),
@@ -616,7 +591,7 @@ class _EmojiReactionRow extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                _formatCount(counts[reaction]!),
+                formatCount(counts[reaction]!),
                 style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)
                     .copyWith(shadows: _shadow),
               ),
@@ -740,45 +715,6 @@ class _CircleIconButton extends StatelessWidget {
         alignment: Alignment.center,
         child: Icon(icon, color: Colors.white, size: 22),
       ),
-    );
-  }
-}
-
-class _DetailStat extends StatelessWidget {
-  const _DetailStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: kAccentColor),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
-            ),
-            Text(
-              value,
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

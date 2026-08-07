@@ -188,11 +188,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                       );
                     },
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: AppErrorText('Failed to load comments: $error'),
-                      ),
+                    error: (error, _) => AppErrorState(
+                      error: error,
+                      onRetry: () => ref.invalidate(sessionCommentsProvider(widget.sessionId)),
                     ),
                   ),
                 ),

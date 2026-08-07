@@ -109,6 +109,16 @@ class LeagueSubmission {
   final String projectTitle;
   final int projectCompletionPercent;
   final bool projectFinishedStatus;
+
+  /// The submitted project as a `projects`-row-shaped map, for opening it in
+  /// the shared ProjectDetailScreen (which keys ownership off `user_id`).
+  Map<String, dynamic> get projectRow => {
+        'id': projectId,
+        'title': projectTitle,
+        'user_id': userId,
+        'completion_percent': projectCompletionPercent,
+        'finished_status': projectFinishedStatus,
+      };
 }
 
 /// The top-starred submission from a past (already-ended) league.

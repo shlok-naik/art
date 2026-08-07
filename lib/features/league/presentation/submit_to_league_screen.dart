@@ -131,11 +131,9 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: AppErrorText('Error: $error'),
-          ),
+        error: (error, stack) => AppErrorState(
+          error: error,
+          onRetry: () => ref.invalidate(myProjectsWithCoverProvider),
         ),
       ),
     );

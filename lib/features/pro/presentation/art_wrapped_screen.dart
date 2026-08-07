@@ -134,12 +134,10 @@ class ArtWrappedScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
-            error: (error, _) => Center(
-              child: Text(
-                'Failed to load your recap: $error',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.chewy(fontSize: 16, color: Colors.white),
-              ),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onDark: true,
+              onRetry: () => ref.invalidate(artWrappedProvider),
             ),
           ),
         ),

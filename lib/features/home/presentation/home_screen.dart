@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../analytics/presentation/analytics_screen.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
@@ -18,13 +19,6 @@ import '../../pro/presentation/pro_screen.dart';
 import '../../pro/providers.dart';
 
 const _sidePadding = EdgeInsets.symmetric(horizontal: 16);
-
-const _monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-String _formatPostDate(DateTime date) => '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -349,7 +343,7 @@ class HomeScreen extends ConsumerWidget {
                               Text(
                                 mostRecentPost == null
                                     ? 'Finish a session to see it here.'
-                                    : '👁 ${mostRecentPost.views} views     🗓 ${_formatPostDate(mostRecentPost.datePosted)}',
+                                    : '👁 ${mostRecentPost.views} views     🗓 ${formatMonthDayYear(mostRecentPost.datePosted)}',
                                 style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
                               ),
                             ],

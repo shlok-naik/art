@@ -10,7 +10,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../achievements/providers.dart';
+import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
@@ -19,31 +21,24 @@ import '../providers.dart';
 import 'session_capture.dart';
 import 'session_details_form.dart';
 
-const _monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-String _formatLoggedAt(dynamic value) {
-  if (value == null) return '—';
-  final date = DateTime.tryParse(value.toString());
-  if (date == null) return value.toString();
-  return '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-}
-
-String _formatDuration(Duration duration) {
-  final hours = duration.inHours.toString().padLeft(2, '0');
-  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return '$hours:$minutes:$seconds';
-}
-
 enum _SessionStage { idle, running, paused, photoSource, camera, review, details, submitting }
 
+/// The single project view, used from every context a project can be opened
+/// in: the Projects tab and Home (your own projects), a league submission,
+/// and a profile's project circles. The session list renders identically
+/// everywhere; the ownership check on `project['user_id']` is what gates the
+/// editable controls (Start New Session), so someone else's project is
+/// always read-only — RLS would reject a write anyway, this just keeps the
+/// UI honest about it.
 class ProjectDetailScreen extends ConsumerStatefulWidget {
-  const ProjectDetailScreen({super.key, required this.project});
+  const ProjectDetailScreen({super.key, required this.project, this.artistUsername});
 
   final Map<String, dynamic> project;
+
+  /// The project owner's username, for opening sessions as posts. Only
+  /// needed when viewing someone else's project (league, profile); omitted
+  /// for your own, where the signed-in profile's username is used.
+  final String? artistUsername;
 
   @override
   ConsumerState<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
@@ -61,8 +56,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   bool get _isFinished =>
       (int.tryParse(widget.project['completion_percent']?.toString() ?? '') ?? 0) >= 100;
 
+  /// Whether the signed-in user owns this project — gates every editable
+  /// control on this screen.
+  bool get _isOwner {
+    final myUserId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+    return myUserId != null && widget.project['user_id']?.toString() == myUserId;
+  }
+
   void _startSession() {
-    if (_isFinished) return;
+    if (_isFinished || !_isOwner) return;
     setState(() {
       _stage = _SessionStage.running;
       _elapsed = Duration.zero;
@@ -218,7 +220,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _formatDuration(_elapsed),
+            formatDurationHms(_elapsed),
             style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: Colors.black),
           ),
           const SizedBox(height: 32),
@@ -261,7 +263,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final sessionsAsync = ref.watch(sessionsListProvider(_projectId));
     return Column(
       children: [
-        if (_isFinished)
+        if (!_isOwner)
+          const SizedBox(height: 8)
+        else if (_isFinished)
           Container(
             width: double.infinity,
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -326,14 +330,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      final username = ref.read(currentProfileProvider).value?.username ?? 'you';
+                      final artist = widget.artistUsername ??
+                          ref.read(currentProfileProvider).value?.username ??
+                          'you';
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => PostDetailScreen(
                             post: FeedPost.fromRow(
                               session: session,
                               project: widget.project,
-                              artist: username,
+                              artist: artist,
                             ),
                           ),
                         ),
@@ -366,11 +372,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _formatDuration(Duration(seconds: durationSeconds)),
+                                  formatDurationHms(Duration(seconds: durationSeconds)),
                                   style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 Text(
-                                  'Logged: ${_formatLoggedAt(session['created_at'])}',
+                                  'Logged: ${formatDateValue(session['created_at'])}',
                                   style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
                                 ),
                               ],
@@ -385,8 +391,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator(color: kAccentColor)),
-            error: (error, _) => Center(
-              child: Text('Failed to load sessions: $error', style: GoogleFonts.chewy()),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(sessionsListProvider(_projectId)),
             ),
           ),
         ),

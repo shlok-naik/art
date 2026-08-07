@@ -6,16 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
 import '../../shell/main_shell.dart';
 import 'post_detail_screen.dart';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 final _isGridViewProvider = StateProvider<bool>((ref) => false);
 
@@ -63,11 +58,9 @@ class MyPostsScreen extends ConsumerWidget {
               return isGrid ? _PostGrid(posts: posts) : _PostList(posts: posts);
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: AppErrorText('Failed to load posts: $error'),
-              ),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(myPostsProvider),
             ),
           ),
         ),
@@ -184,7 +177,7 @@ class _PostTile extends ConsumerWidget {
               const Icon(Icons.favorite, size: 16, color: kAccentColor),
               const SizedBox(width: 4),
               Text(
-                '${_formatCount(total)} reactions',
+                '${formatCount(total)} reactions',
                 style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
               ),
             ],

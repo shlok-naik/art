@@ -3,25 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../achievements/domain/achievement.dart';
 import '../../achievements/presentation/achievement_chip.dart';
 import '../../achievements/presentation/all_achievements_screen.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
+import '../../league/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
-
-// League standing has no backing data yet — it needs the future league
-// feature. Posts, Followers, streak, and achievements below are all real.
-const _leagueRank = '#3';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 class ProfileViewScreen extends ConsumerWidget {
   const ProfileViewScreen({super.key});
@@ -43,6 +35,7 @@ class ProfileViewScreen extends ConsumerWidget {
             }
             final postsCount = ref.watch(myPostsProvider).value?.length;
             final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
+            final leagueRank = ref.watch(leagueRankProvider(profile.id)).value;
             final streakDays = ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
             final unlockedAchievements = ref.watch(unlockedAchievementsProvider(profile.id)).value;
             return SingleChildScrollView(
@@ -134,20 +127,25 @@ class ProfileViewScreen extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: _StatColumn(
-                                value: postsCount == null ? '—' : _formatCount(postsCount),
+                              child: AppStatColumn(
+                                value: postsCount == null ? '—' : formatCount(postsCount),
                                 label: 'Posts',
                               ),
                             ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
                             Expanded(
-                              child: _StatColumn(
-                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                              child: AppStatColumn(
+                                value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
-                            Expanded(child: _StatColumn(value: _leagueRank, label: 'League rank')),
+                            Expanded(
+                              child: AppStatColumn(
+                                value: leagueRank == null ? '—' : '#$leagueRank',
+                                label: 'League rank',
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -238,11 +236,9 @@ class ProfileViewScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(currentProfileProvider),
           ),
         ),
       ),
@@ -250,21 +246,4 @@ class ProfileViewScreen extends ConsumerWidget {
   }
 }
 
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-        const SizedBox(height: 2),
-        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
-      ],
-    );
-  }
-}
 

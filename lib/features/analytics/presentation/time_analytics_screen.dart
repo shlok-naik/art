@@ -118,8 +118,9 @@ class TimeAnalyticsScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: AppErrorText('Failed to load analytics: $error'),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(timeAnalyticsProvider),
             ),
           ),
         ),

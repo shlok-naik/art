@@ -8,10 +8,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
 import '../providers.dart';
-import 'league_project_sessions_screen.dart';
 import 'league_voting_feed_screen.dart';
 import 'submit_to_league_screen.dart';
 
@@ -29,11 +29,9 @@ class LeagueScreen extends ConsumerWidget {
         child: leagueAsync.when(
           data: (league) => _LeagueBody(league: league),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(currentLeagueProvider),
           ),
         ),
       ),
@@ -190,7 +188,10 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => AppErrorText('Error: $error'),
+              error: (error, stack) => AppErrorState(
+                error: error,
+                onRetry: () => ref.invalidate(leagueSubmissionsProvider(league.id)),
+              ),
             ),
           ],
         ),
@@ -464,7 +465,12 @@ class _LeaderboardRow extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(8),
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailScreen(
+            project: submission.projectRow,
+            artistUsername: submission.artistUsername,
+          ),
+        ),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -626,7 +632,12 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+                      MaterialPageRoute(
+                        builder: (_) => ProjectDetailScreen(
+                          project: submission.projectRow,
+                          artistUsername: submission.artistUsername,
+                        ),
+                      ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),

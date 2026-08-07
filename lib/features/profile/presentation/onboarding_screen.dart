@@ -74,9 +74,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()..scale(-1.0, 1.0),
+                        Transform.flip(
+                          flipX: true,
                           child: Image.asset('assets/branding/mascot.png', height: 150),
                         ),
                         const SizedBox(height: 24),

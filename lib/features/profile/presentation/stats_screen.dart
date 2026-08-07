@@ -3,21 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../feed/providers.dart';
+import '../../league/providers.dart';
 import '../data/stats_repository.dart';
 import '../domain/stat_key.dart';
 import '../providers.dart';
-
-// League standing has no backing data yet — it needs the future league
-// feature — so it stays a fixed placeholder like it does on the owner's
-// main Profile tab.
-const _leagueRank = '#3';
-
-String _formatCount(num count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 String _formatMinutes(double minutes) {
   final hours = minutes ~/ 60;
@@ -29,7 +20,7 @@ String _formatMinutes(double minutes) {
 /// Public-facing Stats page for one user — reachable from their profile.
 /// Only shows the stats the profile owner has opted into via
 /// [StatsVisibilityScreen], resolved against real data (posts, followers,
-/// views, time spent, streak); league rank remains a hardcoded placeholder.
+/// views, time spent, streak, current league rank).
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key, required this.userId});
 
@@ -105,11 +96,9 @@ class StatsScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(profileByIdProvider(userId)),
           ),
         ),
       ),
@@ -129,21 +118,22 @@ class _StatTile extends ConsumerWidget {
     final followCounts = ref.watch(followCountsProvider(userId)).value;
     final sessionStats = ref.watch(sessionStatsProvider(userId)).value;
     final projectStats = ref.watch(projectStatsProvider(userId)).value;
+    final leagueRank = ref.watch(leagueRankProvider(userId)).value;
 
     final displayValue = switch (statKey) {
-      StatKey.posts => posts == null ? '—' : _formatCount(posts.length),
-      StatKey.followers => followCounts == null ? '—' : _formatCount(followCounts.followers),
-      StatKey.following => followCounts == null ? '—' : _formatCount(followCounts.following),
+      StatKey.posts => posts == null ? '—' : formatCount(posts.length),
+      StatKey.followers => followCounts == null ? '—' : formatCount(followCounts.followers),
+      StatKey.following => followCounts == null ? '—' : formatCount(followCounts.following),
       StatKey.totalViews =>
-        posts == null ? '—' : _formatCount(posts.fold<int>(0, (sum, post) => sum + post.views)),
+        posts == null ? '—' : formatCount(posts.fold<int>(0, (sum, post) => sum + post.views)),
       StatKey.timeSpent => sessionStats == null ? '—' : _formatMinutes(sessionStats.totalMinutes),
-      StatKey.sessionCount => sessionStats == null ? '—' : _formatCount(sessionStats.sessionCount),
-      StatKey.streak => sessionStats == null ? '—' : _formatCount(sessionStats.currentStreakDays),
-      StatKey.leagueRank => _leagueRank,
+      StatKey.sessionCount => sessionStats == null ? '—' : formatCount(sessionStats.sessionCount),
+      StatKey.streak => sessionStats == null ? '—' : formatCount(sessionStats.currentStreakDays),
+      StatKey.leagueRank => leagueRank == null ? '—' : '#$leagueRank',
       StatKey.averageDifficulty => sessionStats?.averageDifficulty == null
           ? '—'
           : '${sessionStats!.averageDifficulty!.toStringAsFixed(1)}/10',
-      StatKey.finishedProjects => projectStats == null ? '—' : _formatCount(projectStats.finishedCount),
+      StatKey.finishedProjects => projectStats == null ? '—' : formatCount(projectStats.finishedCount),
       StatKey.longestSession => sessionStats == null ? '—' : _formatMinutes(sessionStats.longestMinutes),
       StatKey.averageSessionLength => sessionStats == null ? '—' : _formatMinutes(sessionStats.averageMinutes),
       StatKey.workStyle => sessionStats?.workStyle ?? '—',

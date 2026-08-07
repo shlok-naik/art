@@ -28,6 +28,19 @@ final myLeagueRatingsProvider = FutureProvider.autoDispose.family<Map<String, in
   return ref.watch(leagueRepositoryProvider).fetchMyRatings(leagueId);
 });
 
+/// [userId]'s current standing in this week's league — 1-based rank of
+/// their best submission, or null if they haven't submitted. Used by the
+/// profile and stats screens so "League rank" shows the same live value the
+/// league leaderboard does.
+final leagueRankProvider = FutureProvider.autoDispose.family<int?, String>((ref, userId) async {
+  final league = await ref.watch(currentLeagueProvider.future);
+  final submissions = await ref.watch(leagueSubmissionsProvider(league.id).future);
+  // fetchSubmissions orders by stars descending, so the first index where
+  // the user appears is their best submission's rank.
+  final index = submissions.indexWhere((submission) => submission.userId == userId);
+  return index < 0 ? null : index + 1;
+});
+
 /// The winning entry from the most recently ended league, if any.
 final latestLeagueChampionProvider = FutureProvider.autoDispose<LeagueChampion?>((ref) {
   return ref.watch(leagueRepositoryProvider).fetchLatestChampion();

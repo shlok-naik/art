@@ -83,8 +83,7 @@ class StatsRepository {
     final longestMinutes = durations.isEmpty ? 0.0 : durations.reduce((a, b) => a > b ? a : b);
 
     final difficulties = [
-      for (final s in sessions)
-        if (double.tryParse(s['difficulty']?.toString() ?? '') case final d?) d,
+      for (final s in sessions) ?double.tryParse(s['difficulty']?.toString() ?? ''),
     ];
     final averageDifficulty =
         difficulties.isEmpty ? null : difficulties.fold<double>(0, (sum, d) => sum + d) / difficulties.length;

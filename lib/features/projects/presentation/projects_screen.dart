@@ -4,21 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'project_detail_screen.dart';
-
-const _monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-String _formatCreatedAt(dynamic value) {
-  if (value == null) return '—';
-  final date = DateTime.tryParse(value.toString());
-  if (date == null) return value.toString();
-  return '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-}
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -245,8 +234,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(
-                  child: AppErrorText('Failed to load projects: $error'),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(projectsListProvider),
                 ),
               ),
             ),
@@ -277,7 +267,7 @@ class _ProjectCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = project['title']?.toString() ?? project['id'].toString();
-    final createdAt = _formatCreatedAt(project['created_at']);
+    final createdAt = formatDateValue(project['created_at']);
     final completionPercent =
         int.tryParse(project['completion_percent']?.toString() ?? '') ?? 0;
     final isFinished = completionPercent == 100;

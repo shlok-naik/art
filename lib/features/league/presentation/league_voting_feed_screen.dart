@@ -37,15 +37,10 @@ class LeagueVotingFeedScreen extends ConsumerWidget {
             return _VotingFeedBody(league: league, submissions: others);
           },
           loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Failed to load: $error',
-                style: GoogleFonts.chewy(color: Colors.white, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-            ),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onDark: true,
+            onRetry: () => ref.invalidate(leagueSubmissionsProvider(league.id)),
           ),
         ),
       ),
@@ -217,7 +212,16 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
-          error: (error, stack) => Container(color: Colors.grey.shade900),
+          // The submission's cover still lets the entry be rated even if its
+          // session list failed to load; with no cover either, say so rather
+          // than showing a silent blank page.
+          error: (error, stack) => submission.photoUrl.isEmpty
+              ? AppErrorState(
+                  error: error,
+                  onDark: true,
+                  onRetry: () => ref.invalidate(sessionsListProvider(submission.projectId)),
+                )
+              : CachedNetworkImage(imageUrl: submission.photoUrl, fit: BoxFit.cover),
         ),
         // Top gradient + per-session page dots, mirroring the Instagram-story
         // convention for "swipe sideways to see more of this one entry".

@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/formatters.dart';
+import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/domain/reactions.dart';
 import '../../feed/presentation/comments_sheet.dart';
@@ -21,24 +23,12 @@ import '../../shell/main_shell.dart';
 
 enum _Stage { viewing, photoSource, camera, reviewPhoto, savingPhoto, editingDetails, savingDetails }
 
-const _monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-String _formatDate(DateTime date) => '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
-
 /// Full detail view of a single post: photo, views, date, description, tools
 /// used, time taken, and a breakdown of each individual reaction type (not
-/// just a combined total). Also supports editing the photo and the
-/// stage/tools/difficulty details, since both already round-trip through the
-/// existing sessions backend.
+/// just a combined total). Reached from every context a session can be
+/// opened in — the feed, My Posts, a project's session list, a profile's
+/// post grid — so it renders the same everywhere; the photo/details edit
+/// controls only appear when the signed-in user owns the post.
 class PostDetailScreen extends ConsumerStatefulWidget {
   const PostDetailScreen({super.key, required this.post});
 
@@ -200,6 +190,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     ref.invalidate(profile_providers.userProjectGalleriesProvider(userId));
   }
 
+  /// Whether the signed-in user owns this post — gates the edit controls.
+  bool get _isOwner =>
+      ref.read(supabaseClientProvider).auth.currentUser?.id == widget.post.userId;
+
   Widget _buildViewingBody() {
     final post = widget.post;
     final countsMap =
@@ -228,38 +222,40 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     fit: BoxFit.cover,
                   ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _stage = _Stage.photoSource),
-                  style: OutlinedButton.styleFrom(
-                    shape: const StadiumBorder(),
-                    side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+          if (_isOwner) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => _stage = _Stage.photoSource),
+                    style: OutlinedButton.styleFrom(
+                      shape: const StadiumBorder(),
+                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit Photo'),
                   ),
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit Photo'),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _stage = _Stage.editingDetails),
-                  style: OutlinedButton.styleFrom(
-                    shape: const StadiumBorder(),
-                    side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => _stage = _Stage.editingDetails),
+                    style: OutlinedButton.styleFrom(
+                      shape: const StadiumBorder(),
+                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.tune),
+                    label: const Text('Edit Details'),
                   ),
-                  icon: const Icon(Icons.tune),
-                  label: const Text('Edit Details'),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: 20),
           Text(
             _title,
@@ -276,17 +272,17 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           Row(
             children: [
               Expanded(
-                child: _DetailStat(
+                child: AppDetailStat(
                   icon: Icons.visibility_outlined,
                   label: 'Views',
-                  value: _formatCount(post.views),
+                  value: formatCount(post.views),
                 ),
               ),
               Expanded(
-                child: _DetailStat(
+                child: AppDetailStat(
                   icon: Icons.event_outlined,
                   label: 'Date posted',
-                  value: _formatDate(post.datePosted),
+                  value: formatMonthDayYear(post.datePosted),
                 ),
               ),
             ],
@@ -408,32 +404,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 }
 
-class _DetailStat extends StatelessWidget {
-  const _DetailStat({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: kAccentColor),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54)),
-            Text(value, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class _ReactionBreakdown extends StatelessWidget {
   const _ReactionBreakdown({required this.counts});
 
@@ -471,7 +441,7 @@ class _ReactionChip extends StatelessWidget {
           Text(glyph, style: const TextStyle(fontSize: 18)),
           const SizedBox(width: 6),
           Text(
-            _formatCount(count),
+            formatCount(count),
             style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
           ),
         ],

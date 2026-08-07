@@ -13,7 +13,6 @@ class FollowedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final followingAsync = ref.watch(followingListProvider);
     final suggestedAsync = ref.watch(suggestedArtistsProvider);
-    final following = followingAsync.value ?? const [];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -25,39 +24,50 @@ class FollowedScreen extends ConsumerWidget {
             children: [
               Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
               const SizedBox(height: 20),
-              if (followingAsync.hasError)
-                AppErrorText('Failed to load followed artists: ${followingAsync.error}')
-              else if (following.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                  decoration: appHardCardDecoration(radius: 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset('assets/branding/mascot.png', height: 80),
-                      const SizedBox(height: 10),
-                      Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Follow other artists to see their posts here.',
-                        textAlign: TextAlign.center,
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+              followingAsync.when(
+                data: (following) => following.isEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                        decoration: appHardCardDecoration(radius: 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset('assets/branding/mascot.png', height: 80),
+                            const SizedBox(height: 10),
+                            Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Follow other artists to see their posts here.',
+                              textAlign: TextAlign.center,
+                              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          for (final profile in following) ...[
+                            _ArtistTile(
+                              key: ValueKey('following-${profile['id']}'),
+                              userId: profile['id'].toString(),
+                              handle: profile['username']?.toString() ?? '',
+                              subtitle: profile['display_name']?.toString() ?? '',
+                              isFollowing: true,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              else
-                for (final profile in following) ...[
-                  _ArtistTile(
-                    key: ValueKey('following-${profile['id']}'),
-                    userId: profile['id'].toString(),
-                    handle: profile['username']?.toString() ?? '',
-                    subtitle: profile['display_name']?.toString() ?? '',
-                    isFollowing: true,
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 28),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(followingListProvider),
+                ),
+              ),
               const SizedBox(height: 20),
               Text('Suggested artists', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
               const SizedBox(height: 10),
@@ -81,11 +91,14 @@ class FollowedScreen extends ConsumerWidget {
                           ],
                         ],
                       ),
-                loading: () => Text(
-                  'No suggestions right now.',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (error, _) => AppErrorText('Failed to load suggestions: $error'),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(suggestedArtistsProvider),
+                ),
               ),
             ],
           ),
