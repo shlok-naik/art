@@ -28,18 +28,20 @@ class LeagueRepository {
     return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueSubmission.fromRow(row)];
   }
 
-  /// The submission id the signed-in user has voted for in [leagueId], if
-  /// any — drives which submission card shows as "your vote".
-  Future<String?> fetchMyVote(String leagueId) async {
+  /// The signed-in user's ratings in [leagueId], keyed by submission id —
+  /// drives which stars show as already-filled in the voting feed.
+  Future<Map<String, int>> fetchMyRatings(String leagueId) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) return null;
-    final row = await _client
-        .from('league_votes')
-        .select('submission_id')
+    if (userId == null) return const {};
+    final rows = await _client
+        .from('league_ratings')
+        .select('submission_id, rating')
         .eq('league_id', leagueId)
-        .eq('voter_id', userId)
-        .maybeSingle();
-    return row?['submission_id']?.toString();
+        .eq('rater_id', userId);
+    return {
+      for (final row in List<Map<String, dynamic>>.from(rows))
+        row['submission_id'].toString(): int.tryParse(row['rating']?.toString() ?? '') ?? 0,
+    };
   }
 
   /// Submits [projectId] (with its current cover [photoUrl]) as one of the
@@ -76,13 +78,18 @@ class LeagueRepository {
     }
   }
 
-  /// Casts (or changes) the signed-in user's vote for [submissionId] in
-  /// [leagueId]. RLS rejects this if the submission is the voter's own.
-  Future<void> vote({required String leagueId, required String submissionId}) async {
+  /// Casts (or changes) the signed-in user's 1-5 star rating for
+  /// [submissionId] in [leagueId]. RLS rejects this outside the voting
+  /// phase or if the submission is the voter's own.
+  Future<void> rateSubmission({
+    required String leagueId,
+    required String submissionId,
+    required int rating,
+  }) async {
     final userId = _client.auth.currentUser!.id;
-    await _client.from('league_votes').upsert(
-      {'league_id': leagueId, 'voter_id': userId, 'submission_id': submissionId},
-      onConflict: 'league_id,voter_id',
+    await _client.from('league_ratings').upsert(
+      {'league_id': leagueId, 'rater_id': userId, 'submission_id': submissionId, 'rating': rating},
+      onConflict: 'league_id,rater_id,submission_id',
     );
   }
 

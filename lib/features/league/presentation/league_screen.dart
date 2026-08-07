@@ -12,6 +12,7 @@ import '../../shell/main_shell.dart';
 import '../domain/league.dart';
 import '../providers.dart';
 import 'league_project_sessions_screen.dart';
+import 'league_voting_feed_screen.dart';
 import 'submit_to_league_screen.dart';
 
 class LeagueScreen extends ConsumerWidget {
@@ -66,14 +67,13 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
   Widget build(BuildContext context) {
     final league = widget.league;
     final submissionsAsync = ref.watch(leagueSubmissionsProvider(league.id));
-    final myVoteAsync = ref.watch(myLeagueVoteProvider(league.id));
     final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
 
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(currentLeagueProvider);
         ref.invalidate(leagueSubmissionsProvider(league.id));
-        ref.invalidate(myLeagueVoteProvider(league.id));
+        ref.invalidate(myLeagueRatingsProvider(league.id));
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -81,7 +81,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _CountdownTimer(endsAt: league.endsAt),
+            _CountdownTimer(league: league),
             const SizedBox(height: 12),
             _ThemeBanner(league: league),
             const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
               children: [
                 Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
                 const Spacer(),
-                if (league.isOpen)
+                if (league.isSubmissionOpen)
                   InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => SubmitToLeagueScreen(leagueId: league.id)),
@@ -110,12 +110,37 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                         style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
                       ),
                     ),
+                  )
+                else if (league.isVotingOpen)
+                  InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LeagueVotingFeedScreen(league: league)),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Rate Entries',
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.chevron_right, size: 16, color: kAccentColor),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 2),
             Text(
-              'Vote for your favorite — no self-voting!',
+              league.isSubmissionOpen
+                  ? 'Submissions close Friday 2pm London — rating opens right after.'
+                  : league.isVotingOpen
+                      ? 'Rate every entry 1-5 stars — no self-rating!'
+                      : 'Voting has closed for this round.',
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
             ),
             const SizedBox(height: 12),
@@ -144,7 +169,6 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     ),
                   );
                 }
-                final myVoteId = myVoteAsync.value;
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -160,9 +184,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     return _SubmissionCard(
                       submission: submission,
                       isMine: submission.userId == myUserId,
-                      hasVoted: myVoteId != null,
-                      isMyVote: submission.id == myVoteId,
-                      isVotingOpen: league.isOpen,
+                      canUnsubmit: submission.userId == myUserId && league.isSubmissionOpen,
                     );
                   },
                 );
@@ -209,27 +231,26 @@ class _ThemeBanner extends StatelessWidget {
   }
 }
 
-/// Live countdown to [endsAt], ticking every second so days/hours/minutes/
-/// seconds stay accurate without needing a pull-to-refresh.
+/// Live countdown to the current phase's boundary (submissions closing,
+/// then voting closing), ticking every second so days/hours/minutes/
+/// seconds — and the phase label itself — stay accurate without needing a
+/// pull-to-refresh across a Friday-2pm or Sunday-midnight transition.
 class _CountdownTimer extends StatefulWidget {
-  const _CountdownTimer({required this.endsAt});
+  const _CountdownTimer({required this.league});
 
-  final DateTime endsAt;
+  final League league;
 
   @override
   State<_CountdownTimer> createState() => _CountdownTimerState();
 }
 
 class _CountdownTimerState extends State<_CountdownTimer> {
-  late Duration _remaining = widget.endsAt.difference(DateTime.now().toUtc());
   Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _remaining = widget.endsAt.difference(DateTime.now().toUtc()));
-    });
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   }
 
   @override
@@ -240,7 +261,8 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_remaining.isNegative) {
+    final boundary = widget.league.nextPhaseBoundary;
+    if (boundary == null) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -259,22 +281,33 @@ class _CountdownTimerState extends State<_CountdownTimer> {
       );
     }
 
-    final days = _remaining.inDays;
-    final hours = _remaining.inHours.remainder(24);
-    final minutes = _remaining.inMinutes.remainder(60);
-    final seconds = _remaining.inSeconds.remainder(60);
+    final remaining = boundary.difference(DateTime.now().toUtc());
+    final days = remaining.inDays;
+    final hours = remaining.inHours.remainder(24);
+    final minutes = remaining.inMinutes.remainder(60);
+    final seconds = remaining.inSeconds.remainder(60);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: appHardCardDecoration(radius: 18),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _CountdownUnit(value: days, label: 'DAYS'),
-          _CountdownUnit(value: hours, label: 'HRS'),
-          _CountdownUnit(value: minutes, label: 'MIN'),
-          _CountdownUnit(value: seconds, label: 'SEC'),
+          Text(
+            widget.league.phaseLabel.toUpperCase(),
+            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _CountdownUnit(value: days, label: 'DAYS'),
+              _CountdownUnit(value: hours, label: 'HRS'),
+              _CountdownUnit(value: minutes, label: 'MIN'),
+              _CountdownUnit(value: seconds, label: 'SEC'),
+            ],
+          ),
         ],
       ),
     );
@@ -470,7 +503,7 @@ class _LeaderboardRow extends StatelessWidget {
               ),
             ),
             Text(
-              '${submission.votes} vote${submission.votes == 1 ? '' : 's'}',
+              '⭐ ${submission.stars}',
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF555555)),
             ),
           ],
@@ -504,7 +537,7 @@ class _PastChampionCard extends ConsumerWidget {
               children: [
                 Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
                 Text(
-                  '@${champion.artistUsername} — ${champion.votes} vote${champion.votes == 1 ? '' : 's'}',
+                  '@${champion.artistUsername} — ⭐ ${champion.stars}',
                   style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -521,41 +554,19 @@ class _SubmissionCard extends ConsumerStatefulWidget {
   const _SubmissionCard({
     required this.submission,
     required this.isMine,
-    required this.hasVoted,
-    required this.isMyVote,
-    required this.isVotingOpen,
+    required this.canUnsubmit,
   });
 
   final LeagueSubmission submission;
   final bool isMine;
-  final bool hasVoted;
-  final bool isMyVote;
-  final bool isVotingOpen;
+  final bool canUnsubmit;
 
   @override
   ConsumerState<_SubmissionCard> createState() => _SubmissionCardState();
 }
 
 class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
-  bool _isVoting = false;
   bool _isUnsubmitting = false;
-
-  Future<void> _vote() async {
-    setState(() => _isVoting = true);
-    try {
-      await ref.read(leagueRepositoryProvider).vote(
-            leagueId: widget.submission.leagueId,
-            submissionId: widget.submission.id,
-          );
-      ref.invalidate(myLeagueVoteProvider(widget.submission.leagueId));
-      ref.invalidate(leagueSubmissionsProvider(widget.submission.leagueId));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to vote: $e')));
-    } finally {
-      if (mounted) setState(() => _isVoting = false);
-    }
-  }
 
   Future<void> _confirmUnsubmit() async {
     final confirmed = await showDialog<bool>(
@@ -600,8 +611,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
   @override
   Widget build(BuildContext context) {
     final submission = widget.submission;
-    final canVote = widget.isVotingOpen && !widget.isMine && !_isVoting;
-    final canUnsubmit = widget.isMine && widget.isVotingOpen;
+    final canUnsubmit = widget.canUnsubmit;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -673,34 +683,23 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          InkWell(
-            onTap: canVote ? _vote : null,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: widget.isMyVote ? kAccentTintColor : null,
-                border: Border.all(color: kBorderColor, width: kBorderWidth),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: _isVoting
-                  ? const SizedBox(
-                      height: 15,
-                      width: 15,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(widget.isMyVote ? '❤️' : '🤍', style: const TextStyle(fontSize: 15)),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${submission.votes}',
-                          style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
-                        ),
-                      ],
-                    ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('⭐', style: TextStyle(fontSize: 15)),
+                const SizedBox(width: 5),
+                Text(
+                  '${submission.stars}',
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,8 +1,13 @@
-/// One 2-week league period, as materialized by the
+/// One weekly league period, as materialized by the
 /// `get_or_create_current_league()` Postgres function — the theme text and
 /// period boundaries are snapshotted into this row at creation time, so a
 /// past league's display never changes even if the underlying theme catalog
 /// is edited later.
+///
+/// Each week has two phases (both computed server-side in Europe/London
+/// local time, so British Summer Time shifts them automatically):
+///   Mon 00:00 -> Fri 14:00  : submissions open ("it runs")
+///   Fri 14:00 -> Sun 00:00  : voting open (rate every entry 1-5 stars)
 class League {
   const League({
     required this.id,
@@ -11,6 +16,8 @@ class League {
     required this.themeDescription,
     required this.startsAt,
     required this.endsAt,
+    required this.submissionsCloseAt,
+    required this.votingClosesAt,
   });
 
   factory League.fromRow(Map<String, dynamic> row) {
@@ -21,6 +28,8 @@ class League {
       themeDescription: row['theme_description']?.toString() ?? '',
       startsAt: DateTime.tryParse(row['starts_at']?.toString() ?? '') ?? DateTime.now(),
       endsAt: DateTime.tryParse(row['ends_at']?.toString() ?? '') ?? DateTime.now(),
+      submissionsCloseAt: DateTime.tryParse(row['submissions_close_at']?.toString() ?? '') ?? DateTime.now(),
+      votingClosesAt: DateTime.tryParse(row['voting_closes_at']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 
@@ -30,8 +39,30 @@ class League {
   final String themeDescription;
   final DateTime startsAt;
   final DateTime endsAt;
+  final DateTime submissionsCloseAt;
+  final DateTime votingClosesAt;
 
-  bool get isOpen => DateTime.now().toUtc().isBefore(endsAt);
+  bool get isSubmissionOpen => DateTime.now().toUtc().isBefore(submissionsCloseAt);
+
+  bool get isVotingOpen {
+    final now = DateTime.now().toUtc();
+    return !now.isBefore(submissionsCloseAt) && now.isBefore(votingClosesAt);
+  }
+
+  /// The time the current phase (submissions, then voting) next changes, or
+  /// null once voting has closed for the week.
+  DateTime? get nextPhaseBoundary {
+    final now = DateTime.now().toUtc();
+    if (now.isBefore(submissionsCloseAt)) return submissionsCloseAt;
+    if (now.isBefore(votingClosesAt)) return votingClosesAt;
+    return null;
+  }
+
+  String get phaseLabel {
+    if (isSubmissionOpen) return 'Submissions close in';
+    if (isVotingOpen) return 'Voting closes in';
+    return 'Voting closed';
+  }
 }
 
 /// One artist's entry in a league — a whole project, browsable session by
@@ -43,7 +74,7 @@ class LeagueSubmission {
     required this.userId,
     required this.artistUsername,
     required this.photoUrl,
-    required this.votes,
+    required this.stars,
     required this.projectId,
     required this.projectTitle,
     required this.projectCompletionPercent,
@@ -59,7 +90,7 @@ class LeagueSubmission {
       artistUsername: row['artist_username']?.toString() ?? '',
       photoUrl: row['photo_url']?.toString() ?? '',
       caption: row['caption']?.toString(),
-      votes: int.tryParse(row['votes']?.toString() ?? '') ?? 0,
+      stars: int.tryParse(row['stars']?.toString() ?? '') ?? 0,
       projectId: row['project_id']?.toString() ?? '',
       projectTitle: row['project_title']?.toString() ?? '',
       projectCompletionPercent: int.tryParse(row['project_completion_percent']?.toString() ?? '') ?? 0,
@@ -73,21 +104,21 @@ class LeagueSubmission {
   final String artistUsername;
   final String photoUrl;
   final String? caption;
-  final int votes;
+  final int stars;
   final String projectId;
   final String projectTitle;
   final int projectCompletionPercent;
   final bool projectFinishedStatus;
 }
 
-/// The top-voted submission from a past (already-ended) league.
+/// The top-starred submission from a past (already-ended) league.
 class LeagueChampion {
   const LeagueChampion({
     required this.leagueId,
     required this.submissionId,
     required this.artistUsername,
     required this.photoUrl,
-    required this.votes,
+    required this.stars,
   });
 
   factory LeagueChampion.fromRow(Map<String, dynamic> row) {
@@ -96,7 +127,7 @@ class LeagueChampion {
       submissionId: row['submission_id'].toString(),
       artistUsername: row['artist_username']?.toString() ?? '',
       photoUrl: row['photo_url']?.toString() ?? '',
-      votes: int.tryParse(row['votes']?.toString() ?? '') ?? 0,
+      stars: int.tryParse(row['stars']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -104,5 +135,5 @@ class LeagueChampion {
   final String submissionId;
   final String artistUsername;
   final String photoUrl;
-  final int votes;
+  final int stars;
 }
