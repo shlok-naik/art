@@ -3,6 +3,9 @@
 -- consistency pass (unified project views, star ratings, real league rank).
 --
 -- What it does:
+--   0. Ensures the profiles columns from the earlier additive migrations
+--      (bio, visible_stats, pinned_post_id) exist, in case those were
+--      never run against this database.
 --   1. Drops two dead columns the app never reads or writes:
 --        - projects.league_id      (reserved pre-league, superseded by
 --                                   league_submissions.project_id)
@@ -27,6 +30,19 @@
 -- ============================================================
 
 begin;
+
+-- ---------- 0. profile columns from earlier additive migrations ----------
+-- The app reads/writes all three of these; if the database was reset from
+-- reset_schema.sql before the corresponding add_*_column.sql migrations
+-- were (re)run, they can be missing. No-ops when already present.
+alter table public.profiles
+  add column if not exists bio text;
+
+alter table public.profiles
+  add column if not exists visible_stats text[] not null default '{posts,followers,following}';
+
+alter table public.profiles
+  add column if not exists pinned_post_id uuid references public.sessions (id) on delete set null;
 
 -- ---------- 1. dead columns ----------
 alter table public.projects
