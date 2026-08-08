@@ -25,7 +25,7 @@ class LeagueRepository {
         .from('league_submission_details')
         .select()
         .eq('league_id', leagueId)
-        .order('votes', ascending: false);
+        .order('stars', ascending: false);
     return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueSubmission.fromRow(row)];
   }
 

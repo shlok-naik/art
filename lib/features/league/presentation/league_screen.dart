@@ -45,10 +45,6 @@ class LeagueScreen extends ConsumerWidget {
   }
 }
 
-/// Which submissions grid the tab toggle below the "Submissions" header is
-/// currently showing.
-enum _SubmissionsTab { mine, everyone }
-
 class _LeagueBody extends ConsumerStatefulWidget {
   const _LeagueBody({required this.league});
 
@@ -59,8 +55,6 @@ class _LeagueBody extends ConsumerStatefulWidget {
 }
 
 class _LeagueBodyState extends ConsumerState<_LeagueBody> {
-  _SubmissionsTab _tab = _SubmissionsTab.mine;
-
   @override
   Widget build(BuildContext context) {
     final league = widget.league;
@@ -142,16 +136,9 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
             ),
             const SizedBox(height: 12),
-            _SubmissionsTabToggle(
-              selected: _tab,
-              onChanged: (tab) => setState(() => _tab = tab),
-            ),
-            const SizedBox(height: 12),
             submissionsAsync.when(
               data: (submissions) {
-                final visible = submissions.where((s) {
-                  return _tab == _SubmissionsTab.mine ? s.userId == myUserId : s.userId != myUserId;
-                }).toList();
+                final visible = submissions.where((s) => s.userId == myUserId).toList();
 
                 if (visible.isEmpty) {
                   return Container(
@@ -159,9 +146,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
                     decoration: appHardCardDecoration(radius: 18),
                     child: Text(
-                      _tab == _SubmissionsTab.mine
-                          ? "You haven't submitted a project yet — tap Submit above."
-                          : 'No other submissions yet.',
+                      "You haven't submitted a project yet — tap Submit above.",
                       textAlign: TextAlign.center,
                       style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
                     ),
@@ -333,60 +318,6 @@ class _CountdownUnit extends StatelessWidget {
           style: appBodyStyle(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
         ),
       ],
-    );
-  }
-}
-
-/// Pill-shaped two-way toggle between "My Submissions" and "Everyone" —
-/// there's no existing TabBar pattern elsewhere in the app, so this follows
-/// the same hand-rolled hard-card look as the rest of the league screen
-/// instead of introducing Flutter's TabBar/TabController.
-class _SubmissionsTabToggle extends StatelessWidget {
-  const _SubmissionsTabToggle({required this.selected, required this.onChanged});
-
-  final _SubmissionsTab selected;
-  final ValueChanged<_SubmissionsTab> onChanged;
-
-  Widget _segment(String label, _SubmissionsTab tab) {
-    final isSelected = tab == selected;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(tab),
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? kAccentColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            label,
-            style: appBodyStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isSelected ? Colors.white : Colors.black54,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
-      ),
-      child: Row(
-        children: [
-          _segment('My Submissions', _SubmissionsTab.mine),
-          _segment('Everyone', _SubmissionsTab.everyone),
-        ],
-      ),
     );
   }
 }
