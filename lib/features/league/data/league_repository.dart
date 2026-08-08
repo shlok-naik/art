@@ -101,4 +101,35 @@ class LeagueRepository {
     final row = await _client.from('latest_league_champion').select().maybeSingle();
     return row == null ? null : LeagueChampion.fromRow(row);
   }
+
+  /// Every league [userId] has won, most recent first — the trophy cabinet
+  /// shown on their profile. Backed by the `league_trophies` view (winner
+  /// per league, joined with that league's theme/date).
+  Future<List<LeagueTrophy>> fetchTrophies(String userId) async {
+    final rows = await _client
+        .from('league_trophies')
+        .select()
+        .eq('user_id', userId)
+        .order('starts_at', ascending: false);
+    return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueTrophy.fromRow(row)];
+  }
+
+  /// League ids [userId] has already seen the win-celebration screen for.
+  Future<Set<String>> fetchCelebratedTrophyLeagueIds(String userId) async {
+    final rows =
+        await _client.from('league_trophy_celebrations').select('league_id').eq('user_id', userId);
+    return {for (final row in List<Map<String, dynamic>>.from(rows)) row['league_id'].toString()};
+  }
+
+  /// Records that [userId] has seen the celebration for winning [leagueId],
+  /// so it isn't shown again. Upserts with `ignoreDuplicates` for the same
+  /// reason achievement unlocks do — a re-check of an already-seen trophy
+  /// should be a silent no-op, not a duplicate-key error.
+  Future<void> markTrophyCelebrated({required String userId, required String leagueId}) async {
+    await _client.from('league_trophy_celebrations').upsert(
+      {'user_id': userId, 'league_id': leagueId},
+      onConflict: 'user_id,league_id',
+      ignoreDuplicates: true,
+    );
+  }
 }
