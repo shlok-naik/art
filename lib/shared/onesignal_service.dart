@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 /// The app's public OneSignal App ID (not a secret — safe to hardcode).
@@ -16,8 +15,11 @@ class OneSignalService {
   bool _isInitialized = false;
 
   // OneSignal only ships native plugin code for Android and iOS — on other
-  // platforms (e.g. Windows desktop) every call throws MissingPluginException.
-  static bool get _isSupported => Platform.isAndroid || Platform.isIOS;
+  // platforms (e.g. Windows desktop, web) every call throws
+  // MissingPluginException. Checked via defaultTargetPlatform/kIsWeb rather
+  // than dart:io's Platform, which throws UnsupportedError on web.
+  static bool get _isSupported =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
 
   void initialize(String appId) {
     if (_isInitialized || !_isSupported) return;

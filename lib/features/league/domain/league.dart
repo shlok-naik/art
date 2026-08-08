@@ -147,3 +147,42 @@ class LeagueChampion {
   final String photoUrl;
   final int stars;
 }
+
+/// A league a given user won, for their profile's trophy cabinet — the same
+/// underlying win as [LeagueChampion], but scoped to one user and carrying
+/// the theme/date context needed to show it as a keepsake rather than a
+/// live leaderboard fact.
+class LeagueTrophy {
+  const LeagueTrophy({
+    required this.leagueId,
+    required this.submissionId,
+    required this.photoUrl,
+    required this.stars,
+    required this.themeTitle,
+    required this.themeDescription,
+    required this.periodIndex,
+    required this.startsAt,
+  });
+
+  factory LeagueTrophy.fromRow(Map<String, dynamic> row) {
+    return LeagueTrophy(
+      leagueId: row['league_id'].toString(),
+      submissionId: row['submission_id'].toString(),
+      photoUrl: row['photo_url']?.toString() ?? '',
+      stars: int.tryParse(row['stars']?.toString() ?? '') ?? 0,
+      themeTitle: row['theme_title']?.toString() ?? '',
+      themeDescription: row['theme_description']?.toString() ?? '',
+      periodIndex: int.tryParse(row['period_index']?.toString() ?? '') ?? 0,
+      startsAt: DateTime.tryParse(row['starts_at']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
+  final String leagueId;
+  final String submissionId;
+  final String photoUrl;
+  final int stars;
+  final String themeTitle;
+  final String themeDescription;
+  final int periodIndex;
+  final DateTime startsAt;
+}

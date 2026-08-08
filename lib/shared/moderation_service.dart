@@ -18,7 +18,7 @@ class ModerationResult {
 /// Returns the original text unflagged if the backend can't be reached, so
 /// a moderation outage never blocks posting.
 Future<ModerationResult> moderateText(String text) async {
-  final baseUrl = dotenv.env['API_BASE_URL'];
+  final baseUrl = dotenv.env['BACKEND_URL'];
   if (baseUrl == null || baseUrl.isEmpty) {
     return ModerationResult(flagged: false, censored: text);
   }

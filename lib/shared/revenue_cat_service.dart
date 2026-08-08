@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -39,9 +37,12 @@ class RevenueCatService {
   bool _isInitialized = false;
 
   // RevenueCat wraps StoreKit/Play Billing — it only ships native plugin code
-  // for Android and iOS, so on other platforms (e.g. Windows desktop) every
-  // call throws MissingPluginException.
-  static bool get _isSupported => Platform.isAndroid || Platform.isIOS;
+  // for Android and iOS, so on other platforms (e.g. Windows desktop, web)
+  // every call throws MissingPluginException. Checked via
+  // defaultTargetPlatform/kIsWeb rather than dart:io's Platform, which
+  // throws UnsupportedError on web.
+  static bool get _isSupported =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
 
   Future<void> initialize() async {
     if (_isInitialized || !_isSupported) return;

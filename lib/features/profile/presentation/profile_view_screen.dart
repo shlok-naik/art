@@ -10,6 +10,8 @@ import '../../achievements/presentation/all_achievements_screen.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
+import '../../league/presentation/league_trophy_chip.dart';
+import '../../league/presentation/trophy_cabinet_screen.dart';
 import '../../league/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
@@ -38,6 +40,7 @@ class ProfileViewScreen extends ConsumerWidget {
             final leagueRank = ref.watch(leagueRankProvider(profile.id)).value;
             final streakDays = ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
             final unlockedAchievements = ref.watch(unlockedAchievementsProvider(profile.id)).value;
+            final leagueTrophies = ref.watch(myLeagueTrophiesProvider(profile.id)).value;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -229,6 +232,45 @@ class ProfileViewScreen extends ConsumerWidget {
                         for (final achievement in achievementCatalog)
                           if (unlockedAchievements.containsKey(achievement.key))
                             AchievementChip(achievement: achievement),
+                      ],
+                    ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text('Trophy Cabinet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${leagueTrophies?.length ?? 0}',
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => TrophyCabinetScreen(userId: profile.id)),
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          child: Text(
+                            'View all',
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (leagueTrophies == null || leagueTrophies.isEmpty)
+                    Text(
+                      "No trophies yet — top the weekly league's leaderboard to win one.",
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final trophy in leagueTrophies) LeagueTrophyChip(trophy: trophy),
                       ],
                     ),
                 ],

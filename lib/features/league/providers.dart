@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../auth/providers.dart';
+import '../profile/providers.dart';
 import '../projects/providers.dart';
 import 'data/league_repository.dart';
 import 'domain/league.dart';
@@ -44,6 +46,51 @@ final leagueRankProvider = FutureProvider.autoDispose.family<int?, String>((ref,
 /// The winning entry from the most recently ended league, if any.
 final latestLeagueChampionProvider = FutureProvider.autoDispose<LeagueChampion?>((ref) {
   return ref.watch(leagueRepositoryProvider).fetchLatestChampion();
+});
+
+/// Every league [userId] has won, most recent first — works for any
+/// profile, so a visitor's public profile can show a real trophy cabinet
+/// too, not just the owner's.
+final myLeagueTrophiesProvider = FutureProvider.autoDispose.family<List<LeagueTrophy>, String>((ref, userId) {
+  return ref.watch(leagueRepositoryProvider).fetchTrophies(userId);
+});
+
+/// League ids already celebrated (had their confetti screen shown) this app
+/// session — guards against the same race [celebratedAchievementKeysProvider]
+/// guards against: two near-simultaneous evaluations of
+/// [newlyWonTrophiesProvider] both reading `league_trophy_celebrations`
+/// before either write lands, both concluding the same trophy is new.
+final celebratedTrophyLeagueIdsProvider = StateProvider<Set<String>>((ref) => {});
+
+/// Trophies the signed-in user has won but hasn't seen the celebration
+/// screen for yet — computing this value marks them seen (persists a row
+/// per newly-found trophy) as a side effect, then returns just the ones
+/// that were new, for the UI to celebrate. Same shape as
+/// [newlyUnlockedAchievementsProvider]; the difference is a trophy is
+/// "won" by other people's votes and the passage of time rather than by
+/// anything the client computes, so there's no unlock condition to
+/// evaluate — only "have we marked this one seen yet".
+final newlyWonTrophiesProvider = FutureProvider.autoDispose<List<LeagueTrophy>>((ref) async {
+  final profile = await ref.watch(currentProfileProvider.future);
+  if (profile == null) return const [];
+  final userId = profile.id;
+
+  final repo = ref.watch(leagueRepositoryProvider);
+  final trophies = await repo.fetchTrophies(userId);
+  if (trophies.isEmpty) return const [];
+
+  final celebrated = await repo.fetchCelebratedTrophyLeagueIds(userId);
+  final newlyWon = <LeagueTrophy>[];
+  for (final trophy in trophies) {
+    if (!celebrated.contains(trophy.leagueId)) {
+      await repo.markTrophyCelebrated(userId: userId, leagueId: trophy.leagueId);
+      newlyWon.add(trophy);
+    }
+  }
+  if (newlyWon.isNotEmpty) {
+    ref.invalidate(myLeagueTrophiesProvider(userId));
+  }
+  return newlyWon;
 });
 
 /// The signed-in user's projects that have at least one session photo,
