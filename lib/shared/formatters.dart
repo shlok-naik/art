@@ -21,6 +21,10 @@ String formatDateValue(dynamic value) {
   return formatMonthDayYear(date);
 }
 
+/// "Aug 3" — compact date used in meta lines (home recent-activity row).
+String formatShortMonthDay(DateTime date) =>
+    '${_monthNames[date.month - 1].substring(0, 3)} ${date.day}';
+
 /// "01:23:45" — elapsed-time format used by the session timer and session
 /// lists.
 String formatDurationHms(Duration duration) {

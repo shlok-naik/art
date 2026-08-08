@@ -7,14 +7,17 @@ class LeagueRepository {
 
   final SupabaseClient _client;
 
-  /// The current weekly league, lazily materialized server-side by the
-  /// `get_or_create_current_league()` Postgres function — security definer,
-  /// so period boundaries and themes are computed from now() server-side
-  /// rather than trusted from the client.
-  Future<League> fetchCurrentLeague() async {
+  /// The current weekly league for [region], lazily materialized
+  /// server-side by the `get_or_create_current_league()` Postgres function
+  /// — security definer, so period boundaries and themes are computed from
+  /// now() server-side rather than trusted from the client. [region] is
+  /// still passed through as an ordinary argument (not trusted for
+  /// anything sensitive) — it only selects which of that week's parallel
+  /// per-region rows comes back.
+  Future<League> fetchCurrentLeague(String region) async {
     // The function returns a single `leagues` row (not SETOF), so PostgREST
     // hands it back as one JSON object rather than a one-element array.
-    final result = await _client.rpc('get_or_create_current_league');
+    final result = await _client.rpc('get_or_create_current_league', params: {'p_region': region});
     return League.fromRow(Map<String, dynamic>.from(result as Map));
   }
 
@@ -93,13 +96,15 @@ class LeagueRepository {
     );
   }
 
-  /// The winning submission of the most recently *ended* league, if there
-  /// is one yet — used for the "Last Season's Champion" card. The
-  /// latest-past-league selection lives in the `latest_league_champion`
-  /// database view, so this is a single query.
-  Future<LeagueChampion?> fetchLatestChampion() async {
-    final row = await _client.from('latest_league_champion').select().maybeSingle();
-    return row == null ? null : LeagueChampion.fromRow(row);
+  /// The winning submission of the most recently *ended* league in
+  /// [region], if there is one yet — used for the "Last Season's Champion"
+  /// card. "Most recently ended" is ambiguous without a region once
+  /// several leagues (one per region) can end in the same week, so this is
+  /// a function rather than a plain view select.
+  Future<LeagueChampion?> fetchLatestChampion(String region) async {
+    final result = await _client.rpc('latest_league_champion', params: {'p_region': region});
+    if (result == null) return null;
+    return LeagueChampion.fromRow(Map<String, dynamic>.from(result as Map));
   }
 
   /// Every league [userId] has won, most recent first — the trophy cabinet

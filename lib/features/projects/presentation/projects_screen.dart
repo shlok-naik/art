@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../shell/main_shell.dart';
@@ -54,23 +54,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
-        title: Text('Finish project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Finish project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         content: Text(
           '"$title" will be marked 100% complete and locked — no new sessions can be added afterward.',
-          style: GoogleFonts.chewy(fontSize: 15),
+          style: appBodyStyle(fontSize: 14, color: kMutedColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Finish', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+            child: Text('Finish', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kAccentColor)),
           ),
         ],
       ),
@@ -96,20 +93,17 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
-        title: Text('Delete project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
-        content: Text('This will permanently delete "$title".', style: GoogleFonts.chewy(fontSize: 15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+        content: Text('This will permanently delete "$title".', style: appBodyStyle(fontSize: 14, color: kMutedColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+            child: Text('Delete', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red.shade700)),
           ),
         ],
       ),
@@ -134,10 +128,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: appThemedAppBar(context, 'Projects'),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
+            const AppNavyHeader(title: 'Projects'),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -146,36 +139,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   Expanded(
                     child: TextField(
                       controller: _nameController,
-                      decoration: appInputDecoration('New project name').copyWith(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth),
-                        ),
-                        labelStyle: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black45),
-                      ),
-                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
+                      decoration: appInputDecoration('New project name'),
+                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   InkWell(
                     onTap: _isCreating ? null : _createProject,
-                    borderRadius: BorderRadius.circular(23),
+                    borderRadius: BorderRadius.circular(22),
                     child: Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: kAccentColor,
-                        border: Border.all(color: kBorderColor, width: kBorderWidth),
-                        boxShadow: hardShadow(offset: 3),
                       ),
                       alignment: Alignment.center,
                       child: _isCreating
@@ -184,7 +161,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : const Icon(Icons.add, color: Colors.white, size: 24),
+                          : const AppIcon(AppIcons.plus, color: Colors.white, strokeWidth: 2),
                     ),
                   ),
                 ],
@@ -202,7 +179,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     return Center(
                       child: Text(
                         'No projects yet.',
-                        style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                        style: appBodyStyle(fontSize: 14, color: kMutedColor),
                       ),
                     );
                   }
@@ -242,7 +219,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
           ],
         ),
-      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: -1,
         onTap: (i) => goToMainTab(context, ref, i),
@@ -278,7 +254,7 @@ class _ProjectCard extends ConsumerWidget {
       onTap: onOpen,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
+        decoration: appFlatCardDecoration(),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -287,13 +263,13 @@ class _ProjectCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                  Text(title, style: appHeadlineStyle(fontSize: 19)),
                   const SizedBox(height: 3),
                   Text(
                     sessionCount == null
                         ? 'Created $createdAt'
                         : 'Created $createdAt · $sessionCount session${sessionCount == 1 ? '' : 's'}',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
+                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
                   ),
                   const SizedBox(height: 6),
                   Container(
@@ -306,7 +282,7 @@ class _ProjectCard extends ConsumerWidget {
                       isFinished ? 'Finished' : 'In progress',
                       style: appBodyStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: isFinished ? kSuccessTextColor : kAccentColor,
                       ),
                     ),
@@ -323,7 +299,7 @@ class _ProjectCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
-                      child: Icon(Icons.check_circle_outline, color: kSuccessTextColor, size: 20),
+                      child: AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
                     ),
                   ),
                 InkWell(
@@ -331,7 +307,7 @@ class _ProjectCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close, color: Colors.black, size: 20),
+                    child: AppIcon(AppIcons.x, size: 20),
                   ),
                 ),
               ],

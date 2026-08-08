@@ -5,6 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league.dart';
 
@@ -18,25 +19,23 @@ class LeagueTrophyChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       onTap: () => showLeagueTrophyDetail(context, trophy: trophy),
       child: Tooltip(
         message: trophy.themeTitle,
         child: Container(
-          width: 78,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
-          child: Column(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          decoration: appFlatCardDecoration(radius: 20),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🏆', style: TextStyle(fontSize: 20)),
-              const SizedBox(height: 3),
+              const AppIcon(AppIcons.trophy, size: 14),
+              const SizedBox(width: 6),
               Text(
                 trophy.themeTitle,
-                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
             ],
           ),

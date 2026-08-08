@@ -1,32 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Shared look-and-feel constants matching the home screen's comic-panel style:
-/// white background, black text/borders in the Chewy font, and a deep orange accent.
+/// Shared look-and-feel constants for the navy/cobalt flat redesign: white
+/// background, navy chrome (app bars, bottom nav), flat filled cards, Inter
+/// body text with Fraunces reserved for a few "creative content" headlines.
+const kNavyColor = Color(0xFF16233E);
+const kInkColor = Color(0xFF1B2740);
+const kMutedColor = Color(0xFF6B7690);
+const kHairlineColor = Color(0xFFE7EAF2);
+const kSurfaceColor = Color(0xFFF6F7FA);
+const kAccentColor = Color(0xFF2E5EFF);
+
+/// Pre-redesign border constants — only still used by appHardCardDecoration
+/// and the handful of screens the navy/cobalt handoff didn't cover.
 const kBorderColor = Color(0xFF111111);
 const kBorderWidth = 2.0;
-const kAccentColor = Colors.deepOrange;
 
-/// Accent-tinted background used for banners/callouts (streak card, theme banner).
-const kAccentTintColor = Color(0xFFFFF1EA);
+/// Accent-tinted background used for banners/callouts (streak badge, theme
+/// banner, "Go Pro" tile, follow-state chips).
+const kAccentTintColor = Color(0xFFEEF2FF);
 
 /// "Finished"/success status color pair (chip text on chip background).
 const kSuccessTextColor = Color(0xFF2E9E4E);
 const kSuccessBgColor = Color(0xFFE8F7EC);
 
-TextStyle appHeadlineStyle({double fontSize = 56, Color color = kAccentColor}) {
-  return GoogleFonts.chewy(fontSize: fontSize, height: 1.05, color: color);
+/// Fraunces serif — kept only for "creative content" headlines (league theme
+/// title, project titles); everything else is Inter.
+TextStyle appHeadlineStyle({double fontSize = 28, Color color = kInkColor}) {
+  return GoogleFonts.fraunces(fontSize: fontSize, height: 1.1, fontWeight: FontWeight.w500, color: color);
 }
 
-/// Nunito is used for body copy, stats, numbers and meta text so Chewy stays
-/// reserved for headlines, buttons and nav labels.
 TextStyle appBodyStyle({
   double fontSize = 15,
-  FontWeight fontWeight = FontWeight.w600,
-  Color color = Colors.black,
+  FontWeight fontWeight = FontWeight.w400,
+  Color color = kInkColor,
 }) {
-  return GoogleFonts.nunito(fontSize: fontSize, fontWeight: fontWeight, color: color);
+  return GoogleFonts.inter(fontSize: fontSize, fontWeight: fontWeight, color: color);
 }
+
+/// Flat filled card — the redesign's standard card treatment, replacing
+/// appHardCardDecoration's white+border look on every covered screen.
+BoxDecoration appFlatCardDecoration({double radius = 16, Color color = kSurfaceColor}) =>
+    BoxDecoration(color: color, borderRadius: BorderRadius.circular(radius));
 
 /// Flat "hard shadow" (offset only, no blur) used on virtually every card and
 /// button in the redesign — replaces plain unshadowed borders.
@@ -52,28 +67,30 @@ BoxDecoration appHardCardDecoration({
 
 AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? actions}) {
   return AppBar(
-    backgroundColor: Colors.white,
-    surfaceTintColor: Colors.white,
+    backgroundColor: kNavyColor,
+    surfaceTintColor: kNavyColor,
     elevation: 0,
-    foregroundColor: Colors.black,
-    iconTheme: const IconThemeData(color: Colors.black),
-    title: Text(title, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black)),
+    foregroundColor: Colors.white,
+    iconTheme: const IconThemeData(color: Colors.white),
+    title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
     actions: actions,
   );
 }
 
 InputDecoration appInputDecoration(String label) {
   final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+    borderRadius: BorderRadius.circular(14),
+    borderSide: BorderSide.none,
   );
   return InputDecoration(
     labelText: label,
-    labelStyle: GoogleFonts.chewy(color: Colors.black54, fontSize: 16),
+    labelStyle: GoogleFonts.inter(color: kMutedColor, fontSize: 14, fontWeight: FontWeight.w500),
+    filled: true,
+    fillColor: kSurfaceColor,
     border: border,
     enabledBorder: border,
-    focusedBorder: border.copyWith(borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth)),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    focusedBorder: border,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
   );
 }
 
@@ -102,9 +119,10 @@ class AppPrimaryButton extends StatelessWidget {
           backgroundColor: kAccentColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: kAccentColor.withValues(alpha: 0.5),
+          elevation: 0,
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+          textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         child: isLoading
             ? const SizedBox(
@@ -118,13 +136,15 @@ class AppPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Outlined black-bordered pill button, matching the home screen's nav pills.
+/// Flat surface pill button — the redesign's secondary action (log out,
+/// preview profile). Name kept from the old outlined version so existing
+/// call sites restyle without a rename.
 class AppOutlinedPillButton extends StatelessWidget {
   const AppOutlinedPillButton({
     super.key,
     required this.label,
     required this.onPressed,
-    this.fontSize = 16,
+    this.fontSize = 13,
   });
 
   final String label;
@@ -133,14 +153,14 @@ class AppOutlinedPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
+    return TextButton(
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
+      style: TextButton.styleFrom(
         shape: const StadiumBorder(),
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        foregroundColor: Colors.black,
+        backgroundColor: kSurfaceColor,
+        foregroundColor: kInkColor,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: fontSize),
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: fontSize),
       ),
       child: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
     );
@@ -156,7 +176,7 @@ class AppErrorText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.chewy(color: Colors.red.shade700, fontSize: 15),
+      style: GoogleFonts.inter(color: Colors.red.shade700, fontSize: 14, fontWeight: FontWeight.w500),
       textAlign: TextAlign.center,
     );
   }
@@ -201,26 +221,27 @@ class AppErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_outlined, size: 40, color: onDark ? Colors.white38 : Colors.black26),
+            Icon(Icons.cloud_off_outlined, size: 40, color: onDark ? Colors.white38 : kMutedColor),
             const SizedBox(height: 10),
             Text(
               appErrorMessage(error),
               textAlign: TextAlign.center,
-              style: GoogleFonts.chewy(
-                fontSize: 15,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
                 color: onDark ? Colors.white : Colors.red.shade700,
               ),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 14),
-              OutlinedButton(
+              TextButton(
                 onPressed: onRetry,
-                style: OutlinedButton.styleFrom(
+                style: TextButton.styleFrom(
                   shape: const StadiumBorder(),
-                  side: BorderSide(color: onDark ? Colors.white : kBorderColor, width: kBorderWidth),
-                  foregroundColor: onDark ? Colors.white : Colors.black,
+                  backgroundColor: onDark ? Colors.white24 : kSurfaceColor,
+                  foregroundColor: onDark ? Colors.white : kInkColor,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+                  textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 child: const Text('Retry'),
               ),
@@ -251,8 +272,8 @@ class AppDetailStat extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54)),
-            Text(value, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(label, style: GoogleFonts.inter(fontSize: 12, color: kMutedColor)),
+            Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15, color: kInkColor)),
           ],
         ),
       ],
@@ -272,9 +293,9 @@ class AppStatColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+        Text(value, style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 2),
-        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
+        Text(label, style: appBodyStyle(fontSize: 10, color: kMutedColor)),
       ],
     );
   }

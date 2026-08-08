@@ -91,4 +91,18 @@ class ProfileRepository {
       throw const MissingColumnException('Pinning needs a pending database update.');
     }
   }
+
+  /// Sets which [leagueRegions] key (see league_region.dart) this user
+  /// competes in — required before they can enter a weekly league.
+  Future<void> updateRegion({
+    required String userId,
+    required String region,
+  }) async {
+    try {
+      await _client.from('profiles').update({'region': region}).eq('id', userId);
+    } catch (e) {
+      if (!_isUndefinedColumn(e)) rethrow;
+      throw const MissingColumnException('Regional leagues need a pending database update.');
+    }
+  }
 }

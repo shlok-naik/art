@@ -6,17 +6,26 @@ import '../profile/providers.dart';
 import '../projects/providers.dart';
 import 'data/league_repository.dart';
 import 'domain/league.dart';
+import 'domain/league_region.dart';
 
 final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
   return LeagueRepository(ref.watch(supabaseClientProvider));
 });
 
-/// The current weekly league — materialized lazily server-side by the
-/// `get_or_create_current_league()` Postgres function the first time anyone
-/// asks, so this is safe to watch from app start with no separate "is there
-/// a league yet?" check.
-final currentLeagueProvider = FutureProvider.autoDispose<League>((ref) {
-  return ref.watch(leagueRepositoryProvider).fetchCurrentLeague();
+/// The current weekly league for the signed-in user's region — materialized
+/// lazily server-side by the `get_or_create_current_league()` Postgres
+/// function the first time anyone in that region asks, so this is safe to
+/// watch from app start with no separate "is there a league yet?" check.
+///
+/// Throws [NoRegionSelectedException] if the signed-in user hasn't picked a
+/// region yet, so [LeagueScreen] can show a picker instead of an error —
+/// consumers that only need `.value` (e.g. [leagueRankProvider]'s callers)
+/// naturally see null in that case rather than crashing.
+final currentLeagueProvider = FutureProvider.autoDispose<League>((ref) async {
+  final profile = await ref.watch(currentProfileProvider.future);
+  final region = profile?.region;
+  if (region == null) throw const NoRegionSelectedException();
+  return ref.watch(leagueRepositoryProvider).fetchCurrentLeague(region);
 });
 
 /// Submissions for [leagueId], highest-voted first.
@@ -43,9 +52,15 @@ final leagueRankProvider = FutureProvider.autoDispose.family<int?, String>((ref,
   return index < 0 ? null : index + 1;
 });
 
-/// The winning entry from the most recently ended league, if any.
-final latestLeagueChampionProvider = FutureProvider.autoDispose<LeagueChampion?>((ref) {
-  return ref.watch(leagueRepositoryProvider).fetchLatestChampion();
+/// The winning entry from the most recently ended league in the signed-in
+/// user's region, if any — null (rather than throwing) when no region is
+/// picked yet, since this card is decorative and shouldn't block the rest
+/// of the league screen the way [currentLeagueProvider] does.
+final latestLeagueChampionProvider = FutureProvider.autoDispose<LeagueChampion?>((ref) async {
+  final profile = await ref.watch(currentProfileProvider.future);
+  final region = profile?.region;
+  if (region == null) return null;
+  return ref.watch(leagueRepositoryProvider).fetchLatestChampion(region);
 });
 
 /// Every league [userId] has won, most recent first — works for any

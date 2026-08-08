@@ -1,14 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../analytics/presentation/analytics_screen.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
 import '../../league/presentation/league_screen.dart';
+import '../../league/providers.dart';
 import '../../posts/presentation/my_posts_screen.dart';
 import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
@@ -18,18 +19,38 @@ import '../../projects/providers.dart';
 import '../../pro/presentation/pro_screen.dart';
 import '../../pro/providers.dart';
 
-const _sidePadding = EdgeInsets.symmetric(horizontal: 16);
+String _greetingForNow() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(currentProfileProvider);
-    final username = profileAsync.value?.username ?? 'user';
+    final profile = ref.watch(currentProfileProvider).value;
+    final username = profile?.username ?? 'user';
+    final streakDays =
+        profile == null ? 0 : ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
+
     final lastProject = ref.watch(lastOpenedProjectProvider).value;
     final lastProjectCompletion =
         int.tryParse(lastProject?['completion_percent']?.toString() ?? '') ?? 0;
+    // The league submit picker already pairs each of the user's projects
+    // with its latest session photo — reused here for the hero card image.
+    final projectCovers = ref.watch(myProjectsWithCoverProvider).value;
+    String? heroPhotoUrl;
+    if (lastProject != null && projectCovers != null) {
+      for (final (project, cover) in projectCovers) {
+        if (project['id'].toString() == lastProject['id'].toString()) {
+          heroPhotoUrl = cover;
+          break;
+        }
+      }
+    }
 
     final myPosts = ref.watch(myPostsProvider).value ?? const <FeedPost>[];
     final mostRecentPost = myPosts.isEmpty ? null : myPosts.first;
@@ -45,313 +66,124 @@ class HomeScreen extends ConsumerWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: _sidePadding,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Image.asset(
-                              'assets/branding/logo.png',
-                              height: 44,
-                              fit: BoxFit.contain,
-                              alignment: Alignment.centerLeft,
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Unfinished',
+                          style: appBodyStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: kNavyColor,
+                          ).copyWith(letterSpacing: -0.3),
+                        ),
+                        _BuyProPill(
+                          isPro: ref.watch(isProProvider),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ProScreen()),
                           ),
-                          const SizedBox(width: 8),
-                          _BuyProPill(
-                            isPro: ref.watch(isProProvider),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const ProScreen()),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 18),
-                    Padding(
-                      padding: _sidePadding,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _QuickActionChip(
-                              emoji: '🏆',
-                              label: 'League',
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const LeagueScreen()),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_greetingForNow()}, $username',
+                                style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickActionChip(
-                              emoji: '📊',
-                              label: 'Analytics',
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Ready to create a masterpiece?',
+                                style: appBodyStyle(fontSize: 13, color: kMutedColor),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickActionChip(
-                              emoji: '🖼️',
-                              label: 'My Posts',
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const MyPostsScreen()),
-                              ),
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: kAccentTintColor,
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickActionChip(
-                              emoji: '📁',
-                              label: 'Projects',
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: _sidePadding,
-                      child: Center(
-                        child: Column(
-                          children: [
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                'WELCOME',
-                                maxLines: 1,
-                                softWrap: false,
-                                style: GoogleFonts.chewy(
-                                  fontSize: 68,
-                                  letterSpacing: 1,
-                                  height: 1.0,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AppIcon(AppIcons.flame, size: 14, color: kAccentColor),
+                              const SizedBox(width: 5),
+                              Text(
+                                '$streakDays',
+                                style: appBodyStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                   color: kAccentColor,
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '@$username',
-                              style: GoogleFonts.rubikMonoOne(fontSize: 30, color: Colors.black),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Ready to create a masterpiece?',
-                              style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF444444)),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: _sidePadding,
-                      child: InkWell(
-                        onTap: lastProject == null
-                            ? null
-                            : () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: lastProject)),
-                              ),
-                        borderRadius: BorderRadius.circular(18),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          decoration: appHardCardDecoration(radius: 18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: kAccentColor,
-                                      border: Border.all(color: kBorderColor, width: kBorderWidth),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: const Icon(Icons.play_arrow, color: Colors.white, size: 22),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Continue Last Project',
-                                          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          lastProject == null
-                                              ? 'Start a project to see it here'
-                                              : (lastProject['title']?.toString() ?? lastProject['id'].toString()),
-                                          style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (lastProject != null) ...[
-                                const SizedBox(height: 10),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Container(
-                                    height: 8,
-                                    color: const Color(0xFFF0EDE8),
-                                    alignment: Alignment.centerLeft,
-                                    child: FractionallySizedBox(
-                                      widthFactor: lastProjectCompletion / 100,
-                                      child: Container(color: kAccentColor),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '$lastProjectCompletion% complete',
-                                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor),
-                                ),
-                              ],
                             ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: 20),
-                    Padding(
-                      padding: _sidePadding,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'Most Recent Post',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+                    _HeroProjectCard(
+                      project: lastProject,
+                      completionPercent: lastProjectCompletion,
+                      photoUrl: heroPhotoUrl,
+                    ),
+                    const SizedBox(height: 20),
+                    _QuickActionsBar(
+                      items: [
+                        (AppIcons.trophy, 'League', () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const LeagueScreen()))),
+                        (AppIcons.barChart, 'Analytics', () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AnalyticsScreen()))),
+                        (AppIcons.image, 'My posts', () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MyPostsScreen()))),
+                        (AppIcons.folder, 'Projects', () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ProjectsScreen()))),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          'Recent activity',
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MyPostsScreen()),
+                          ),
+                          child: Text(
+                            'See all',
+                            style: appBodyStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: kAccentColor,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const MyPostsScreen()),
-                            ),
-                            child: Text(
-                              'See all',
-                              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
-                    Padding(
-                      padding: _sidePadding,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(18),
-                        onTap: mostRecentPost == null
-                            ? null
-                            : () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: mostRecentPost)),
-                              ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: appHardCardDecoration(radius: 18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      height: 130,
-                                      width: double.infinity,
-                                      color: Colors.grey.shade200,
-                                      child: (mostRecentPost?.photoUrl == null || mostRecentPost!.photoUrl!.isEmpty)
-                                          ? Center(
-                                              child: Text(
-                                                mostRecentPost == null ? 'No posts yet' : 'Image',
-                                                style: GoogleFonts.chewy(
-                                                  fontSize: mostRecentPost == null ? 18 : 44,
-                                                  color: Colors.black45,
-                                                ),
-                                              ),
-                                            )
-                                          : CachedNetworkImage(
-                                              imageUrl: mostRecentPost.photoUrl!,
-                                              fit: BoxFit.cover,
-                                              errorWidget: (context, url, error) => const Center(
-                                                child: Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  if (mostRecentPost != null)
-                                    Positioned(
-                                      right: 8,
-                                      bottom: 8,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.72),
-                                          borderRadius: BorderRadius.circular(24),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.favorite, size: 14, color: Colors.white),
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              '$mostRecentReactionsTotal',
-                                              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                mostRecentPost?.displayTitle ?? 'No recent posts',
-                                style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                mostRecentPost == null
-                                    ? 'Finish a session to see it here.'
-                                    : '👁 ${mostRecentPost.views} views     🗓 ${formatMonthDayYear(mostRecentPost.datePosted)}',
-                                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    _RecentActivityRow(
+                      post: mostRecentPost,
+                      reactionsTotal: mostRecentReactionsTotal,
                     ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -375,19 +207,20 @@ class _BuyProPill extends StatelessWidget {
       onTap: onPressed,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
           color: kAccentColor,
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: hardShadow(offset: 3),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('👑', style: TextStyle(fontSize: 14)),
+            const AppIcon(AppIcons.crown, size: 14, color: Colors.white),
             const SizedBox(width: 6),
-            Text(isPro ? 'Pro' : 'Buy Pro', style: GoogleFonts.chewy(fontSize: 15, color: Colors.white)),
+            Text(
+              isPro ? 'Pro' : 'Buy Pro',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+            ),
           ],
         ),
       ),
@@ -395,34 +228,310 @@ class _BuyProPill extends StatelessWidget {
   }
 }
 
-class _QuickActionChip extends StatelessWidget {
-  const _QuickActionChip({required this.emoji, required this.label, required this.onPressed});
+/// The dashboard's hero: the last-opened project's photo with a navy scrim,
+/// an IN PROGRESS badge, title + progress bar, and a centered cobalt play
+/// button. Both the card and the play button open the project, same as the
+/// old "Continue last project" tap target.
+class _HeroProjectCard extends StatelessWidget {
+  const _HeroProjectCard({
+    required this.project,
+    required this.completionPercent,
+    required this.photoUrl,
+  });
 
-  final String emoji;
-  final String label;
-  final VoidCallback onPressed;
+  final Map<String, dynamic>? project;
+  final int completionPercent;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
+    final project = this.project;
+
     return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      onTap: project == null
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project))),
+      borderRadius: BorderRadius.circular(20),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: AspectRatio(
+          aspectRatio: 4 / 3,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (photoUrl != null && photoUrl!.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: photoUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(color: kSurfaceColor),
+                  errorWidget: (context, url, error) => const _StripedPlaceholder(),
+                )
+              else
+                const _StripedPlaceholder(),
+              // Bottom-to-top navy scrim so the title/progress stay legible
+              // over any photo.
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    stops: const [0, 0.55, 0.75],
+                    colors: [
+                      kNavyColor.withValues(alpha: 0.88),
+                      kNavyColor.withValues(alpha: 0.25),
+                      kNavyColor.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: kNavyColor.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    project == null ? 'NO PROJECT YET' : 'IN PROGRESS',
+                    style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)
+                        .copyWith(letterSpacing: 0.4),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 14,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      project == null
+                          ? 'Start a project to see it here'
+                          : (project['title']?.toString() ?? project['id'].toString()),
+                      style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (project != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                height: 6,
+                                color: Colors.white.withValues(alpha: 0.28),
+                                alignment: Alignment.centerLeft,
+                                child: FractionallySizedBox(
+                                  widthFactor: completionPercent / 100,
+                                  child: Container(color: kAccentColor),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '$completionPercent%',
+                            style: appBodyStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (project != null)
+                Center(
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: kAccentColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: kNavyColor.withValues(alpha: 0.35),
+                          offset: const Offset(0, 6),
+                          blurRadius: 18,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: const AppIcon(AppIcons.play, size: 20, color: Colors.white),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StripedPlaceholder extends StatelessWidget {
+  const _StripedPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _StripePainter());
+  }
+}
+
+/// Diagonal-stripe placeholder matching the prototypes' repeating-gradient
+/// stand-in for a missing photo.
+class _StripePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFEDEFF4));
+    final stripe = Paint()..color = const Color(0xFFE2E6EF);
+    const width = 14.0;
+    for (var x = -size.height; x < size.width; x += width * 2) {
+      final path = Path()
+        ..moveTo(x, size.height)
+        ..lineTo(x + size.height, 0)
+        ..lineTo(x + size.height + width, 0)
+        ..lineTo(x + width, size.height)
+        ..close();
+      canvas.drawPath(path, stripe);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StripePainter oldDelegate) => false;
+}
+
+/// One continuous surface strip of four equal tappable columns separated by
+/// hairline dividers.
+class _QuickActionsBar extends StatelessWidget {
+  const _QuickActionsBar({required this.items});
+
+  final List<(String icon, String label, VoidCallback onTap)> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: appFlatCardDecoration(),
+      child: IntrinsicHeight(
+        child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.chewy(fontSize: 12, color: Colors.black),
-            ),
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: VerticalDivider(width: 1, thickness: 1, color: kHairlineColor),
+                ),
+              Expanded(
+                child: InkWell(
+                  onTap: items[i].$3,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIcon(items[i].$1, size: 18),
+                        const SizedBox(height: 6),
+                        Text(
+                          items[i].$2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RecentActivityRow extends StatelessWidget {
+  const _RecentActivityRow({required this.post, required this.reactionsTotal});
+
+  final FeedPost? post;
+  final int reactionsTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final post = this.post;
+    if (post == null) {
+      return Text(
+        'No posts yet — finish a session to see it here.',
+        style: appBodyStyle(fontSize: 13, color: kMutedColor),
+      );
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 64,
+              height: 64,
+              child: (post.photoUrl == null || post.photoUrl!.isEmpty)
+                  ? const _StripedPlaceholder()
+                  : CachedNetworkImage(
+                      imageUrl: post.photoUrl!,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => const _StripedPlaceholder(),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  post.displayTitle,
+                  style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    const AppIcon(AppIcons.eye, size: 13, color: kMutedColor),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        '${formatCount(post.views)} views · ${formatShortMonthDay(post.datePosted)}',
+                        style: appBodyStyle(fontSize: 12, color: kMutedColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          const AppIcon(AppIcons.heartFilled, size: 15, color: kAccentColor),
+          const SizedBox(width: 4),
+          Text(
+            '$reactionsTotal',
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }

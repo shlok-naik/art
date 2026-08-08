@@ -14,25 +14,23 @@ class AchievementChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       onTap: () => showAchievementDetail(context, achievement: achievement, isUnlocked: true),
       child: Tooltip(
         message: achievement.description,
         child: Container(
-          width: 78,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
-          child: Column(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          decoration: appFlatCardDecoration(radius: 20),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 3),
+              Text(achievement.emoji, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
               Text(
                 achievement.title,
-                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
             ],
           ),

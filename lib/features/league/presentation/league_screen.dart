@@ -3,16 +3,19 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
+import '../domain/league_region.dart';
 import '../providers.dart';
 import 'league_voting_feed_screen.dart';
+import 'region_picker_sheet.dart';
 import 'submit_to_league_screen.dart';
 
 class LeagueScreen extends ConsumerWidget {
@@ -24,21 +27,102 @@ class LeagueScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: appThemedAppBar(context, 'League'),
-      body: SafeArea(
-        child: leagueAsync.when(
-          data: (league) => _LeagueBody(league: league),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => AppErrorState(
-            error: error,
-            onRetry: () => ref.invalidate(currentLeagueProvider),
+      body: Column(
+        children: [
+          const AppNavyHeader(title: 'League'),
+          Expanded(
+            child: leagueAsync.when(
+              data: (league) => _LeagueBody(league: league),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) =>
+                  error is NoRegionSelectedException ? const _RegionPickerPrompt() : AppErrorState(
+                    error: error,
+                    onRetry: () => ref.invalidate(currentLeagueProvider),
+                  ),
+            ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: Consumer(
         builder: (context, ref, _) => AppBottomNav(
           currentIndex: -1,
           onTap: (i) => goToMainTab(context, ref, i),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the league body when the signed-in user hasn't picked
+/// a region yet — regional leagues need one to know which week's league row
+/// to materialize/join.
+class _RegionPickerPrompt extends ConsumerStatefulWidget {
+  const _RegionPickerPrompt();
+
+  @override
+  ConsumerState<_RegionPickerPrompt> createState() => _RegionPickerPromptState();
+}
+
+class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
+  bool _isSaving = false;
+
+  Future<void> _choose() async {
+    final region = await pickLeagueRegion(context);
+    if (region == null || !mounted) return;
+
+    setState(() => _isSaving = true);
+    final userId = ref.read(authRepositoryProvider).currentUser?.id;
+    try {
+      if (userId != null) {
+        await ref.read(profileRepositoryProvider).updateRegion(userId: userId, region: region);
+        ref.invalidate(currentProfileProvider);
+        ref.invalidate(currentLeagueProvider);
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🌍', style: TextStyle(fontSize: 44)),
+            const SizedBox(height: 12),
+            Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text(
+              "Leagues run per-region so the leaderboard stays close — pick where you'd like to compete.",
+              textAlign: TextAlign.center,
+              style: appBodyStyle(fontSize: 14, color: kMutedColor),
+            ),
+            const SizedBox(height: 20),
+            InkWell(
+              onTap: _isSaving ? null : _choose,
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                decoration: BoxDecoration(
+                  color: kAccentColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(
+                        'Choose region',
+                        style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -86,8 +170,10 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
             const _PastChampionCard(),
             const SizedBox(height: 20),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                Text('Submissions', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 if (league.isSubmissionOpen)
                   InkWell(
@@ -99,7 +185,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                       child: Text(
                         'Submit',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                       ),
                     ),
                   )
@@ -116,7 +202,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                         children: [
                           Text(
                             'Rate Entries',
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                           ),
                           const SizedBox(width: 2),
                           const Icon(Icons.chevron_right, size: 16, color: kAccentColor),
@@ -133,7 +219,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                   : league.isVotingOpen
                       ? 'Rate every entry 1-5 stars — no self-rating!'
                       : 'Voting has closed for this round.',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
             ),
             const SizedBox(height: 12),
             submissionsAsync.when(
@@ -144,11 +230,11 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                    decoration: appHardCardDecoration(radius: 18),
+                    decoration: appFlatCardDecoration(),
                     child: Text(
                       "You haven't submitted a project yet — tap Submit above.",
                       textAlign: TextAlign.center,
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+                      style: appBodyStyle(fontSize: 13, color: kMutedColor),
                     ),
                   );
                 }
@@ -195,21 +281,30 @@ class _ThemeBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: appHardCardDecoration(radius: 18, color: kAccentTintColor),
+      decoration: appFlatCardDecoration(color: kAccentTintColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "THIS SEASON'S THEME",
-            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor),
+          Row(
+            children: [
+              Text(
+                "This season's theme",
+                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
+              ),
+              const Spacer(),
+              Text(
+                leagueRegionLabel(league.region),
+                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(league.themeTitle, style: appHeadlineStyle(fontSize: 38)),
+          const SizedBox(height: 2),
+          Text(league.themeTitle, style: appHeadlineStyle()),
           const SizedBox(height: 2),
           Text(
             league.themeDescription,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
           ),
         ],
       ),
@@ -252,15 +347,15 @@ class _CountdownTimerState extends State<_CountdownTimer> {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: appHardCardDecoration(radius: 18),
+        decoration: appFlatCardDecoration(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.timer_off_outlined, color: Colors.black54, size: 18),
+            const Icon(Icons.timer_off_outlined, color: kMutedColor, size: 18),
             const SizedBox(width: 8),
             Text(
               'Voting closed',
-              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black54),
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
           ],
         ),
@@ -275,23 +370,23 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: appHardCardDecoration(radius: 18),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      decoration: appFlatCardDecoration(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            widget.league.phaseLabel.toUpperCase(),
-            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+            widget.league.phaseLabel,
+            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _CountdownUnit(value: days, label: 'DAYS'),
-              _CountdownUnit(value: hours, label: 'HRS'),
-              _CountdownUnit(value: minutes, label: 'MIN'),
-              _CountdownUnit(value: seconds, label: 'SEC'),
+              _CountdownUnit(value: days, label: 'days'),
+              _CountdownUnit(value: hours, label: 'hrs'),
+              _CountdownUnit(value: minutes, label: 'min'),
+              _CountdownUnit(value: seconds, label: 'sec'),
             ],
           ),
         ],
@@ -311,12 +406,12 @@ class _CountdownUnit extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value.toString().padLeft(2, '0'), style: GoogleFonts.chewy(fontSize: 26, color: Colors.black)),
-        const SizedBox(height: 2),
         Text(
-          label,
-          style: appBodyStyle(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+          value.toString().padLeft(2, '0'),
+          style: appBodyStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
+        const SizedBox(height: 2),
+        Text(label, style: appBodyStyle(fontSize: 10, color: kMutedColor)),
       ],
     );
   }
@@ -350,18 +445,12 @@ class _Leaderboard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: appHardCardDecoration(radius: 18),
+      decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.leaderboard, color: kAccentColor, size: 20),
-              const SizedBox(width: 6),
-              Text('Current Standings', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-            ],
-          ),
+          Text('Current standings', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           for (var i = 0; i < top.length; i++) ...[
             if (i > 0) const SizedBox(height: 10),
@@ -369,11 +458,11 @@ class _Leaderboard extends StatelessWidget {
           ],
           if (myRank >= 0 && !myRowShownInTop) ...[
             const SizedBox(height: 12),
-            const Divider(color: kBorderColor, height: 1, thickness: kBorderWidth),
+            const Divider(color: kHairlineColor, height: 1, thickness: 1),
             const SizedBox(height: 10),
             Text(
-              'YOUR RANK',
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+              'Your rank',
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
             const SizedBox(height: 8),
             _LeaderboardRow(rank: myRank, submission: submissions[myRank], isMe: true),
@@ -404,44 +493,44 @@ class _LeaderboardRow extends StatelessWidget {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: isMe ? kAccentTintColor : null,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
             SizedBox(
-              width: 26,
+              width: 24,
               child: Text(
                 rank < _Leaderboard._medals.length ? _Leaderboard._medals[rank] : '#${rank + 1}',
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 15),
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: submission.photoUrl.isEmpty
                   ? Container(
-                      width: 36,
-                      height: 36,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported, size: 16, color: Colors.black26),
+                      width: 34,
+                      height: 34,
+                      color: kHairlineColor,
+                      child: const Icon(Icons.image_not_supported, size: 16, color: kMutedColor),
                     )
-                  : CachedNetworkImage(imageUrl: submission.photoUrl, width: 36, height: 36, fit: BoxFit.cover),
+                  : CachedNetworkImage(imageUrl: submission.photoUrl, width: 34, height: 34, fit: BoxFit.cover),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
-                style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                style: appBodyStyle(fontSize: 14),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
-              '⭐ ${submission.stars}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF555555)),
+              '★ ${submission.stars}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
           ],
         ),
@@ -462,20 +551,20 @@ class _PastChampionCard extends ConsumerWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: appHardCardDecoration(radius: 18),
+      decoration: appFlatCardDecoration(),
       child: Row(
         children: [
-          const Text('🏆', style: TextStyle(fontSize: 32)),
-          const SizedBox(width: 14),
+          const AppIcon(AppIcons.trophy, size: 30, strokeWidth: 1.6),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                Text("Last season's champion", style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 Text(
-                  '@${champion.artistUsername} — ⭐ ${champion.stars}',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
+                  '@${champion.artistUsername} · ★ ${champion.stars}',
+                  style: appBodyStyle(fontSize: 12, color: kMutedColor),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -510,24 +599,27 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Pulling "${widget.submission.projectTitle}"?',
+          style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        title: Text('Pulling "${widget.submission.projectTitle}"?', style: GoogleFonts.chewy(fontSize: 20)),
         content: Text(
           "Just checking — is this because you found a stronger piece to enter, or because you're being "
           "harsh on your own work? If it's the second one, leave it up.",
-          style: GoogleFonts.chewy(fontSize: 15),
+          style: appBodyStyle(fontSize: 14, color: kMutedColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Never mind, keep it', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Never mind, keep it', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Pull it', style: GoogleFonts.chewy(color: Colors.red.shade700, fontSize: 15)),
+            child: Text(
+              'Pull it',
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red.shade700),
+            ),
           ),
         ],
       ),
@@ -551,8 +643,8 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     final canUnsubmit = widget.canUnsubmit;
 
     return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: appHardCardDecoration(radius: 14, shadowOffset: 3),
+      padding: const EdgeInsets.all(8),
+      decoration: appFlatCardDecoration(radius: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -574,19 +666,19 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                       borderRadius: BorderRadius.circular(10),
                       child: submission.photoUrl.isEmpty
                           ? Container(
-                              color: Colors.grey.shade200,
+                              color: kHairlineColor,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                              child: const Icon(Icons.image_not_supported, size: 24, color: kMutedColor),
                             )
                           : CachedNetworkImage(
                               imageUrl: submission.photoUrl,
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                              placeholder: (context, url) => Container(color: kSurfaceColor),
                               errorWidget: (context, url, error) => Container(
-                                color: Colors.grey.shade200,
+                                color: kHairlineColor,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                                child: const Icon(Icons.image_not_supported, size: 24, color: kMutedColor),
                               ),
                             ),
                     ),
@@ -599,11 +691,10 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                     child: GestureDetector(
                       onTap: _isUnsubmitting ? null : _confirmUnsubmit,
                       child: Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
-                          border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
                         ),
                         child: _isUnsubmitting
                             ? const SizedBox(
@@ -611,7 +702,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                                 width: 10,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: kAccentColor),
                               )
-                            : const Icon(Icons.close, size: 12, color: kAccentColor),
+                            : const AppIcon(AppIcons.x, size: 10, color: kAccentColor),
                       ),
                     ),
                   ),
@@ -621,27 +712,21 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
           const SizedBox(height: 8),
           Text(
             '@${submission.artistUsername}',
-            style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+            style: appBodyStyle(fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 5),
             decoration: BoxDecoration(
-              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('⭐', style: TextStyle(fontSize: 15)),
-                const SizedBox(width: 5),
-                Text(
-                  '${submission.stars}',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
-                ),
-              ],
+            child: Text(
+              '★ ${submission.stars}',
+              textAlign: TextAlign.center,
+              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ],
