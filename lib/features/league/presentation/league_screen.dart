@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
 import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
@@ -41,7 +42,7 @@ class LeagueScreen extends ConsumerWidget {
                     ),
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
-                      padding: EdgeInsets.all(2),
+                      padding: EdgeInsets.all(AppSpacing.space4),
                       child: AppIcon(AppIcons.comment, color: kInkColor, strokeWidth: 2),
                     ),
                   ),
@@ -49,7 +50,7 @@ class LeagueScreen extends ConsumerWidget {
           Expanded(
             child: leagueAsync.when(
               data: (league) => _LeagueBody(league: league),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AppSkeletonScreen(),
               error: (error, stack) =>
                   error is NoRegionSelectedException ? const _RegionPickerPrompt() : AppErrorState(
                     error: error,
@@ -103,25 +104,25 @@ class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.space24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const AppIcon(AppIcons.globe, size: 40, color: kNavyColor, strokeWidth: 1.4),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.space8),
             Text(
               "Leagues run per-region so the leaderboard stays close — pick where you'd like to compete.",
               textAlign: TextAlign.center,
               style: appBodyStyle(fontSize: 14, color: kMutedColor),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             InkWell(
               onTap: _isSaving ? null : _choose,
               borderRadius: BorderRadius.circular(24),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space12),
                 decoration: BoxDecoration(
                   color: kAccentColor,
                   borderRadius: BorderRadius.circular(24),
@@ -174,17 +175,17 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _CountdownTimer(league: league),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             _ThemeBanner(league: league),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             submissionsAsync.when(
               data: (submissions) => _Leaderboard(submissions: submissions, myUserId: myUserId),
               loading: () => const SizedBox.shrink(),
               error: (error, stack) => const SizedBox.shrink(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             const _PastChampionCard(),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
@@ -198,7 +199,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
                       child: Text(
                         'Submit',
                         style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
@@ -212,7 +213,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -220,7 +221,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                             'Rate Entries',
                             style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: AppSpacing.space4),
                           const AppIcon(AppIcons.chevronRight, size: 16, color: kAccentColor),
                         ],
                       ),
@@ -228,7 +229,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                   ),
               ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               league.isSubmissionOpen
                   ? 'Submissions close Friday 2pm London — rating opens right after.'
@@ -237,7 +238,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                       : 'Voting has closed for this round.',
               style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             submissionsAsync.when(
               data: (submissions) {
                 final visible = submissions.where((s) => s.userId == myUserId).toList();
@@ -245,7 +246,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                 if (visible.isEmpty) {
                   return Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
                     decoration: appFlatCardDecoration(),
                     child: Text(
                       "You haven't submitted a project yet — tap Submit above.",
@@ -274,7 +275,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AppSkeletonScreen(),
               error: (error, stack) => AppErrorState(
                 error: error,
                 onRetry: () => ref.invalidate(leagueSubmissionsProvider(league.id)),
@@ -296,7 +297,7 @@ class _ThemeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       // Navy plaque with a gold hairline — the same museum framing the
       // photos get, applied to the season's headline moment.
       decoration: BoxDecoration(
@@ -326,12 +327,12 @@ class _ThemeBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             league.themeTitle,
             style: appHeadlineStyle(fontSize: 22, color: Colors.white, italic: true),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             league.themeDescription,
             style: appBodyStyle(
@@ -380,13 +381,13 @@ class _CountdownTimerState extends State<_CountdownTimer> {
     if (boundary == null) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space16),
         decoration: appFlatCardDecoration(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const AppIcon(AppIcons.clock, size: 18, color: kMutedColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.space8),
             Text(
               'Voting closed',
               style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
@@ -404,7 +405,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space8),
       decoration: appFlatCardDecoration(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -413,7 +414,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
             widget.league.phaseLabel,
             style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -444,7 +445,7 @@ class _CountdownUnit extends StatelessWidget {
           value.toString().padLeft(2, '0'),
           style: appBodyStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.space4),
         Text(label, style: appBodyStyle(fontSize: 10, color: kMutedColor)),
       ],
     );
@@ -477,27 +478,27 @@ class _Leaderboard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('Current standings', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.space12),
           for (var i = 0; i < top.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
+            if (i > 0) const SizedBox(height: AppSpacing.space12),
             _LeaderboardRow(rank: i, submission: top[i], isMe: i == myRank),
           ],
           if (myRank >= 0 && !myRowShownInTop) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             const Divider(color: kHairlineColor, height: 1, thickness: 1),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.space12),
             Text(
               'Your rank',
               style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             _LeaderboardRow(rank: myRank, submission: submissions[myRank], isMe: true),
           ],
         ],
@@ -526,7 +527,7 @@ class _LeaderboardRow extends StatelessWidget {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppSpacing.space8),
         decoration: BoxDecoration(
           color: isMe ? kAccentTintColor : null,
           borderRadius: BorderRadius.circular(10),
@@ -534,7 +535,7 @@ class _LeaderboardRow extends StatelessWidget {
         child: Row(
           children: [
             AppRankBadge(rank: rank + 1, size: 22),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.space8),
             Container(
               width: 32,
               height: 32,
@@ -551,7 +552,7 @@ class _LeaderboardRow extends StatelessWidget {
                     )
                   : CachedNetworkImage(imageUrl: submission.photoUrl, fit: BoxFit.cover),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.space12),
             Expanded(
               child: Text(
                 isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
@@ -578,12 +579,12 @@ class _PastChampionCard extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
       decoration: appFlatCardDecoration(),
       child: Row(
         children: [
           const AppIcon(AppIcons.trophy, size: 30, color: kGoldColor, strokeWidth: 1.6),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -599,7 +600,7 @@ class _PastChampionCard extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppSpacing.space8),
                     AppStarCount(label: '${champion.stars}', fontSize: 12),
                   ],
                 ),
@@ -679,7 +680,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     final canUnsubmit = widget.canUnsubmit;
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(AppSpacing.space8),
       decoration: appFlatCardDecoration(radius: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,7 +728,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                     child: GestureDetector(
                       onTap: _isUnsubmitting ? null : _confirmUnsubmit,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppSpacing.space4),
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
@@ -745,16 +746,16 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           Text(
             '@${submission.artistUsername}',
             style: appBodyStyle(fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space4),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),

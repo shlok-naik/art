@@ -42,9 +42,11 @@ create table public.projects (
   title text not null check (char_length(title) between 1 and 140),
   finished_status boolean not null default false,
   completion_percent smallint not null default 0 check (completion_percent between 0 and 100),
+  last_opened_at timestamptz,
   created_at timestamptz not null default now()
 );
 create index projects_user_id_created_at_idx on public.projects (user_id, created_at desc);
+create index projects_user_id_last_opened_at_idx on public.projects (user_id, last_opened_at desc nulls last);
 
 create table public.sessions (
   id uuid primary key default gen_random_uuid(),
@@ -159,6 +161,15 @@ create table public.league_ratings (
   primary key (league_id, rater_id, submission_id)
 );
 create index league_ratings_submission_id_idx on public.league_ratings (submission_id);
+
+-- League ids a user has already seen the trophy win-celebration screen for.
+-- Presence of a row means "seen"; there's nothing else to store per row.
+create table public.league_trophy_celebrations (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  league_id uuid not null references public.leagues(id) on delete cascade,
+  celebrated_at timestamptz not null default now(),
+  primary key (user_id, league_id)
+);
 
 -- Read models the Flutter app queries --------------------------------------
 create view public.reaction_counts as
@@ -298,6 +309,7 @@ alter table public.user_achievements enable row level security;
 alter table public.leagues enable row level security;
 alter table public.league_submissions enable row level security;
 alter table public.league_ratings enable row level security;
+alter table public.league_trophy_celebrations enable row level security;
 
 create policy "signed-in users read profiles" on public.profiles for select using (auth.uid() is not null);
 create policy "create own profile" on public.profiles for insert with check (id = auth.uid());
@@ -387,11 +399,15 @@ create policy "delete own rating during voting" on public.league_ratings for del
   )
 );
 
+create policy "read own trophy celebrations" on public.league_trophy_celebrations for select using (user_id = auth.uid());
+create policy "mark own trophy celebrations" on public.league_trophy_celebrations for insert with check (user_id = auth.uid());
+
 grant select on all tables in schema public to authenticated;
 grant insert, update, delete on public.profiles, public.projects, public.sessions,
   public.follows, public.reactions, public.comments,
   public.comment_reports, public.user_achievements, public.league_submissions,
   public.league_ratings to authenticated;
+grant insert on public.league_trophy_celebrations to authenticated;
 grant select on all tables in schema public to authenticated;
 grant execute on function public.get_or_create_current_league(text), public.latest_league_champion(text),
   public.record_session_view(uuid) to authenticated;

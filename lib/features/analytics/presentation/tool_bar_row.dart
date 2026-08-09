@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../providers.dart';
 
@@ -51,7 +52,7 @@ class ToolBarRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 24,
           child: Text(

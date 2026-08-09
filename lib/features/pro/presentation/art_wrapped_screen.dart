@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../analytics/providers.dart';
 import '../../shell/main_shell.dart';
 
@@ -48,7 +49,7 @@ class ArtWrappedScreen extends ConsumerWidget {
               if (stats.sessionCount == 0) {
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppSpacing.space24),
                     child: Text(
                       'Log a few sessions to unlock your recap.',
                       textAlign: TextAlign.center,
@@ -74,7 +75,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                       'across ${stats.sessionCount} session${stats.sessionCount == 1 ? '' : 's'}',
                       style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.space28),
                     Row(
                       children: [
                         Expanded(
@@ -85,7 +86,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                             sublabel: '${stats.finishedProjectCount} finished',
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _WrappedStatCard(
                             icon: AppIcons.flame,
@@ -96,7 +97,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.space12),
                     Row(
                       children: [
                         Expanded(
@@ -106,7 +107,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                             value: stats.hardestStage ?? '—',
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _WrappedStatCard(
                             icon: AppIcons.pencil,
@@ -117,7 +118,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                       ],
                     ),
                     if (stats.personalityBadge != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.space12),
                       _WrappedStatCard(
                         icon: AppIcons.clock,
                         label: 'You are a',
@@ -125,7 +126,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                         fullWidth: true,
                       ),
                     ],
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.space28),
                     Text(
                       'Screenshot this to share your year in art.',
                       textAlign: TextAlign.center,
@@ -135,7 +136,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+            loading: () => const AppSkeletonBlock(onDark: true, height: 320),
             error: (error, _) => AppErrorState(
               error: error,
               onDark: true,
@@ -173,7 +174,7 @@ class _WrappedStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: fullWidth ? double.infinity : null,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -183,7 +184,7 @@ class _WrappedStatCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppIcon(icon, size: 18, color: kNavyColor),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kMutedColor)),
           Text(
             value,

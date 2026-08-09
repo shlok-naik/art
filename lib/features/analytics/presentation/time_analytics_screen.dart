@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 
@@ -50,9 +51,9 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                       'Total time logged',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     _TotalTimeHero(minutes: time.totalMinutes),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.space16),
                     Row(
                       children: [
                         Expanded(
@@ -61,7 +62,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                             value: _formatMinutes(time.averageSessionMinutes),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _StatTile(
                             label: time.longestSession == null
@@ -74,7 +75,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Row(
                       children: [
                         Expanded(
@@ -86,7 +87,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                                 : '${time.currentStreakDays} day${time.currentStreakDays == 1 ? '' : 's'}',
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _StatTile(
                             label: 'You are a',
@@ -95,21 +96,21 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Time per stage',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final stage in time.perStage) ...[
                             _StageTimeRow(stage: stage, maxMinutes: time.perStage.first.totalMinutes),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
@@ -118,7 +119,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const AppSkeletonScreen(),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(timeAnalyticsProvider),
@@ -143,7 +144,7 @@ class _TotalTimeHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       decoration: BoxDecoration(
         color: kAccentColor,
         borderRadius: BorderRadius.circular(16),
@@ -151,7 +152,7 @@ class _TotalTimeHero extends StatelessWidget {
       child: Row(
         children: [
           const AppIcon(AppIcons.clock, size: 30, color: Colors.white),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.space16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +188,7 @@ class _StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
       decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,12 +199,12 @@ class _StatTile extends StatelessWidget {
             style: appBodyStyle(fontSize: 12, color: kMutedColor),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Row(
             children: [
               if (icon != null) ...[
                 AppIcon(icon!, size: 14, color: kAccentColor),
-                const SizedBox(width: 5),
+                const SizedBox(width: AppSpacing.space4),
               ],
               Flexible(
                 child: Text(
@@ -268,7 +269,7 @@ class _StageTimeRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 52,
           child: Text(

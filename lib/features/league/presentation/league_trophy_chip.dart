@@ -5,6 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league.dart';
 
@@ -23,13 +24,13 @@ class LeagueTrophyChip extends StatelessWidget {
       child: Tooltip(
         message: trophy.themeTitle,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8, horizontal: AppSpacing.space12),
           decoration: appFlatCardDecoration(radius: 20),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               const AppIcon(AppIcons.trophy, size: 14, color: kGoldColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.space8),
               Text(
                 trophy.themeTitle,
                 maxLines: 1,
@@ -85,7 +86,7 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32),
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
@@ -101,13 +102,13 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
                   textAlign: TextAlign.center,
                   style: appHeadlineStyle(fontSize: 22, color: kNavyColor, italic: true),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.space8),
                 Text(
                   trophy.themeDescription,
                   textAlign: TextAlign.center,
                   style: appBodyStyle(fontSize: 14, color: kMutedColor),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
                 if (trophy.photoUrl.isNotEmpty)
                   MuseumFrame(
                     radius: 8,
@@ -117,9 +118,9 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
                       child: CachedNetworkImage(imageUrl: trophy.photoUrl, fit: BoxFit.cover),
                     ),
                   ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                   decoration: BoxDecoration(
                     color: kGoldColor,
                     borderRadius: BorderRadius.circular(20),
@@ -129,12 +130,12 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
                     style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kNavyColor),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.space20),
                 InkWell(
                   onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space12),
                     decoration: BoxDecoration(
                       color: kAccentColor,
                       borderRadius: BorderRadius.circular(24),

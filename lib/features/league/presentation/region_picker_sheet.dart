@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league_region.dart';
 
@@ -33,20 +34,20 @@ class _RegionPickerSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               "You'll compete in this region's weekly league.",
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             for (final entry in leagueRegions.entries) ...[
               InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: () => Navigator.of(context).pop(entry.key),
                 child: Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.space8),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
                   decoration: BoxDecoration(
                     color: entry.key == current ? kAccentTintColor : Colors.white,
                     border: Border.all(color: kHairlineColor, width: 1),

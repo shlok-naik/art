@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 const _clockNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
@@ -42,7 +43,7 @@ class HourlyRoseChart extends StatelessWidget {
           maxCount: maxCount,
           label: 'AM',
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.space20),
         _SingleClockRose(
           hours: hourly.sublist(12, 24),
           minutes: minutes.sublist(12, 24),
@@ -126,7 +127,7 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
           widget.label,
           style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 15, color: kInkColor),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.space8),
         AspectRatio(
           aspectRatio: 1,
           child: Container(
@@ -220,7 +221,7 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
       child: IgnorePointer(
         child: Container(
           width: tooltipWidth,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space8, vertical: AppSpacing.space8),
           decoration: BoxDecoration(
             color: kNavyColor,
             borderRadius: BorderRadius.circular(8),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../domain/achievement.dart';
 import '../providers.dart';
 
@@ -26,7 +27,7 @@ class AllAchievementsScreen extends ConsumerWidget {
       appBar: appThemedAppBar(context, 'Achievements'),
       body: unlockedAsync.when(
         data: (unlocked) => GridView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.space16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             mainAxisSpacing: 12,
@@ -40,7 +41,7 @@ class AllAchievementsScreen extends ConsumerWidget {
             return _AchievementTile(achievement: achievement, isUnlocked: isUnlocked);
           },
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppSkeletonScreen(),
         error: (error, stack) => AppErrorState(
           error: error,
           onRetry: () => ref.invalidate(unlockedAchievementsProvider(userId)),
@@ -64,7 +65,7 @@ class _AchievementTile extends StatelessWidget {
       // Both states sit on navy; unlocked earns the gold hairline and gold
       // icon/text, locked stays borderless and dimmed white.
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8, horizontal: AppSpacing.space8),
         decoration: BoxDecoration(
           color: kNavyColor,
           borderRadius: BorderRadius.circular(14),
@@ -79,7 +80,7 @@ class _AchievementTile extends StatelessWidget {
               size: 20,
               color: isUnlocked ? kGoldColor : Colors.white.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               achievement.title,
               textAlign: TextAlign.center,
@@ -141,7 +142,7 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32),
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
@@ -157,15 +158,15 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
                   textAlign: TextAlign.center,
                   style: appHeadlineStyle(fontSize: 22, color: kNavyColor, italic: true),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.space8),
                 Text(
                   achievement.description,
                   textAlign: TextAlign.center,
                   style: appBodyStyle(fontSize: 14, color: kMutedColor),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                   decoration: BoxDecoration(
                     color: isUnlocked ? kSuccessBgColor : kSurfaceColor,
                     borderRadius: BorderRadius.circular(20),
@@ -179,12 +180,12 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.space20),
                 InkWell(
                   onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space12),
                     decoration: BoxDecoration(
                       color: kAccentColor,
                       borderRadius: BorderRadius.circular(24),

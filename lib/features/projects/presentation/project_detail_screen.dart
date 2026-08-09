@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
@@ -218,12 +219,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
             style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16, color: kAccentColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           Text(
             formatDurationHms(_elapsed),
             style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 64, color: kInkColor),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.space32),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -233,20 +234,20 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   shape: const StadiumBorder(),
                   side: const BorderSide(color: kHairlineColor, width: 1),
                   foregroundColor: kInkColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
                   textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 icon: AppIcon(isPaused ? AppIcons.play : AppIcons.pause, size: 20, color: Colors.white),
                 label: Text(isPaused ? 'Resume' : 'Pause'),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.space16),
               ElevatedButton.icon(
                 onPressed: _endSession,
                 style: ElevatedButton.styleFrom(
                   shape: const StadiumBorder(),
                   backgroundColor: kAccentColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
                   textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 icon: const AppIcon(AppIcons.stop, size: 18, color: Colors.white),
@@ -264,12 +265,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     return Column(
       children: [
         if (!_isOwner)
-          const SizedBox(height: 8)
+          const SizedBox(height: AppSpacing.space8)
         else if (_isFinished)
           Container(
             width: double.infinity,
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
             decoration: BoxDecoration(
               color: kSuccessBgColor,
               border: Border.all(color: kHairlineColor, width: 1),
@@ -278,7 +279,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             child: Row(
               children: [
                 const AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.space12),
                 Expanded(
                   child: Text(
                     'This project is finished — 100% complete and locked. No new sessions can be added.',
@@ -295,18 +296,18 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
         if (_errorText != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
             child: AppErrorText(_errorText!),
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.space12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text('Past Sessions', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20)),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         Expanded(
           child: sessionsAsync.when(
             data: (sessions) {
@@ -321,7 +322,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 itemCount: sessions.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space12),
                 itemBuilder: (context, index) {
                   final session = sessions[index];
                   final photoUrl = session['photo_url']?.toString();
@@ -346,7 +347,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(AppSpacing.space12),
                       decoration: appFlatCardDecoration(),
                       child: Row(
                         children: [
@@ -366,7 +367,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                     fit: BoxFit.cover,
                                   ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.space12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +391,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator(color: kAccentColor)),
+            loading: () => const AppSkeletonScreen(),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(sessionsListProvider(_projectId)),

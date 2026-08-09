@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_icons.dart';
+import 'app_spacing.dart';
 
 /// Shared look-and-feel constants for the navy/cobalt flat design: white
 /// background and white screen headers, navy reserved for the bottom tab bar
@@ -146,7 +147,7 @@ InputDecoration appInputDecoration(String label) {
     border: border,
     enabledBorder: border,
     focusedBorder: border,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
   );
 }
 
@@ -170,7 +171,7 @@ class AppPrimaryButton extends StatelessWidget {
           disabledBackgroundColor: kAccentColor.withValues(alpha: 0.5),
           elevation: 0,
           shape: const StadiumBorder(),
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16),
           textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         child: isLoading
@@ -208,7 +209,7 @@ class AppOutlinedPillButton extends StatelessWidget {
         shape: const StadiumBorder(),
         backgroundColor: kSurfaceColor,
         foregroundColor: kInkColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
         textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: fontSize),
       ),
       child: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -266,7 +267,7 @@ class AppErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.space24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -289,7 +290,7 @@ class AppErrorState extends StatelessWidget {
                   shape: const StadiumBorder(),
                   backgroundColor: onDark ? Colors.white24 : kSurfaceColor,
                   foregroundColor: onDark ? Colors.white : kInkColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
                   textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 child: const Text('Retry'),

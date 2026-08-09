@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 const kSessionStages = [
@@ -111,7 +112,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
     return DefaultTextStyle(
       style: appBodyStyle(color: kInkColor),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.space16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -119,9 +120,9 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
               widget.title,
               style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 24),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Text('Session Name', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             TextField(
               controller: _nameController,
               enabled: !widget.isSubmitting,
@@ -133,9 +134,9 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                 if (_nameError != null) setState(() => _nameError = null);
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Text('Stage', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             DropdownButtonFormField<String>(
               initialValue: _stage,
               decoration: appInputDecoration('Stage'),
@@ -146,12 +147,12 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                   ? null
                   : (value) => setState(() => _stage = value ?? _stage),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Text('Tools Used', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             if (_tools.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpacing.space8),
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -177,14 +178,14 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                     onSubmitted: (_) => _addTool(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.space8),
                 IconButton(
                   icon: const AppIcon(AppIcons.plus, size: 26, color: kAccentColor),
                   onPressed: widget.isSubmitting ? null : _addTool,
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Text(
               'Difficulty (1-10)',
               style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -215,15 +216,15 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
               ],
             ),
             if (widget.showProjectCompletion) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.space16),
               Text(
                 'Project Completion',
                 style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.space4),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                 decoration: BoxDecoration(
                   color: kAccentTintColor,
                   borderRadius: BorderRadius.circular(12),
@@ -271,13 +272,13 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                 ],
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.space24),
             AppPrimaryButton(
               label: widget.submitLabel,
               isLoading: widget.isSubmitting,
               onPressed: widget.isSubmitting ? null : _handleSubmit,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             TextButton(
               onPressed: widget.isSubmitting ? null : widget.onBack,
               child: Text('Back', style: appBodyStyle(color: kInkColor, fontSize: 15)),

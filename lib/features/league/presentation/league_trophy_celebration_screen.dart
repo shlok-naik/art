@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league.dart';
 
@@ -47,7 +48,7 @@ class _LeagueTrophyCelebrationScreenState extends State<LeagueTrophyCelebrationS
           SafeArea(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.space24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -56,7 +57,7 @@ class _LeagueTrophyCelebrationScreenState extends State<LeagueTrophyCelebrationS
                       textAlign: TextAlign.center,
                       style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     if (trophy.photoUrl.isNotEmpty)
                       Container(
                         width: 160,
@@ -81,13 +82,13 @@ class _LeagueTrophyCelebrationScreenState extends State<LeagueTrophyCelebrationS
                         alignment: Alignment.center,
                         child: const AppIcon(AppIcons.trophy, size: 80, color: kGoldColor, strokeWidth: 1.2),
                       ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Text(
                       trophy.themeTitle,
                       textAlign: TextAlign.center,
                       style: appHeadlineStyle(fontSize: 30, color: Colors.white, italic: true),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.space8),
                     Text(
                       'Won with ★ ${trophy.stars} — added to your trophy cabinet.',
                       textAlign: TextAlign.center,
@@ -98,7 +99,7 @@ class _LeagueTrophyCelebrationScreenState extends State<LeagueTrophyCelebrationS
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32, vertical: AppSpacing.space12),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),

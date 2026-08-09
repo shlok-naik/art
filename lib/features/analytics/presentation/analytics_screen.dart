@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../pro/presentation/pro_screen.dart';
 import '../../pro/providers.dart';
@@ -36,7 +37,7 @@ class AnalyticsScreen extends ConsumerWidget {
                       MaterialPageRoute(builder: (_) => const DifficultyAnalyticsScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.space12),
                   _AnalyticsRow(
                     icon: AppIcons.folder,
                     label: 'Projects',
@@ -44,7 +45,7 @@ class AnalyticsScreen extends ConsumerWidget {
                       MaterialPageRoute(builder: (_) => const ProjectsAnalyticsScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.space12),
                   _AnalyticsRow(
                     icon: AppIcons.clock,
                     label: 'Time spent',
@@ -52,7 +53,7 @@ class AnalyticsScreen extends ConsumerWidget {
                       MaterialPageRoute(builder: (_) => const TimeAnalyticsScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.space12),
                   // The paywalled row keeps its distinct tinted treatment to
                   // signal it's the Pro one.
                   _AnalyticsRow(
@@ -100,12 +101,12 @@ class _AnalyticsRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space20),
         decoration: appFlatCardDecoration(color: isPro ? kAccentTintColor : kSurfaceColor),
         child: Row(
           children: [
             AppIcon(icon, size: 22, color: color),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppSpacing.space16),
             Expanded(
               child: Text(
                 label,

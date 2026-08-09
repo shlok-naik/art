@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 
@@ -45,7 +46,7 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
           SafeArea(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.space24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -53,7 +54,7 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
                       'Achievement unlocked!',
                       style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Container(
                       width: 160,
                       height: 160,
@@ -65,13 +66,13 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
                       alignment: Alignment.center,
                       child: AppIcon(achievement.icon, size: 80, color: kGoldColor, strokeWidth: 1.2),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Text(
                       achievement.title,
                       textAlign: TextAlign.center,
                       style: appHeadlineStyle(fontSize: 30, color: Colors.white, italic: true),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.space8),
                     Text(
                       achievement.description,
                       textAlign: TextAlign.center,
@@ -82,7 +83,7 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32, vertical: AppSpacing.space12),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),

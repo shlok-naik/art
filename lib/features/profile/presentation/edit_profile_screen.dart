@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../../league/domain/league_region.dart';
@@ -120,26 +121,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: appThemedAppBar(context, 'Edit Profile'),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.space20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Your details', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _displayNameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Display name'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _usernameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Username'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _bioController,
                 enabled: !_isSaving,
@@ -148,14 +149,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('Bio (optional)'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               Text('League region', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.space4),
               Text(
                 "Which region's weekly league you compete in.",
                 style: appBodyStyle(fontSize: 13, color: kMutedColor),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.space12),
               InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: _isSaving
@@ -166,7 +167,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
                   decoration: BoxDecoration(
                     border: Border.all(color: kHairlineColor, width: 1),
                     borderRadius: BorderRadius.circular(14),
@@ -184,14 +185,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               Text('Change password', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.space4),
               Text(
                 'Leave this blank to keep your current password.',
                 style: appBodyStyle(fontSize: 13, color: kMutedColor),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               TextField(
                 controller: _passwordController,
                 enabled: !_isSaving,
@@ -199,10 +200,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('New password'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.space20),
               if (_errorText != null) ...[
                 AppErrorText(_errorText!),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
               ],
               AppPrimaryButton(label: 'Save changes', isLoading: _isSaving, onPressed: _save),
             ],

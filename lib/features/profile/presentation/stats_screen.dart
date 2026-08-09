@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../feed/providers.dart';
 import '../../league/providers.dart';
@@ -39,7 +40,7 @@ class StatsScreen extends ConsumerWidget {
           data: (profile) {
             if (profile == null) {
               return Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.space16),
                 child: Text('Profile not found.', style: appBodyStyle(fontSize: 16, color: kInkColor)),
               );
             }
@@ -54,13 +55,13 @@ class StatsScreen extends ConsumerWidget {
                     '@${profile.username}',
                     style: GoogleFonts.rubikMonoOne(fontSize: 16, color: kAccentColor),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.space4),
                   Text(profile.displayName, style: appBodyStyle(fontSize: 22, color: kInkColor)),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.space20),
                   if (visibleKeys.isEmpty)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
                       decoration: appHardCardDecoration(radius: 18),
                       child: Text(
                         "This artist hasn't chosen to show any stats yet.",
@@ -83,7 +84,7 @@ class StatsScreen extends ConsumerWidget {
                         ],
                       ),
                     for (final key in visibleKeys.where((key) => key.isChart)) ...[
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.space20),
                       switch (key) {
                         StatKey.stageBreakdown => _StageBreakdownChart(userId: userId),
                         StatKey.difficultySpread => _DifficultySpreadChart(userId: userId),
@@ -96,7 +97,7 @@ class StatsScreen extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppSkeletonScreen(),
           error: (error, stack) => AppErrorState(
             error: error,
             onRetry: () => ref.invalidate(profileByIdProvider(userId)),
@@ -147,14 +148,14 @@ class _StatTile extends ConsumerWidget {
     final isBadge = statKey == StatKey.workStyle;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           AppIcon(statKey.icon, size: 20, color: kAccentColor),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -168,7 +169,7 @@ class _StatTile extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             statKey.label,
             style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
@@ -196,16 +197,13 @@ class _StageBreakdownChart extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Time per stage', style: appBodyStyle(fontSize: 18, color: kInkColor)),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
           decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
           child: stages == null
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+              ? const AppSkeletonBlock(height: 140)
               : Column(
                   children: [
                     for (final stage in stages) ...[
@@ -213,7 +211,7 @@ class _StageBreakdownChart extends ConsumerWidget {
                         stage: stage,
                         maxMinutes: stages.fold<double>(0, (max, s) => s.totalMinutes > max ? s.totalMinutes : max),
                       ),
-                      if (stage != stages.last) const SizedBox(height: 12),
+                      if (stage != stages.last) const SizedBox(height: AppSpacing.space12),
                     ],
                   ],
                 ),
@@ -268,7 +266,7 @@ class _StageBar extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 52,
           child: Text(
@@ -303,16 +301,13 @@ class _DifficultySpreadChart extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Difficulty spread', style: appBodyStyle(fontSize: 18, color: kInkColor)),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
           decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
           child: histogram == null
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+              ? const AppSkeletonBlock(height: 140)
               : SizedBox(
                   height: 100,
                   child: Column(
@@ -324,7 +319,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
                             for (var i = 0; i < histogram.length; i++)
                               Expanded(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                                   child: FractionallySizedBox(
                                     alignment: Alignment.bottomCenter,
                                     heightFactor: maxCount == 0 ? 0 : histogram[i] / maxCount,
@@ -340,7 +335,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.space8),
                       Row(
                         children: [
                           for (var i = 1; i <= 10; i++)
@@ -377,16 +372,13 @@ class _ProjectStatusChart extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Project status', style: appBodyStyle(fontSize: 18, color: kInkColor)),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
           decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
           child: projectStats == null
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+              ? const AppSkeletonBlock(height: 140)
               : Column(
                   children: [
                     _StatusBar(
@@ -395,7 +387,7 @@ class _ProjectStatusChart extends ConsumerWidget {
                       maxCount: projectStats.totalCount,
                       color: kSuccessTextColor,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.space12),
                     _StatusBar(
                       label: 'In progress',
                       count: projectStats.totalCount - projectStats.finishedCount,
@@ -457,7 +449,7 @@ class _StatusBar extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 30,
           child: Text(

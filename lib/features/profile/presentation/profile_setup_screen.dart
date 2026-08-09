@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
@@ -64,32 +65,32 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const AppWordmark(),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.space24),
                 Text(
                   'Set up',
                   style: appHeadlineStyle(fontSize: 34, color: kNavyColor, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.space24),
                 TextField(
                   controller: _displayNameController,
                   decoration: appInputDecoration('Display name'),
                   style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
                 TextField(
                   controller: _usernameController,
                   decoration: appInputDecoration('Username'),
                   style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.space24),
                 if (_errorText != null) ...[
                   AppErrorText(_errorText!),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.space12),
                 ],
                 AppPrimaryButton(
                   label: 'Save',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 
@@ -23,20 +24,20 @@ class FollowedScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Followed', style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.space20),
               followingAsync.when(
                 data: (following) => following.isEmpty
                     ? Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
                         decoration: appFlatCardDecoration(radius: 18),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const AppIcon(AppIcons.followed, size: 40, color: kMutedColor, strokeWidth: 1.4),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: AppSpacing.space12),
                             Text('Nobody here yet', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.space4),
                             Text(
                               'Follow other artists to see their posts here.',
                               textAlign: TextAlign.center,
@@ -57,18 +58,15 @@ class FollowedScreen extends ConsumerWidget {
                             ),
                         ],
                       ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 28),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const AppSkeletonScreen(rows: 3, padding: EdgeInsets.zero),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(followingListProvider),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: AppSpacing.space24),
               Text('Suggested artists', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.space8),
               suggestedAsync.when(
                 data: (suggested) => suggested.isEmpty
                     ? Text(
@@ -87,10 +85,7 @@ class FollowedScreen extends ConsumerWidget {
                             ),
                         ],
                       ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const AppSkeletonScreen(rows: 2, padding: EdgeInsets.zero),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(suggestedArtistsProvider),
@@ -200,7 +195,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
     return InkWell(
       onTap: _openProfile,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
         ),
@@ -209,7 +204,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
             AppInitialsAvatar(
               name: widget.subtitle.isNotEmpty ? widget.subtitle : widget.handle,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,7 +224,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
               onTap: _isSubmitting ? null : _confirmToggleFollow,
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
                 decoration: _isFollowing
                     ? BoxDecoration(
                         color: kSurfaceColor,

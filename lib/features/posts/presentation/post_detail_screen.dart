@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../auth/providers.dart';
@@ -199,7 +200,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final counts = ReactionCounts.fromCountsMap(countsMap);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -218,7 +219,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             ),
           ),
           if (_isOwner) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             Row(
               children: [
                 Expanded(
@@ -227,7 +228,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     onPressed: () => setState(() => _stage = _Stage.photoSource),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.space12),
                 Expanded(
                   child: AppOutlinedPillButton(
                     label: 'Edit details',
@@ -237,16 +238,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ],
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.space16),
           Text(_title, style: appBodyStyle(fontSize: 24, fontWeight: FontWeight.w600)),
           if (_title != post.projectTitle) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               'Part of ${post.projectTitle}',
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500, color: kMutedColor),
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.space16),
           Row(
             children: [
               // Views stays plain ink — gold is reserved for engagement
@@ -260,13 +261,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.space20),
           Text('Details', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Text(_description, style: appBodyStyle(fontSize: 14, color: kMutedColor)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space16),
           Text('Tools used', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           if (_toolsUsed.isEmpty)
             Text('None recorded', style: appBodyStyle(fontSize: 14, color: kMutedColor))
           else
@@ -276,21 +277,21 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               children: [
                 for (final tool in _toolsUsed)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                     decoration: appFlatCardDecoration(radius: 20),
                     child: Text(tool, style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                   ),
               ],
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space16),
           Text('Time taken', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(post.timeTaken, style: appBodyStyle(fontSize: 14, color: kMutedColor)),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.space20),
           Text('Reactions', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           _ReactionBreakdown(counts: counts),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.space20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -404,13 +405,13 @@ class _ReactionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
       decoration: appFlatCardDecoration(radius: 20),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           AppIcon(icon, size: 14, color: kInkColor),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.space8),
           Text(
             formatCount(count),
             style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),

@@ -40,7 +40,6 @@ dependencies:
   google_fonts: ^8.2.0
   camera: ^0.12.0+2
   camera_windows: ^0.2.6+4
-  shared_preferences: ^2.5.5
   image_picker: ^1.2.3
   file_picker: 10.3.8
   cached_network_image: ^3.4.1

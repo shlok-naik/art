@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'app_icons.dart';
+import 'app_spacing.dart';
+
 import 'app_styles.dart';
 
 /// Persistent bottom nav shown across the four main tabs (Home, Feed,
@@ -83,7 +85,7 @@ class _NavItem extends StatelessWidget {
         children: [
           if (isActive)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
               decoration: const BoxDecoration(
                 color: kAccentColor,
                 borderRadius: BorderRadius.all(Radius.circular(999)),
@@ -94,10 +96,10 @@ class _NavItem extends StatelessWidget {
             Padding(
               // Keeps icon centers level between the pill-wrapped active icon
               // and bare inactive ones.
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8),
               child: AppIcon(icon, color: Colors.white70),
             ),
-          const SizedBox(height: 3),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             label,
             maxLines: 1,

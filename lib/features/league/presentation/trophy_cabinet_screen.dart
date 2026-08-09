@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../domain/league.dart';
 import '../providers.dart';
@@ -29,7 +30,7 @@ class TrophyCabinetScreen extends ConsumerWidget {
           if (trophies.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.space24),
                 child: Text(
                   "No trophies yet — top the weekly league's leaderboard to win one.",
                   textAlign: TextAlign.center,
@@ -39,7 +40,7 @@ class TrophyCabinetScreen extends ConsumerWidget {
             );
           }
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -50,7 +51,7 @@ class TrophyCabinetScreen extends ConsumerWidget {
             itemBuilder: (context, index) => _TrophyTile(trophy: trophies[index]),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppSkeletonScreen(),
         error: (error, stack) => AppErrorState(
           error: error,
           onRetry: () => ref.invalidate(myLeagueTrophiesProvider(userId)),
@@ -73,7 +74,7 @@ class _TrophyTile extends StatelessWidget {
       // The whole tile is the navy mat: gold-hairlined photo above the
       // trophy's title, date and star pill.
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppSpacing.space8),
         decoration: BoxDecoration(
           color: kNavyColor,
           borderRadius: BorderRadius.circular(14),
@@ -99,7 +100,7 @@ class _TrophyTile extends StatelessWidget {
                       ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             Text(
               trophy.themeTitle,
               style: appHeadlineStyle(fontSize: 15, color: Colors.white, italic: true),
@@ -110,10 +111,10 @@ class _TrophyTile extends StatelessWidget {
               formatMonthDayYear(trophy.startsAt),
               style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.space8),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8),
               decoration: BoxDecoration(
                 color: kGoldColor,
                 borderRadius: BorderRadius.circular(20),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -61,50 +62,50 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                       'Status',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final status in overview.statusBreakdown) ...[
                             _StatusRow(status: status, total: overview.perProject.length),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
                     ),
                     if (overview.fastestFinish != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.space12),
                       _FastestFinishCard(fastestFinish: overview.fastestFinish!),
                     ],
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Completion',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final project in [...overview.perProject]
                             ..sort((a, b) => b.completionPercent.compareTo(a.completionPercent))) ...[
                             _CompletionRow(stats: project),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Time invested per project',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     for (final project in overview.perProject) ...[
                       _ProjectStatsRow(
                         stats: project,
@@ -114,13 +115,13 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.space12),
                     ],
                   ],
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const AppSkeletonScreen(),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(projectsOverviewProvider),
@@ -181,7 +182,7 @@ class _StatusRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 30,
           child: Text(
@@ -204,7 +205,7 @@ class _FastestFinishCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
       decoration: BoxDecoration(
         color: kAccentTintColor,
         borderRadius: BorderRadius.circular(12),
@@ -213,7 +214,7 @@ class _FastestFinishCard extends StatelessWidget {
       child: Row(
         children: [
           const AppIcon(AppIcons.clock, size: 20, color: kAccentColor),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +282,7 @@ class _CompletionRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 44,
           child: isFinished
@@ -313,7 +314,7 @@ class _ProjectStatsRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
         decoration: appFlatCardDecoration(),
         child: Row(
           children: [
@@ -337,7 +338,7 @@ class _ProjectStatsRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Text(
               _formatMinutes(stats.totalMinutes),
               style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),

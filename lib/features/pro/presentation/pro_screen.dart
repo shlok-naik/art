@@ -5,6 +5,7 @@ import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/revenue_cat_service.dart';
 import '../../shell/main_shell.dart';
@@ -82,7 +83,7 @@ class ProScreen extends ConsumerWidget {
                       'PRO',
                       style: appHeadlineStyle(fontSize: 44, color: kNavyColor, fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.space4),
                     Text(
                       isPro ? "You've got the full studio unlocked." : 'Unlock the full studio.',
                       style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
@@ -90,19 +91,19 @@ class ProScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.space20),
               const _FeatureCard(
                 icon: AppIcons.followed,
                 title: 'Multiple leagues',
                 description: 'Join and compete in as many leagues at once as you want.',
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               const _FeatureCard(
                 icon: AppIcons.barChart,
                 title: 'Deeper analytics',
                 description: "Time spent per stage, and how you're improving over time.",
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () => Navigator.of(context).push(
@@ -110,16 +111,16 @@ class ProScreen extends ConsumerWidget {
                 ),
                 child: const _ArtWrappedCard(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.space16),
               if (isPro) ...[
                 _ManageSubscriptionButton(
                   onPressed: () => RevenueCatUI.presentCustomerCenter(),
                 ),
               ] else ...[
                 _PriceCard(offeringAsync: offeringAsync),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.space16),
                 _UpgradeButton(onPressed: () => _presentPaywall(context, ref)),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.space12),
                 Center(
                   child: TextButton(
                     onPressed: () => _restorePurchases(context, ref),
@@ -153,20 +154,20 @@ class _FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: appFlatCardDecoration(radius: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppIcon(icon, size: 22),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(title, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.space4),
                 Text(description, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor)),
               ],
             ),
@@ -184,7 +185,7 @@ class _ArtWrappedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: appFlatCardDecoration(radius: 16),
       child: Stack(
         children: [
@@ -195,13 +196,13 @@ class _ArtWrappedCard extends StatelessWidget {
               Row(
                 children: [
                   const AppIcon(AppIcons.star, size: 22),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.space12),
                   Expanded(
                     child: Text('Art Wrapped', style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.space12),
               // Placeholder for the hero illustration — swap for a generated
               // asset (see the image-gen prompt shared alongside this screen).
               Container(
@@ -217,7 +218,7 @@ class _ArtWrappedCard extends StatelessWidget {
                   style: appBodyStyle(fontSize: 16, color: kMutedColor),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.space12),
               Text(
                 'Hours logged, favorite tools, trophies won — rendered as a shareable slideshow.',
                 style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
@@ -228,7 +229,7 @@ class _ArtWrappedCard extends StatelessWidget {
             top: -14,
             right: -14,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
               decoration: const BoxDecoration(
                 color: kAccentColor,
                 borderRadius: BorderRadius.only(
@@ -260,7 +261,7 @@ class _PriceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space16),
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
       child: offeringAsync.when(
         data: (offering) {
@@ -297,7 +298,7 @@ class _PriceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -324,7 +325,7 @@ class _UpgradeButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16),
         decoration: BoxDecoration(
           color: kAccentColor,
           border: Border.all(color: kHairlineColor, width: 1),
@@ -353,7 +354,7 @@ class _ManageSubscriptionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: kHairlineColor, width: 1),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/moderation_service.dart';
 import '../../profile/providers.dart';
 import '../domain/comment.dart';
@@ -146,7 +147,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                 Container(
                   width: 40,
                   height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
                   decoration: BoxDecoration(
                     color: kMutedColor,
                     borderRadius: BorderRadius.circular(4),
@@ -156,7 +157,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                   'Comments',
                   style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.space8),
                 const Divider(height: 1),
                 Expanded(
                   child: commentsAsync.when(
@@ -171,9 +172,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         );
                       }
                       return ListView.separated(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.space16),
                         itemCount: comments.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 14),
+                        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space16),
                         itemBuilder: (context, index) {
                           final comment = comments[index];
                           final canDelete = comment.userId == currentUserId ||
@@ -187,7 +188,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const AppSkeletonScreen(rows: 4),
                     error: (error, _) => AppErrorState(
                       error: error,
                       onRetry: () => ref.invalidate(sessionCommentsProvider(widget.sessionId)),
@@ -215,11 +216,11 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                               borderRadius: BorderRadius.circular(20),
                               borderSide: const BorderSide(color: kHairlineColor, width: 1),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.space8),
                       IconButton(
                         onPressed: _isSubmitting ? null : _submit,
                         icon: _isSubmitting
@@ -271,14 +272,14 @@ class _CommentTile extends StatelessWidget {
                     '@${comment.username}',
                     style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space8),
                   Text(
                     _formatCommentTime(comment.createdAt),
                     style: appBodyStyle(fontSize: 12, color: kMutedColor),
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.space4),
               Text(comment.body, style: appBodyStyle(fontSize: 15)),
             ],
           ),

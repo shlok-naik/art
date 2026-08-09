@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../data/profile_model.dart';
 import '../domain/stat_key.dart';
@@ -59,16 +60,16 @@ class _StatsVisibilityScreenState extends ConsumerState<StatsVisibilityScreen> {
       appBar: appThemedAppBar(context, 'Choose stats to show'),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(AppSpacing.space20),
           children: [
             Text(
               "Pick what shows on your public Stats page — visible to anyone who taps 'View stats' on your profile.",
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             if (_errorText != null) ...[
               AppErrorText(_errorText!),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
             ],
             for (final key in StatKey.values) ...[
               _StatToggleTile(
@@ -77,7 +78,7 @@ class _StatsVisibilityScreenState extends ConsumerState<StatsVisibilityScreen> {
                 enabled: !_isSaving,
                 onChanged: (value) => _toggle(key, value),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.space12),
             ],
           ],
         ),
@@ -102,12 +103,12 @@ class _StatToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
       child: Row(
         children: [
           AppIcon(statKey.icon, size: 20, color: kAccentColor),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Text(statKey.label, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),

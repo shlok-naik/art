@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 import 'all_achievements_screen.dart';
@@ -20,7 +21,7 @@ class AchievementChip extends StatelessWidget {
       child: Tooltip(
         message: achievement.description,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8, horizontal: AppSpacing.space12),
           decoration: BoxDecoration(
             color: kNavyColor,
             border: Border.all(color: kGoldColor, width: 1),
@@ -30,7 +31,7 @@ class AchievementChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppIcon(achievement.icon, size: 14, color: kGoldColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.space8),
               Text(
                 achievement.title,
                 maxLines: 1,

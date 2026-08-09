@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
@@ -34,7 +35,7 @@ class MyPostsScreen extends ConsumerWidget {
               onTap: () => ref.read(_isGridViewProvider.notifier).state = !isGrid,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(2),
+                padding: const EdgeInsets.all(AppSpacing.space4),
                 child: Tooltip(
                   message: isGrid ? 'Switch to list view' : 'Switch to grid view',
                   child: AppIcon(
@@ -51,7 +52,7 @@ class MyPostsScreen extends ConsumerWidget {
                 if (posts.isEmpty) {
                   return Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.space24),
                       child: Text(
                         'No posts yet — finish a session to see it here.',
                         textAlign: TextAlign.center,
@@ -62,7 +63,7 @@ class MyPostsScreen extends ConsumerWidget {
                 }
                 return isGrid ? _PostGrid(posts: posts) : _PostList(posts: posts);
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AppSkeletonScreen(rows: 4),
               error: (error, _) => AppErrorState(
                 error: error,
                 onRetry: () => ref.invalidate(myPostsProvider),
@@ -93,9 +94,9 @@ class _PostList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       itemCount: posts.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space16),
       itemBuilder: (context, index) => _PostTile(post: posts[index], isGrid: false),
     );
   }
@@ -109,7 +110,7 @@ class _PostGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       itemCount: posts.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -154,7 +155,7 @@ class _PostTile extends ConsumerWidget {
                     ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Text(
             post.displayTitle,
             maxLines: 1,
@@ -165,7 +166,7 @@ class _PostTile extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const AppIcon(AppIcons.heartFilled, size: 11, color: kGoldColor),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.space4),
               Text(
                 '${formatCount(total)} reactions',
                 style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor),

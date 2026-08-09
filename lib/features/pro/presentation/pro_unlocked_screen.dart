@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 /// Full-screen celebration shown right after a successful Pro purchase —
@@ -42,7 +43,7 @@ class _ProUnlockedScreenState extends State<ProUnlockedScreen> {
           SafeArea(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.space24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -50,7 +51,7 @@ class _ProUnlockedScreenState extends State<ProUnlockedScreen> {
                       "You're Pro!",
                       style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Container(
                       width: 160,
                       height: 160,
@@ -61,13 +62,13 @@ class _ProUnlockedScreenState extends State<ProUnlockedScreen> {
                       alignment: Alignment.center,
                       child: const AppIcon(AppIcons.crown, size: 72, color: kAccentColor, strokeWidth: 1.4),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Text(
                       'Welcome to the full studio',
                       textAlign: TextAlign.center,
                       style: appHeadlineStyle(fontSize: 28, color: Colors.white, italic: true),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.space8),
                     Text(
                       'Multiple leagues, deeper analytics, and Art Wrapped are all unlocked.',
                       textAlign: TextAlign.center,
@@ -78,7 +79,7 @@ class _ProUnlockedScreenState extends State<ProUnlockedScreen> {
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32, vertical: AppSpacing.space12),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
 
@@ -64,7 +65,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
         data: (projectsWithCover) {
           if (projectsWithCover.isEmpty) {
             return Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.space24),
               child: Text(
                 "You don't have any projects with a logged session yet — log a session first.",
                 textAlign: TextAlign.center,
@@ -73,7 +74,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
             );
           }
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             itemCount: projectsWithCover.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -99,7 +100,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                         bottom: 0,
                         child: Container(
                           color: kMutedColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space8, vertical: AppSpacing.space4),
                           child: Text(
                             project['title']?.toString() ?? '',
                             maxLines: 1,
@@ -119,7 +120,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                           top: 4,
                           right: 4,
                           child: Container(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(AppSpacing.space4),
                             decoration: const BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
                             child: const AppIcon(AppIcons.checkCircle, size: 12, color: Colors.white, strokeWidth: 2.4),
                           ),
@@ -131,7 +132,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppSkeletonScreen(),
         error: (error, stack) => AppErrorState(
           error: error,
           onRetry: () => ref.invalidate(myProjectsWithCoverProvider),

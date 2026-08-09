@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/sparkline.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -34,7 +35,7 @@ class StageRadarScreen extends ConsumerWidget {
           'Pro analytics',
           actions: const [
             Padding(
-              padding: EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: AppSpacing.space16),
               child: Center(child: AppIcon(AppIcons.crown, size: 18, color: kAccentColor)),
             ),
           ],
@@ -50,19 +51,19 @@ class StageRadarScreen extends ConsumerWidget {
                     Row(
                       children: [
                         const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.space8),
                         Text(
                           'Difficulty by stage',
                           style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.space4),
                     Text(
                       'See which stages are consistently hardest across all your projects.',
                       style: appBodyStyle(fontSize: 15, color: kMutedColor),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.space8),
                     Text(
                       'Farther from the center = harder (1–10 scale).',
                       style: appBodyStyle(
@@ -71,37 +72,37 @@ class StageRadarScreen extends ConsumerWidget {
                         color: kMutedColor,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: AspectRatio(
                         aspectRatio: 1,
                         child: StageRadarChart(stages: analytics.perStage),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     difficultyInsightsAsync.when(
                       data: (insights) => _DifficultyProInsights(insights: insights),
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () => const AppSkeletonBlock(height: 80),
                       error: (error, _) => AppErrorText('Failed to load insights: $error'),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     insightsAsync.when(
                       data: (insights) => overviewAsync.when(
                         data: (overview) => _ProInsights(insights: insights, overview: overview),
-                        loading: () => const Center(child: CircularProgressIndicator()),
+                        loading: () => const AppSkeletonBlock(height: 80),
                         error: (error, _) => AppErrorText('Failed to load insights: $error'),
                       ),
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () => const AppSkeletonBlock(height: 80),
                       error: (error, _) => AppErrorText('Failed to load insights: $error'),
                     ),
                   ],
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const AppSkeletonScreen(),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(difficultyAnalyticsProvider),
@@ -134,50 +135,50 @@ class _DifficultyProInsights extends StatelessWidget {
           Row(
             children: [
               const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.space8),
               Text(
                 'Then vs. now',
                 style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             'Older sessions (grey) vs. your more recent half (orange).',
             style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.space12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             decoration: appFlatCardDecoration(),
             child: AspectRatio(
               aspectRatio: 1,
               child: StageRadarChart(stages: comparison.recent, compareStages: comparison.older),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.space24),
         ],
         if (monthly.length >= 2) ...[
           Row(
             children: [
               const AppIcon(AppIcons.trendUp, size: 22, color: kAccentColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.space8),
               Text(
                 'Growth curve',
                 style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             'Average difficulty tackled per month.',
             style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.space12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             decoration: appFlatCardDecoration(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,9 +196,9 @@ class _DifficultyProInsights extends StatelessWidget {
                       ),
                     ),
                     if (insights.growthPercent != null) ...[
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.space12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
                         decoration: BoxDecoration(
                           color: insights.growthPercent! >= 0 ? kAccentColor : kHairlineColor,
                           borderRadius: BorderRadius.circular(20),
@@ -215,7 +216,7 @@ class _DifficultyProInsights extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.space8),
                 Row(
                   children: [
                     Text(
@@ -252,22 +253,22 @@ class _ProInsights extends StatelessWidget {
         Row(
           children: [
             const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.space8),
             Text(
               'Top tools',
               style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.space4),
         Text(
           'What you reach for most across every session.',
           style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.space12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
           decoration: appFlatCardDecoration(),
           child: insights.topTools.isEmpty
               ? Text(
@@ -278,42 +279,42 @@ class _ProInsights extends StatelessWidget {
                   children: [
                     for (final tool in insights.topTools) ...[
                       ToolBarRow(tool: tool, maxCount: insights.topTools.first.count),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.space12),
                     ],
                   ],
                 ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.space24),
         Text(
           'Practice streak',
           style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.space4),
         Text(
           'Sessions logged over the last 12 weeks.',
           style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.space12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.space16),
           decoration: appFlatCardDecoration(),
           child: _ActivityHeatmap(days: insights.activity),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.space24),
         Text(
           'When you work',
           style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.space4),
         Text(
           'Sessions started, by time of day.',
           style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.space12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.space16),
           decoration: appFlatCardDecoration(),
           child: HourlyRoseChart(
             hourly: insights.hourlyActivity,
@@ -321,63 +322,63 @@ class _ProInsights extends StatelessWidget {
           ),
         ),
         if (insights.durationTrendMinutes.length > 1) ...[
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.space24),
           Text(
             'Session length trend',
             style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             'Are your sessions getting longer or shorter?',
             style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.space12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             decoration: appFlatCardDecoration(),
             child: _SessionLengthTrend(minutes: insights.durationTrendMinutes),
           ),
         ],
         if (overview.perProject.any((p) => p.createdAt != null)) ...[
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.space24),
           Text(
             'Project timeline',
             style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             'When each project was active — see what overlapped.',
             style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.space12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.space16),
             decoration: appFlatCardDecoration(),
             child: _ProjectTimeline(projects: overview.perProject),
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.space24),
         Text(
           'Needs attention',
           style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.space4),
         Text(
           "Unfinished projects you haven't touched in a while.",
           style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.space12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
           decoration: appFlatCardDecoration(),
           child: insights.needsAttention.isEmpty
               ? Row(
                   children: [
                     const AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AppSpacing.space12),
                     Expanded(
                       child: Text(
                         "No old unfinished projects right now!",
@@ -390,7 +391,7 @@ class _ProInsights extends StatelessWidget {
                   children: [
                     for (final project in insights.needsAttention) ...[
                       _NeedsAttentionRow(project: project),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.space12),
                     ],
                   ],
                 ),
@@ -430,12 +431,12 @@ class _ActivityHeatmap extends StatelessWidget {
             children: [
               for (final week in weeks)
                 Padding(
-                  padding: const EdgeInsets.only(right: 3),
+                  padding: const EdgeInsets.only(right: AppSpacing.space4),
                   child: Column(
                     children: [
                       for (final day in week)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.space4),
                           child: Container(
                             width: 12,
                             height: 12,
@@ -451,7 +452,7 @@ class _ActivityHeatmap extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.space12),
         Text(
           '$activeDays active day${activeDays == 1 ? '' : 's'} in the last 12 weeks',
           style: appBodyStyle(fontSize: 13, color: kMutedColor),
@@ -501,9 +502,9 @@ class _SessionLengthTrend extends StatelessWidget {
           child: Sparkline(values: minutes, width: double.infinity, height: 40, color: kAccentColor),
         ),
         if (delta != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
             decoration: BoxDecoration(
               color: isShorter ? kAccentColor : kHairlineColor,
               borderRadius: BorderRadius.circular(20),
@@ -594,7 +595,7 @@ class _ProjectTimeline extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.space12),
         ],
         Row(
           children: [
@@ -625,7 +626,7 @@ class _NeedsAttentionRow extends StatelessWidget {
     return Row(
       children: [
         const AppIcon(AppIcons.hourglass, size: 18, color: kAccentColor),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         Expanded(
           child: Text(
             project.title,

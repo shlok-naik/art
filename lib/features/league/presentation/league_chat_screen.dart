@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/moderation_service.dart';
 import '../../profile/providers.dart';
 import '../domain/league_chat_message.dart';
@@ -146,9 +147,9 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
                   }
                   return ListView.separated(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.space16),
                     itemCount: messages.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 14),
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space16),
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       return _MessageTile(
@@ -160,7 +161,7 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppSkeletonScreen(),
                 error: (error, stack) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(leagueChatMessagesProvider(widget.leagueId)),
@@ -190,11 +191,11 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
                           borderRadius: BorderRadius.circular(20),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space8),
                   IconButton(
                     onPressed: _isSubmitting ? null : _submit,
                     icon: _isSubmitting
@@ -244,14 +245,14 @@ class _MessageTile extends StatelessWidget {
                     '@${message.username}',
                     style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space8),
                   Text(
                     _formatMessageTime(message.createdAt),
                     style: appBodyStyle(fontSize: 12, color: kMutedColor),
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.space4),
               Text(message.body, style: appBodyStyle(fontSize: 15)),
             ],
           ),

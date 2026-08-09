@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../providers.dart';
 
@@ -57,7 +58,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space28),
             child: _signUpSuccess
                 ? Column(
                     mainAxisSize: MainAxisSize.min,
@@ -67,7 +68,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         style: appBodyStyle(fontSize: 15, color: kMutedColor),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.space20),
                       AppPrimaryButton(
                         label: 'Back to login',
                         onPressed: () => Navigator.of(context).pop(),
@@ -82,24 +83,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         'Sign up',
                         style: appHeadlineStyle(fontSize: 26, color: kNavyColor, fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.space20),
                       TextField(
                         controller: _emailController,
                         decoration: appInputDecoration('Email'),
                         keyboardType: TextInputType.emailAddress,
                         style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.space12),
                       TextField(
                         controller: _passwordController,
                         decoration: appInputDecoration('Password'),
                         obscureText: true,
                         style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: AppSpacing.space24),
                       if (_errorText != null) ...[
                         AppErrorText(_errorText!),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.space12),
                       ],
                       AppPrimaryButton(
                         label: 'Sign up',

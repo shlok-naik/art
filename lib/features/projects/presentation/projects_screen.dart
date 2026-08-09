@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -143,7 +144,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.space12),
                   InkWell(
                     onTap: _isCreating ? null : _createProject,
                     borderRadius: BorderRadius.circular(22),
@@ -169,7 +170,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
             if (_errorText != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
                 child: AppErrorText(_errorText!),
               ),
             Expanded(
@@ -194,7 +195,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           project: project,
                           onOpen: () async {
                             final projectId = project['id'].toString();
-                            await ref.read(recentProjectStoreProvider).recordOpened(projectId);
+                            await ref.read(projectsRepositoryProvider).recordOpened(projectId);
                             ref.invalidate(projectsListProvider);
                             ref.invalidate(lastOpenedProjectProvider);
                             if (!context.mounted) return;
@@ -206,11 +207,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           onDelete: () => _deleteProject(project),
                         );
                       },
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.space12),
                     ),
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppSkeletonScreen(),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(projectsListProvider),
@@ -253,7 +254,7 @@ class _ProjectCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onOpen,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
         decoration: appFlatCardDecoration(),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,16 +265,16 @@ class _ProjectCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(title, style: appHeadlineStyle(fontSize: 19)),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.space4),
                   Text(
                     sessionCount == null
                         ? 'Created $createdAt'
                         : 'Created $createdAt · $sessionCount session${sessionCount == 1 ? '' : 's'}',
                     style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppSpacing.space8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
                     decoration: BoxDecoration(
                       color: isFinished ? kSuccessBgColor : kAccentTintColor,
                       borderRadius: BorderRadius.circular(12),
@@ -298,7 +299,7 @@ class _ProjectCard extends ConsumerWidget {
                     onTap: onFinish,
                     borderRadius: BorderRadius.circular(20),
                     child: const Padding(
-                      padding: EdgeInsets.all(6),
+                      padding: EdgeInsets.all(AppSpacing.space8),
                       child: AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
                     ),
                   ),
@@ -306,7 +307,7 @@ class _ProjectCard extends ConsumerWidget {
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(20),
                   child: const Padding(
-                    padding: EdgeInsets.all(6),
+                    padding: EdgeInsets.all(AppSpacing.space8),
                     child: AppIcon(AppIcons.x, size: 20),
                   ),
                 ),

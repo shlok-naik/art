@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../analytics/presentation/analytics_screen.dart';
@@ -91,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.space8),
                         _BuyProPill(
                           isPro: ref.watch(isProProvider),
                           onPressed: () => Navigator.of(context).push(
@@ -100,7 +101,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Row(
                       children: [
                         Expanded(
@@ -112,7 +113,7 @@ class HomeScreen extends ConsumerWidget {
                                 style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppSpacing.space4),
                               Text(
                                 'Ready to create a masterpiece?',
                                 style: appBodyStyle(fontSize: 13, color: kMutedColor),
@@ -120,9 +121,9 @@ class HomeScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.space8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                           decoration: BoxDecoration(
                             color: kAccentTintColor,
                             borderRadius: BorderRadius.circular(20),
@@ -131,7 +132,7 @@ class HomeScreen extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const AppIcon(AppIcons.flame, size: 14, color: kAccentColor),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: AppSpacing.space4),
                               Text(
                                 '$streakDays',
                                 style: appBodyStyle(
@@ -145,13 +146,13 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     _HeroProjectCard(
                       project: lastProject,
                       completionPercent: lastProjectCompletion,
                       photoUrl: heroPhotoUrl,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     _QuickActionsBar(
                       items: [
                         (AppIcons.trophy, 'League', () => Navigator.of(context).push(
@@ -164,7 +165,7 @@ class HomeScreen extends ConsumerWidget {
                             MaterialPageRoute(builder: (_) => const ProjectsScreen()))),
                       ],
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: AppSpacing.space24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -177,7 +178,7 @@ class HomeScreen extends ConsumerWidget {
                             style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.space8),
                         InkWell(
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const MyPostsScreen()),
@@ -193,7 +194,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     _RecentActivityRow(
                       post: mostRecentPost,
                       reactionsTotal: mostRecentReactionsTotal,
@@ -221,7 +222,7 @@ class _BuyProPill extends StatelessWidget {
       onTap: onPressed,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
         decoration: BoxDecoration(
           color: kAccentColor,
           borderRadius: BorderRadius.circular(20),
@@ -230,7 +231,7 @@ class _BuyProPill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const AppIcon(AppIcons.crown, size: 14, color: Colors.white),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpacing.space8),
             Text(
               isPro ? 'Pro' : 'Buy Pro',
               style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
@@ -303,7 +304,7 @@ class _HeroProjectCard extends StatelessWidget {
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
                   decoration: BoxDecoration(
                     color: kNavyColor.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(20),
@@ -331,7 +332,7 @@ class _HeroProjectCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (project != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.space8),
                       Row(
                         children: [
                           Expanded(
@@ -348,7 +349,7 @@ class _HeroProjectCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: AppSpacing.space12),
                           Text(
                             '$completionPercent%',
                             style: appBodyStyle(
@@ -440,7 +441,7 @@ class _QuickActionsBar extends StatelessWidget {
             for (var i = 0; i < items.length; i++) ...[
               if (i > 0)
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.space12),
                   child: VerticalDivider(width: 1, thickness: 1, color: kHairlineColor),
                 ),
               Expanded(
@@ -448,12 +449,12 @@ class _QuickActionsBar extends StatelessWidget {
                   onTap: items[i].$3,
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space4),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         AppIcon(items[i].$1, size: 18),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.space8),
                         Text(
                           items[i].$2,
                           maxLines: 1,
@@ -510,7 +511,7 @@ class _RecentActivityRow extends StatelessWidget {
                     ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,11 +522,11 @@ class _RecentActivityRow extends StatelessWidget {
                   style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: AppSpacing.space4),
                 Row(
                   children: [
                     const AppIcon(AppIcons.eye, size: 13, color: kMutedColor),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.space4),
                     Flexible(
                       child: Text(
                         '${formatCount(post.views)} views · ${formatShortMonthDay(post.datePosted)}',
@@ -538,9 +539,9 @@ class _RecentActivityRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.space12),
           const AppIcon(AppIcons.heartFilled, size: 15, color: kGoldColor),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.space4),
           Text(
             '$reactionsTotal',
             style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kGoldColor),

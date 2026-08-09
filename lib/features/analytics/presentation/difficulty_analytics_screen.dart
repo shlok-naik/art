@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/sparkline.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
@@ -46,7 +47,7 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                       'Hardest project',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     _HardestProjectHero(
                       project: hardest,
                       onTap: () => Navigator.of(context).push(
@@ -56,12 +57,12 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                       ),
                     ),
                     if (rest.isNotEmpty) ...[
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.space20),
                       Text(
                         'Other projects',
                         style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.space12),
                       for (final project in rest) ...[
                         _ProjectDifficultyRow(
                           project: project,
@@ -71,28 +72,28 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: AppSpacing.space12),
                       ],
                     ],
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Difficulty distribution',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: _DifficultyHistogram(histogram: analytics.histogram),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     timeAsync.maybeWhen(
                       data: (time) {
                         final callout = _difficultyVsSpeedCallout(analytics.perStage, time.perStage);
                         if (callout == null) return const SizedBox.shrink();
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.space20),
                           child: _CalloutCard(text: callout),
                         );
                       },
@@ -102,16 +103,16 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                       'Average difficulty per stage',
                       style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
                       decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final stage in analytics.perStage) ...[
                             _StageBarRow(stage: stage),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
@@ -120,7 +121,7 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const AppSkeletonScreen(),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(difficultyAnalyticsProvider),
@@ -149,7 +150,7 @@ class _HardestProjectHero extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(AppSpacing.space20),
         decoration: BoxDecoration(
           color: kAccentColor,
           borderRadius: BorderRadius.circular(12),
@@ -176,7 +177,7 @@ class _HardestProjectHero extends StatelessWidget {
                     style: appBodyStyle(fontSize: 14, color: Colors.white70),
                   ),
                   if (project.history.length > 1) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Sparkline(
                       values: project.history,
                       width: 140,
@@ -189,7 +190,7 @@ class _HardestProjectHero extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Text(
               project.average.toStringAsFixed(1),
               style: appBodyStyle(
@@ -218,7 +219,7 @@ class _ProjectDifficultyRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
         decoration: appFlatCardDecoration(),
         child: Row(
           children: [
@@ -248,7 +249,7 @@ class _ProjectDifficultyRow extends StatelessWidget {
                 minValue: 1,
                 maxValue: 10,
               ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Text(
               '${project.average.toStringAsFixed(1)} / 10',
               style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),
@@ -304,7 +305,7 @@ class _StageBarRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 46,
           child: Text(
@@ -355,7 +356,7 @@ class _CalloutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
       decoration: BoxDecoration(
         color: kAccentTintColor,
         borderRadius: BorderRadius.circular(12),
@@ -364,7 +365,7 @@ class _CalloutCard extends StatelessWidget {
       child: Row(
         children: [
           const AppIcon(AppIcons.bulb, size: 20, color: kAccentColor),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Text(text, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
@@ -394,7 +395,7 @@ class _DifficultyHistogram extends StatelessWidget {
                 for (var i = 0; i < histogram.length; i++)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                       child: FractionallySizedBox(
                         alignment: Alignment.bottomCenter,
                         heightFactor: maxCount == 0 ? 0 : histogram[i] / maxCount,
@@ -410,7 +411,7 @@ class _DifficultyHistogram extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Row(
             children: [
               for (var i = 1; i <= 10; i++)

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../auth/providers.dart';
 import '../../profile/presentation/public_profile_screen.dart';
@@ -47,7 +48,7 @@ class FeedScreen extends ConsumerWidget {
                     ),
                   ),
                   const AppIcon(AppIcons.search, color: kInkColor, strokeWidth: 2),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.space16),
                   const AppIcon(AppIcons.bell, color: kInkColor, strokeWidth: 2),
                 ],
               ),
@@ -70,7 +71,7 @@ class FeedScreen extends ConsumerWidget {
                   itemBuilder: (context, index) => _FeedPostCard(post: posts[index]),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AppSkeletonScreen(),
               error: (error, _) => AppErrorState(
                 error: error,
                 onRetry: () => ref.invalidate(feedPostsProvider),
@@ -142,7 +143,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.space16),
                   decoration: BoxDecoration(
                     color: kHairlineColor,
                     borderRadius: BorderRadius.circular(4),
@@ -151,7 +152,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
               ),
               Text('Title', style: appBodyStyle(fontSize: 12, color: kMutedColor)),
               Text(post.displayTitle, style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               Row(
                 children: [
                   Expanded(child: AppDetailStat(label: 'Views', value: formatCount(post.views))),
@@ -163,20 +164,20 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.space20),
               Text('Details', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.space8),
               Text(post.description, style: appBodyStyle(fontSize: 14)),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               Text('Tools used', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.space8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   for (final tool in post.toolsUsed)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                       decoration: BoxDecoration(
                         color: kSurfaceColor,
                         borderRadius: BorderRadius.circular(20),
@@ -185,9 +186,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               Text('Time taken', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.space4),
               Text(post.timeTaken, style: appBodyStyle(fontSize: 14)),
             ],
           ),
@@ -215,7 +216,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
             child: Row(
               children: [
                 Expanded(
@@ -226,7 +227,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     child: Row(
                       children: [
                         AppInitialsAvatar(name: post.artist, size: 38),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +250,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   ),
                 ),
                 if (!isMine) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space8),
                   _FollowPill(userId: post.userId, isFollowing: isFollowing),
                 ],
               ],
@@ -294,9 +295,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       ? const AppIcon(AppIcons.heartFilled, size: 24, color: kAccentColor)
                       : const AppIcon(AppIcons.heart, size: 24),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.space16),
                 InkWell(onTap: _showComments, child: const AppIcon(AppIcons.comment, size: 24)),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.space16),
                 // The paper plane surfaces the post's details sheet — the
                 // closest existing behavior to "share" (the old more-vert
                 // target); a real OS share sheet is a separate feature.
@@ -308,7 +309,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
           // count above the artist/title set in italic Fraunces.
           Container(
             margin: const EdgeInsets.fromLTRB(14, 2, 14, 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space12),
             decoration: const BoxDecoration(
               color: kNavyColor,
               borderRadius: BorderRadius.all(Radius.circular(6)),
@@ -320,7 +321,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                 Row(
                   children: [
                     const AppIcon(AppIcons.heartFilled, size: 12, color: kGoldColor),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: AppSpacing.space4),
                     Text(
                       '$likeCount LIKES',
                       style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor)
@@ -328,7 +329,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: AppSpacing.space4),
                 Text(
                   '${post.artist} — ${post.displayTitle}',
                   style: appHeadlineStyle(fontSize: 14, color: Colors.white, italic: true),
@@ -414,7 +415,7 @@ class _FollowPillState extends ConsumerState<_FollowPill> {
       onTap: _isBusy ? null : _toggle,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
         decoration: BoxDecoration(
           color: isFollowing ? kSurfaceColor : kAccentColor,
           borderRadius: BorderRadius.circular(999),

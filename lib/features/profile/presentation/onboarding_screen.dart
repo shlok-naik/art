@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.space24),
           child: Column(
             children: [
               Align(
@@ -80,14 +81,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         if (index == 0) ...[
                           const AppWordmark(fontSize: 40),
-                          const SizedBox(height: 26),
+                          const SizedBox(height: AppSpacing.space28),
                         ],
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
                           style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.space8),
                         Text(
                           page.body,
                           textAlign: TextAlign.center,
@@ -105,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       width: 8,
                       height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                       decoration: BoxDecoration(
                         color: index == _page ? kAccentColor : kHairlineColor,
                         shape: BoxShape.circle,
@@ -113,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.space20),
               AppPrimaryButton(
                 label: _page == _pages.length - 1 ? 'Set up my profile' : 'Next',
                 onPressed: _next,

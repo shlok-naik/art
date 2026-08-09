@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
 import '../../projects/providers.dart';
 import '../domain/league.dart';
@@ -36,7 +37,7 @@ class LeagueVotingFeedScreen extends ConsumerWidget {
             }
             return _VotingFeedBody(league: league, submissions: others);
           },
-          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          loading: () => const AppSkeletonBlock(onDark: true, height: double.infinity),
           error: (error, stack) => AppErrorState(
             error: error,
             onDark: true,
@@ -126,7 +127,7 @@ class _CloseButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(AppSpacing.space8),
           decoration: const BoxDecoration(color: kMutedColor, shape: BoxShape.circle),
           child: const AppIcon(AppIcons.x, size: 20, color: Colors.white, strokeWidth: 2),
         ),
@@ -211,7 +212,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
               itemBuilder: (context, i) => CachedNetworkImage(imageUrl: photos[i], fit: BoxFit.cover),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          loading: () => const AppSkeletonBlock(onDark: true, height: double.infinity),
           // The submission's cover still lets the entry be rated even if its
           // session list failed to load; with no cover either, say so rather
           // than showing a silent blank page.
@@ -245,7 +246,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                 return Row(
                   children: [
                     for (var i = 0; i < count; i++) ...[
-                      if (i > 0) const SizedBox(width: 4),
+                      if (i > 0) const SizedBox(width: AppSpacing.space4),
                       Expanded(
                         child: Container(
                           height: 3,
@@ -299,7 +300,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.space12),
                 ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -308,7 +309,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                       GestureDetector(
                         onTap: widget.league.isVotingOpen ? () => _rate(star) : null,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                           child: Text(
                             '★',
                             style: TextStyle(
@@ -320,7 +321,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.space4),
                 Text(
                   _myRating > 0
                       ? 'Your rating: $_myRating/5 · ★ ${submission.stars} total'
