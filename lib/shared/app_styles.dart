@@ -6,13 +6,20 @@ import 'package:google_fonts/google_fonts.dart';
 /// body text with Fraunces reserved for a few "creative content" headlines.
 const kNavyColor = Color(0xFF16233E);
 const kInkColor = Color(0xFF1B2740);
-const kMutedColor = Color(0xFF6B7690);
+const kMutedColor = Color(0xFF6B7280);
 const kHairlineColor = Color(0xFFE7EAF2);
 const kSurfaceColor = Color(0xFFF6F7FA);
 const kAccentColor = Color(0xFF2E5EFF);
 
-/// Pre-redesign border constants — only still used by appHardCardDecoration
-/// and the handful of screens the navy/cobalt handoff didn't cover.
+/// Standard rounding applied to cards, buttons, and input fields.
+const kCardRadius = 12.0;
+
+/// Subtle card outline — replaces the old hard 2px black border on
+/// appHardCardDecoration.
+const kCardBorderColor = Color(0xFFE5E7EB);
+
+/// Pre-redesign border constants — used directly by badges, chart outlines,
+/// and image frames that intentionally keep the bolder accent look.
 const kBorderColor = Color(0xFF111111);
 const kBorderWidth = 2.0;
 
@@ -40,26 +47,26 @@ TextStyle appBodyStyle({
 
 /// Flat filled card — the redesign's standard card treatment, replacing
 /// appHardCardDecoration's white+border look on every covered screen.
-BoxDecoration appFlatCardDecoration({double radius = 16, Color color = kSurfaceColor}) =>
+BoxDecoration appFlatCardDecoration({double radius = kCardRadius, Color color = kSurfaceColor}) =>
     BoxDecoration(color: color, borderRadius: BorderRadius.circular(radius));
 
-/// Flat "hard shadow" (offset only, no blur) used on virtually every card and
-/// button in the redesign — replaces plain unshadowed borders.
+/// Soft, low-blur shadow used on white cards in place of the old hard offset
+/// shadow — barely-there depth instead of a drawn outline.
 List<BoxShadow> hardShadow({double offset = 4}) {
-  return [BoxShadow(color: kBorderColor, offset: Offset(offset, offset), blurRadius: 0)];
+  return [BoxShadow(color: Colors.black.withValues(alpha: 0.04), offset: Offset(0, offset / 2), blurRadius: 10)];
 }
 
-/// Card decoration for the redesigned screens: 2px black border, rounded
-/// corners and a hard shadow. Kept separate from [appCardDecoration] (used by
+/// Card decoration for the redesigned screens: a subtle grey outline, rounded
+/// corners and a soft shadow. Kept separate from [appCardDecoration] (used by
 /// screens outside this redesign) so existing plain-bordered screens are unaffected.
 BoxDecoration appHardCardDecoration({
-  double radius = 18,
+  double radius = kCardRadius,
   double shadowOffset = 4,
   Color color = Colors.white,
 }) {
   return BoxDecoration(
     color: color,
-    border: Border.all(color: kBorderColor, width: kBorderWidth),
+    border: Border.all(color: kCardBorderColor, width: 1),
     borderRadius: BorderRadius.circular(radius),
     boxShadow: hardShadow(offset: shadowOffset),
   );
@@ -79,7 +86,7 @@ AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? action
 
 InputDecoration appInputDecoration(String label) {
   final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(14),
+    borderRadius: BorderRadius.circular(kCardRadius),
     borderSide: BorderSide.none,
   );
   return InputDecoration(
@@ -94,7 +101,7 @@ InputDecoration appInputDecoration(String label) {
   );
 }
 
-BoxDecoration appCardDecoration({double radius = 12}) {
+BoxDecoration appCardDecoration({double radius = kCardRadius}) {
   return BoxDecoration(
     border: Border.all(color: kBorderColor, width: kBorderWidth),
     borderRadius: BorderRadius.circular(radius),
