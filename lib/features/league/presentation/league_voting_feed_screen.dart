@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../../projects/providers.dart';
@@ -60,7 +60,7 @@ class _EmptyFeed extends StatelessWidget {
         Center(
           child: Text(
             'No other submissions to rate yet.',
-            style: GoogleFonts.chewy(color: Colors.white, fontSize: 17),
+            style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
             textAlign: TextAlign.center,
           ),
         ),
@@ -127,8 +127,8 @@ class _CloseButton extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(6),
-          decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
-          child: const Icon(Icons.close, color: Colors.white, size: 22),
+          decoration: const BoxDecoration(color: kMutedColor, shape: BoxShape.circle),
+          child: const AppIcon(AppIcons.x, size: 20, color: Colors.white, strokeWidth: 2),
         ),
       ),
     );
@@ -269,7 +269,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
           right: 56,
           child: Text(
             '@${submission.artistUsername} · ${submission.projectTitle}',
-            style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
+            style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -309,10 +309,12 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                         onTap: widget.league.isVotingOpen ? () => _rate(star) : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            star <= _myRating ? Icons.star : Icons.star_border,
-                            color: Colors.amber,
-                            size: 34,
+                          child: Text(
+                            '★',
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: star <= _myRating ? const Color(0xFFF5B301) : const Color(0xFF5A5A5A),
+                            ),
                           ),
                         ),
                       ),
@@ -320,7 +322,9 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _myRating > 0 ? 'Your rating: $_myRating/5 · ⭐ ${submission.stars} total' : '⭐ ${submission.stars} total',
+                  _myRating > 0
+                      ? 'Your rating: $_myRating/5 · ★ ${submission.stars} total'
+                      : '★ ${submission.stars} total',
                   style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white70),
                 ),
               ],

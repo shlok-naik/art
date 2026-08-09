@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Shared look-and-feel constants for the navy/cobalt flat redesign: white
-/// background, navy chrome (app bars, bottom nav), flat filled cards, Inter
-/// body text with Fraunces reserved for a few "creative content" headlines.
+import 'app_icons.dart';
+
+/// Shared look-and-feel constants for the navy/cobalt flat design: white
+/// background and white screen headers, navy reserved for the bottom tab bar
+/// and the museum treatments (photo mats, theme/achievement/trophy plaques),
+/// flat filled cards, Inter body text with Fraunces reserved for a few
+/// "creative content" headlines and the wordmark.
 const kNavyColor = Color(0xFF16233E);
 const kInkColor = Color(0xFF1B2740);
 const kMutedColor = Color(0xFF6B7280);
@@ -11,17 +15,17 @@ const kHairlineColor = Color(0xFFE7EAF2);
 const kSurfaceColor = Color(0xFFF6F7FA);
 const kAccentColor = Color(0xFF2E5EFF);
 
+/// Museum gold — reserved strictly for the photo frame hairline and for
+/// engagement/rating numbers (likes, reactions, stars) and their labels.
+/// Deliberately *not* used for raw view counts or generic emphasis.
+const kGoldColor = Color(0xFFC9A227);
+
 /// Standard rounding applied to cards, buttons, and input fields.
 const kCardRadius = 12.0;
 
 /// Subtle card outline — replaces the old hard 2px black border on
 /// appHardCardDecoration.
 const kCardBorderColor = Color(0xFFE5E7EB);
-
-/// Pre-redesign border constants — used directly by badges, chart outlines,
-/// and image frames that intentionally keep the bolder accent look.
-const kBorderColor = Color(0xFF111111);
-const kBorderWidth = 2.0;
 
 /// Accent-tinted background used for banners/callouts (streak badge, theme
 /// banner, "Go Pro" tile, follow-state chips).
@@ -33,16 +37,55 @@ const kSuccessBgColor = Color(0xFFE8F7EC);
 
 /// Fraunces serif — kept only for "creative content" headlines (league theme
 /// title, project titles); everything else is Inter.
-TextStyle appHeadlineStyle({double fontSize = 28, Color color = kInkColor}) {
-  return GoogleFonts.fraunces(fontSize: fontSize, height: 1.1, fontWeight: FontWeight.w500, color: color);
+TextStyle appHeadlineStyle({
+  double fontSize = 28,
+  Color color = kInkColor,
+  FontWeight fontWeight = FontWeight.w500,
+  bool italic = false,
+}) {
+  return GoogleFonts.fraunces(
+    fontSize: fontSize,
+    height: 1.1,
+    fontWeight: fontWeight,
+    fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+    color: color,
+  );
+}
+
+/// The "Unfinished" wordmark, set in italic Fraunces — this replaces the
+/// raster logo/mascot artwork everywhere it used to appear.
+class AppWordmark extends StatelessWidget {
+  const AppWordmark({super.key, this.fontSize = 26, this.color = kNavyColor});
+
+  final double fontSize;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Unfinished',
+      style: appHeadlineStyle(
+        fontSize: fontSize,
+        color: color,
+        fontWeight: FontWeight.w600,
+        italic: true,
+      ).copyWith(letterSpacing: -0.5),
+    );
+  }
 }
 
 TextStyle appBodyStyle({
   double fontSize = 15,
   FontWeight fontWeight = FontWeight.w400,
   Color color = kInkColor,
+  FontStyle fontStyle = FontStyle.normal,
 }) {
-  return GoogleFonts.inter(fontSize: fontSize, fontWeight: fontWeight, color: color);
+  return GoogleFonts.inter(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    fontStyle: fontStyle,
+    color: color,
+  );
 }
 
 /// Flat filled card — the redesign's standard card treatment, replacing
@@ -56,9 +99,10 @@ List<BoxShadow> hardShadow({double offset = 4}) {
   return [BoxShadow(color: Colors.black.withValues(alpha: 0.04), offset: Offset(0, offset / 2), blurRadius: 10)];
 }
 
-/// Card decoration for the redesigned screens: a subtle grey outline, rounded
-/// corners and a soft shadow. Kept separate from [appCardDecoration] (used by
-/// screens outside this redesign) so existing plain-bordered screens are unaffected.
+/// White card with a subtle grey outline, rounded corners and a soft
+/// shadow — used where a card needs to lift off a white background rather
+/// than sit in it (dialogs, elevated tiles). Flat surface fills come from
+/// [appFlatCardDecoration] instead.
 BoxDecoration appHardCardDecoration({
   double radius = kCardRadius,
   double shadowOffset = 4,
@@ -72,15 +116,20 @@ BoxDecoration appHardCardDecoration({
   );
 }
 
+/// White pushed-screen app bar with dark text and a 1px hairline underneath.
+/// Navy chrome is reserved for the bottom tab bar — a navy status-bar
+/// backdrop clashed with the system time/battery glyphs.
 AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? actions}) {
   return AppBar(
-    backgroundColor: kNavyColor,
-    surfaceTintColor: kNavyColor,
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.white,
     elevation: 0,
-    foregroundColor: Colors.white,
-    iconTheme: const IconThemeData(color: Colors.white),
-    title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white)),
+    scrolledUnderElevation: 0,
+    foregroundColor: kInkColor,
+    iconTheme: const IconThemeData(color: kInkColor),
+    title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: kInkColor)),
     actions: actions,
+    shape: const Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
   );
 }
 
@@ -98,13 +147,6 @@ InputDecoration appInputDecoration(String label) {
     enabledBorder: border,
     focusedBorder: border,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-  );
-}
-
-BoxDecoration appCardDecoration({double radius = kCardRadius}) {
-  return BoxDecoration(
-    border: Border.all(color: kBorderColor, width: kBorderWidth),
-    borderRadius: BorderRadius.circular(radius),
   );
 }
 
@@ -228,7 +270,7 @@ class AppErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_outlined, size: 40, color: onDark ? Colors.white38 : kMutedColor),
+            AppIcon(AppIcons.globe, size: 36, color: onDark ? Colors.white38 : kMutedColor, strokeWidth: 1.4),
             const SizedBox(height: 10),
             Text(
               appErrorMessage(error),
@@ -260,29 +302,24 @@ class AppErrorState extends StatelessWidget {
   }
 }
 
-/// Icon + label + value row used by the post detail screen and the feed's
-/// details sheet.
+/// Small muted label over an ink value, used by the post detail screen and
+/// the feed's details sheet. Deliberately icon-free — the redesign leans on
+/// type hierarchy here rather than a cobalt glyph per stat.
 class AppDetailStat extends StatelessWidget {
-  const AppDetailStat({super.key, required this.icon, required this.label, required this.value});
+  const AppDetailStat({super.key, required this.label, required this.value});
 
-  final IconData icon;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: kAccentColor),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: GoogleFonts.inter(fontSize: 12, color: kMutedColor)),
-            Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15, color: kInkColor)),
-          ],
-        ),
+        Text(label, style: GoogleFonts.inter(fontSize: 11, color: kMutedColor)),
+        const SizedBox(height: 1),
+        Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: kInkColor)),
       ],
     );
   }

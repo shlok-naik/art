@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -25,7 +25,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
     final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Time Spent'),
@@ -37,7 +37,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                   child: Text(
                     'No time logged yet — finish a session to see analytics here.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.chewy(fontSize: 16),
+                    style: appBodyStyle(fontSize: 16),
                   ),
                 );
               }
@@ -48,7 +48,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Total time logged',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
                     const SizedBox(height: 10),
                     _TotalTimeHero(minutes: time.totalMinutes),
@@ -80,9 +80,10 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                         Expanded(
                           child: _StatTile(
                             label: 'Current streak',
+                            icon: time.currentStreakDays == 0 ? null : AppIcons.flame,
                             value: time.currentStreakDays == 0
                                 ? '—'
-                                : '🔥 ${time.currentStreakDays} day${time.currentStreakDays == 1 ? '' : 's'}',
+                                : '${time.currentStreakDays} day${time.currentStreakDays == 1 ? '' : 's'}',
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -97,13 +98,13 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
                     Text(
                       'Time per stage',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: appCardDecoration(),
+                      decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final stage in time.perStage) ...[
@@ -145,12 +146,11 @@ class _TotalTimeHero extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: kAccentColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.timer_outlined, color: Colors.white, size: 36),
+          const AppIcon(AppIcons.clock, size: 30, color: Colors.white),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -159,11 +159,11 @@ class _TotalTimeHero extends StatelessWidget {
               children: [
                 Text(
                   _formatMinutes(minutes),
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 34, color: Colors.white),
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 30, color: Colors.white),
                 ),
                 Text(
                   'across every project',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.white70),
+                  style: appBodyStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
             ),
@@ -175,30 +175,44 @@ class _TotalTimeHero extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value});
+  const _StatTile({required this.label, required this.value, this.icon});
 
   final String label;
   final String value;
+
+  /// Optional leading [AppIcons] glyph, cobalt like the value it sits with.
+  final String? icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: appCardDecoration(),
+      decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+            style: appBodyStyle(fontSize: 12, color: kMutedColor),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20, color: kAccentColor),
+          Row(
+            children: [
+              if (icon != null) ...[
+                AppIcon(icon!, size: 14, color: kAccentColor),
+                const SizedBox(width: 5),
+              ],
+              Flexible(
+                child: Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -224,7 +238,7 @@ class _StageTimeRow extends StatelessWidget {
           width: 92,
           child: Text(
             stage.stage,
-            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -237,7 +251,7 @@ class _StageTimeRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -260,10 +274,10 @@ class _StageTimeRow extends StatelessWidget {
           child: Text(
             minutes == null ? 'N/A' : _formatMinutes(minutes),
             textAlign: TextAlign.right,
-            style: GoogleFonts.chewy(
-              fontWeight: FontWeight.bold,
+            style: appBodyStyle(
+              fontWeight: FontWeight.w600,
               fontSize: 13,
-              color: minutes == null ? Colors.black38 : kAccentColor,
+              color: minutes == null ? kMutedColor : kAccentColor,
             ),
           ),
         ),

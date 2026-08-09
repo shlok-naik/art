@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
@@ -67,7 +68,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
               child: Text(
                 "You don't have any projects with a logged session yet — log a session first.",
                 textAlign: TextAlign.center,
-                style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+                style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
               ),
             );
           }
@@ -97,7 +98,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                         right: 0,
                         bottom: 0,
                         child: Container(
-                          color: Colors.black54,
+                          color: kMutedColor,
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                           child: Text(
                             project['title']?.toString() ?? '',
@@ -109,7 +110,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                       ),
                       if (isSubmitting)
                         Container(
-                          color: Colors.black45,
+                          color: kMutedColor,
                           alignment: Alignment.center,
                           child: const CircularProgressIndicator(color: Colors.white),
                         ),
@@ -120,7 +121,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(3),
                             decoration: const BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
-                            child: const Icon(Icons.check, size: 14, color: Colors.white),
+                            child: const AppIcon(AppIcons.checkCircle, size: 12, color: Colors.white, strokeWidth: 2.4),
                           ),
                         ),
                     ],

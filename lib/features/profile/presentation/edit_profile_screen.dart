@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../../league/domain/league_region.dart';
@@ -124,7 +124,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Your details', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('Your details', style: appBodyStyle(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 16),
               TextField(
                 controller: _displayNameController,
@@ -149,11 +149,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 style: appBodyStyle(fontSize: 16),
               ),
               const SizedBox(height: 14),
-              Text('League region', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('League region', style: appBodyStyle(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 4),
               Text(
                 "Which region's weekly league you compete in.",
-                style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
+                style: appBodyStyle(fontSize: 13, color: kMutedColor),
               ),
               const SizedBox(height: 10),
               InkWell(
@@ -168,7 +168,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
-                    border: Border.all(color: kBorderColor, width: kBorderWidth),
+                    border: Border.all(color: kHairlineColor, width: 1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -176,20 +176,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       Expanded(
                         child: Text(
                           _region == null ? 'Not set' : leagueRegionLabel(_region!),
-                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black),
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInkColor),
                         ),
                       ),
-                      const Icon(Icons.chevron_right, size: 20, color: Colors.black45),
+                      const AppIcon(AppIcons.chevronRight, size: 18, color: kMutedColor),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('Change password', style: appBodyStyle(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 4),
               Text(
                 'Leave this blank to keep your current password.',
-                style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
+                style: appBodyStyle(fontSize: 13, color: kMutedColor),
               ),
               const SizedBox(height: 12),
               TextField(

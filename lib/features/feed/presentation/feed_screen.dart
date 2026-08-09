@@ -30,7 +30,10 @@ class FeedScreen extends ConsumerWidget {
       body: Column(
         children: [
           Container(
-            color: kNavyColor,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
+            ),
             padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
@@ -39,13 +42,13 @@ class FeedScreen extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       'Feed',
-                      style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)
+                      style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)
                           .copyWith(letterSpacing: 0.2),
                     ),
                   ),
-                  const AppIcon(AppIcons.search, color: Colors.white, strokeWidth: 2),
+                  const AppIcon(AppIcons.search, color: kInkColor, strokeWidth: 2),
                   const SizedBox(width: 16),
-                  const AppIcon(AppIcons.bell, color: Colors.white, strokeWidth: 2),
+                  const AppIcon(AppIcons.bell, color: kInkColor, strokeWidth: 2),
                 ],
               ),
             ),
@@ -97,9 +100,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   @override
   void initState() {
     super.initState();
-    // Fire-and-forget: the card entering the tree is the view event. The
-    // (session_id, viewer_id) upsert on the server means repeat views by
-    // the same viewer are a silent no-op, not double-counted.
+    // Fire-and-forget: the card entering the tree records one aggregate view.
     ref.read(sessionsRepositoryProvider).recordView(_sessionId);
   }
 
@@ -153,16 +154,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
               const SizedBox(height: 14),
               Row(
                 children: [
+                  Expanded(child: AppDetailStat(label: 'Views', value: formatCount(post.views))),
                   Expanded(
                     child: AppDetailStat(
-                      icon: Icons.visibility_outlined,
-                      label: 'Views',
-                      value: formatCount(post.views),
-                    ),
-                  ),
-                  Expanded(
-                    child: AppDetailStat(
-                      icon: Icons.event_outlined,
                       label: 'Date posted',
                       value: formatMonthDayYear(post.datePosted),
                     ),
@@ -261,26 +255,34 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
               ],
             ),
           ),
-          AspectRatio(
-            aspectRatio: 1,
-            child: post.slideCount > 1
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      PageView.builder(
-                        itemCount: post.slideCount,
-                        onPageChanged: (index) => setState(() => _slideIndex = index),
-                        itemBuilder: (context, index) => _PostImage(post: post),
-                      ),
-                      Positioned(
-                        top: 8,
-                        left: 12,
-                        right: 12,
-                        child: _SlideIndicator(count: post.slideCount, current: _slideIndex),
-                      ),
-                    ],
-                  )
-                : _PostImage(post: post),
+          // Inset rather than edge-to-edge so the photo reads as a framed
+          // piece hung inside the card.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 5, 14, 0),
+            child: MuseumFrame(
+              radius: 10,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: post.slideCount > 1
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          PageView.builder(
+                            itemCount: post.slideCount,
+                            onPageChanged: (index) => setState(() => _slideIndex = index),
+                            itemBuilder: (context, index) => _PostImage(post: post),
+                          ),
+                          Positioned(
+                            top: 8,
+                            left: 12,
+                            right: 12,
+                            child: _SlideIndicator(count: post.slideCount, current: _slideIndex),
+                          ),
+                        ],
+                      )
+                    : _PostImage(post: post),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
@@ -302,27 +304,34 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 2, 14, 14),
+          // Museum wall label: navy plaque with a gold edge, the gold like
+          // count above the artist/title set in italic Fraunces.
+          Container(
+            margin: const EdgeInsets.fromLTRB(14, 2, 14, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: const BoxDecoration(
+              color: kNavyColor,
+              borderRadius: BorderRadius.all(Radius.circular(6)),
+              border: Border(left: BorderSide(color: kGoldColor, width: 3)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$likeCount likes',
-                  style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                Row(
+                  children: [
+                    const AppIcon(AppIcons.heartFilled, size: 12, color: kGoldColor),
+                    const SizedBox(width: 5),
+                    Text(
+                      '$likeCount LIKES',
+                      style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor)
+                          .copyWith(letterSpacing: 0.66),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: post.artist,
-                        style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                      ),
-                      const TextSpan(text: ' '),
-                      TextSpan(text: post.displayTitle, style: appBodyStyle(fontSize: 14)),
-                    ],
-                  ),
+                const SizedBox(height: 3),
+                Text(
+                  '${post.artist} — ${post.displayTitle}',
+                  style: appHeadlineStyle(fontSize: 14, color: Colors.white, italic: true),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -357,7 +366,7 @@ class _PostImage extends StatelessWidget {
       errorWidget: (context, url, error) => Container(
         color: kSurfaceColor,
         alignment: Alignment.center,
-        child: const Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
+        child: const AppIcon(AppIcons.image, size: 40, color: kMutedColor),
       ),
     );
   }

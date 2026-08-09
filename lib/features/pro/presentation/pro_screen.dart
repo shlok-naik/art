@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/revenue_cat_service.dart';
 import '../../shell/main_shell.dart';
@@ -75,26 +75,30 @@ class ProScreen extends ConsumerWidget {
                   children: [
                     Text(
                       isPro ? "YOU'RE" : 'UPGRADE TO',
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+                      style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kMutedColor)
+                          .copyWith(letterSpacing: 0.7),
                     ),
-                    Text('PRO', style: appHeadlineStyle(fontSize: 52)),
+                    Text(
+                      'PRO',
+                      style: appHeadlineStyle(fontSize: 44, color: kNavyColor, fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       isPro ? "You've got the full studio unlocked." : 'Unlock the full studio.',
-                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
+                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 18),
               const _FeatureCard(
-                emoji: '👥',
+                icon: AppIcons.followed,
                 title: 'Multiple leagues',
                 description: 'Join and compete in as many leagues at once as you want.',
               ),
               const SizedBox(height: 12),
               const _FeatureCard(
-                emoji: '📊',
+                icon: AppIcons.barChart,
                 title: 'Deeper analytics',
                 description: "Time spent per stage, and how you're improving over time.",
               ),
@@ -121,7 +125,7 @@ class ProScreen extends ConsumerWidget {
                     onPressed: () => _restorePurchases(context, ref),
                     child: Text(
                       'Restore purchases',
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                     ),
                   ),
                 ),
@@ -139,9 +143,9 @@ class ProScreen extends ConsumerWidget {
 }
 
 class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({required this.emoji, required this.title, required this.description});
+  const _FeatureCard({required this.icon, required this.title, required this.description});
 
-  final String emoji;
+  final String icon;
   final String title;
   final String description;
 
@@ -150,20 +154,20 @@ class _FeatureCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
+      decoration: appFlatCardDecoration(radius: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 26)),
+          AppIcon(icon, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
+                Text(title, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(description, style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555))),
+                Text(description, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor)),
               ],
             ),
           ),
@@ -181,7 +185,7 @@ class _ArtWrappedCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
+      decoration: appFlatCardDecoration(radius: 16),
       child: Stack(
         children: [
           Column(
@@ -190,10 +194,10 @@ class _ArtWrappedCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text('✨', style: TextStyle(fontSize: 26)),
+                  const AppIcon(AppIcons.star, size: 22),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Art Wrapped', style: GoogleFonts.chewy(fontSize: 19, color: Colors.black)),
+                    child: Text('Art Wrapped', style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -204,19 +208,19 @@ class _ArtWrappedCard extends StatelessWidget {
                 height: 90,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
+                  color: kHairlineColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   'Your Year in Art',
-                  style: GoogleFonts.chewy(fontSize: 16, color: Colors.black38),
+                  style: appBodyStyle(fontSize: 16, color: kMutedColor),
                 ),
               ),
               const SizedBox(height: 10),
               Text(
                 'Hours logged, favorite tools, trophies won — rendered as a shareable slideshow.',
-                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
               ),
             ],
           ),
@@ -234,7 +238,7 @@ class _ArtWrappedCard extends StatelessWidget {
               ),
               child: Text(
                 'NEW',
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
               ),
             ),
           ),
@@ -263,7 +267,7 @@ class _PriceCard extends StatelessWidget {
           if (offering == null) {
             return Text(
               'Pricing unavailable',
-              style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kMutedColor),
             );
           }
           return Column(
@@ -277,7 +281,7 @@ class _PriceCard extends StatelessWidget {
         loading: () => const SizedBox(height: 28, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
         error: (_, _) => Text(
           'Pricing unavailable',
-          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kMutedColor),
         ),
       ),
     );
@@ -297,10 +301,10 @@ class _PriceRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
+          Text(label, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kMutedColor)),
           Text(
             package.storeProduct.priceString,
-            style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+            style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: kInkColor),
           ),
         ],
       ),
@@ -323,12 +327,12 @@ class _UpgradeButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: kAccentColor,
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          border: Border.all(color: kHairlineColor, width: 1),
           borderRadius: BorderRadius.circular(24),
           boxShadow: hardShadow(offset: 4),
         ),
         alignment: Alignment.center,
-        child: Text('Upgrade to Pro', style: GoogleFonts.chewy(fontSize: 18, color: Colors.white)),
+        child: Text('Upgrade to Pro', style: appBodyStyle(fontSize: 18, color: Colors.white)),
       ),
     );
   }
@@ -352,12 +356,12 @@ class _ManageSubscriptionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          border: Border.all(color: kHairlineColor, width: 1),
           borderRadius: BorderRadius.circular(24),
           boxShadow: hardShadow(offset: 4),
         ),
         alignment: Alignment.center,
-        child: Text('Manage subscription', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        child: Text('Manage subscription', style: appBodyStyle(fontSize: 18, color: kInkColor)),
       ),
     );
   }

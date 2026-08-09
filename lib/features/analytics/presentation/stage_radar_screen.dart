@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/sparkline.dart';
 import '../../shell/main_shell.dart';
@@ -26,10 +26,19 @@ class StageRadarScreen extends ConsumerWidget {
     final overviewAsync = ref.watch(projectsOverviewProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: appThemedAppBar(context, '👑 Pro-exclusive  Analytics'),
+        appBar: appThemedAppBar(
+          context,
+          'Pro analytics',
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Center(child: AppIcon(AppIcons.crown, size: 18, color: kAccentColor)),
+            ),
+          ],
+        ),
         body: SafeArea(
           child: analyticsAsync.when(
             data: (analytics) {
@@ -40,33 +49,33 @@ class StageRadarScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.workspace_premium, color: kAccentColor, size: 24),
+                        const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
                         const SizedBox(width: 8),
                         Text(
                           'Difficulty by stage',
-                          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+                          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'See which stages are consistently hardest across all your projects.',
-                      style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                      style: appBodyStyle(fontSize: 15, color: kMutedColor),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Farther from the center = harder (1–10 scale).',
-                      style: GoogleFonts.chewy(
+                      style: appBodyStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: Colors.black45,
+                        color: kMutedColor,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      decoration: appCardDecoration(),
+                      decoration: appFlatCardDecoration(),
                       child: AspectRatio(
                         aspectRatio: 1,
                         child: StageRadarChart(stages: analytics.perStage),
@@ -124,24 +133,24 @@ class _DifficultyProInsights extends StatelessWidget {
         if (comparison != null) ...[
           Row(
             children: [
-              const Icon(Icons.workspace_premium, color: kAccentColor, size: 24),
+              const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
               const SizedBox(width: 8),
               Text(
                 'Then vs. now',
-                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+                style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             'Older sessions (grey) vs. your more recent half (orange).',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: appCardDecoration(),
+            decoration: appFlatCardDecoration(),
             child: AspectRatio(
               aspectRatio: 1,
               child: StageRadarChart(stages: comparison.recent, compareStages: comparison.older),
@@ -152,24 +161,24 @@ class _DifficultyProInsights extends StatelessWidget {
         if (monthly.length >= 2) ...[
           Row(
             children: [
-              const Icon(Icons.trending_up, color: kAccentColor, size: 24),
+              const AppIcon(AppIcons.trendUp, size: 22, color: kAccentColor),
               const SizedBox(width: 8),
               Text(
                 'Growth curve',
-                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+                style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             'Average difficulty tackled per month.',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: appCardDecoration(),
+            decoration: appFlatCardDecoration(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -190,16 +199,16 @@ class _DifficultyProInsights extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: insights.growthPercent! >= 0 ? kAccentColor : Colors.black12,
+                          color: insights.growthPercent! >= 0 ? kAccentColor : kHairlineColor,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '${insights.growthPercent! >= 0 ? '+' : ''}'
                           '${insights.growthPercent!.toStringAsFixed(0)}%',
-                          style: GoogleFonts.chewy(
-                            fontWeight: FontWeight.bold,
+                          style: appBodyStyle(
+                            fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            color: insights.growthPercent! >= 0 ? Colors.white : Colors.black54,
+                            color: insights.growthPercent! >= 0 ? Colors.white : kMutedColor,
                           ),
                         ),
                       ),
@@ -211,12 +220,12 @@ class _DifficultyProInsights extends StatelessWidget {
                   children: [
                     Text(
                       monthly.first.label,
-                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                      style: appBodyStyle(fontSize: 12, color: kMutedColor),
                     ),
                     const Spacer(),
                     Text(
                       monthly.last.label,
-                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                      style: appBodyStyle(fontSize: 12, color: kMutedColor),
                     ),
                   ],
                 ),
@@ -242,28 +251,28 @@ class _ProInsights extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.workspace_premium, color: kAccentColor, size: 24),
+            const AppIcon(AppIcons.crown, size: 22, color: kAccentColor),
             const SizedBox(width: 8),
             Text(
               'Top tools',
-              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+              style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
             ),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'What you reach for most across every session.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: appCardDecoration(),
+          decoration: appFlatCardDecoration(),
           child: insights.topTools.isEmpty
               ? Text(
                   'Log a tool during a session to see this.',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54),
+                  style: appBodyStyle(fontSize: 14, color: kMutedColor),
                 )
               : Column(
                   children: [
@@ -277,35 +286,35 @@ class _ProInsights extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Practice streak',
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
         const SizedBox(height: 4),
         Text(
           'Sessions logged over the last 12 weeks.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          decoration: appCardDecoration(),
+          decoration: appFlatCardDecoration(),
           child: _ActivityHeatmap(days: insights.activity),
         ),
         const SizedBox(height: 24),
         Text(
           'When you work',
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
         const SizedBox(height: 4),
         Text(
           'Sessions started, by time of day.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          decoration: appCardDecoration(),
+          decoration: appFlatCardDecoration(),
           child: HourlyRoseChart(
             hourly: insights.hourlyActivity,
             minutes: insights.hourlyMinutes,
@@ -315,18 +324,18 @@ class _ProInsights extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Session length trend',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
           const SizedBox(height: 4),
           Text(
             'Are your sessions getting longer or shorter?',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: appCardDecoration(),
+            decoration: appFlatCardDecoration(),
             child: _SessionLengthTrend(minutes: insights.durationTrendMinutes),
           ),
         ],
@@ -334,45 +343,45 @@ class _ProInsights extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Project timeline',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
           ),
           const SizedBox(height: 4),
           Text(
             'When each project was active — see what overlapped.',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: appBodyStyle(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: appCardDecoration(),
+            decoration: appFlatCardDecoration(),
             child: _ProjectTimeline(projects: overview.perProject),
           ),
         ],
         const SizedBox(height: 24),
         Text(
           'Needs attention',
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22),
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
         const SizedBox(height: 4),
         Text(
           "Unfinished projects you haven't touched in a while.",
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: appBodyStyle(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: appCardDecoration(),
+          decoration: appFlatCardDecoration(),
           child: insights.needsAttention.isEmpty
               ? Row(
                   children: [
-                    const Text('✅', style: TextStyle(fontSize: 20)),
+                    const AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         "No old unfinished projects right now!",
-                        style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -398,7 +407,7 @@ class _ActivityHeatmap extends StatelessWidget {
   final List<ActivityDay> days;
 
   Color _colorFor(int count) {
-    if (count <= 0) return Colors.grey.shade200;
+    if (count <= 0) return kHairlineColor;
     if (count == 1) return kAccentColor.withValues(alpha: 0.35);
     if (count <= 3) return kAccentColor.withValues(alpha: 0.65);
     return kAccentColor;
@@ -445,7 +454,7 @@ class _ActivityHeatmap extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           '$activeDays active day${activeDays == 1 ? '' : 's'} in the last 12 weeks',
-          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
       ],
     );
@@ -496,15 +505,15 @@ class _SessionLengthTrend extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isShorter ? kAccentColor : Colors.black12,
+              color: isShorter ? kAccentColor : kHairlineColor,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${delta > 0 ? '+' : ''}${delta.toStringAsFixed(0)}%',
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
+              style: appBodyStyle(
+                fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: isShorter ? Colors.white : Colors.black54,
+                color: isShorter ? Colors.white : kMutedColor,
               ),
             ),
           ),
@@ -540,7 +549,7 @@ class _ProjectTimeline extends StatelessWidget {
                 width: 92,
                 child: Text(
                   project.title,
-                  style: GoogleFonts.chewy(fontSize: 13, fontWeight: FontWeight.bold),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -563,7 +572,7 @@ class _ProjectTimeline extends StatelessWidget {
                           height: 10,
                           width: constraints.maxWidth,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
+                            color: kHairlineColor,
                             borderRadius: BorderRadius.circular(5),
                           ),
                         ),
@@ -589,9 +598,9 @@ class _ProjectTimeline extends StatelessWidget {
         ],
         Row(
           children: [
-            Text(_shortDate(rangeStart), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+            Text(_shortDate(rangeStart), style: appBodyStyle(fontSize: 11, color: kMutedColor)),
             const Spacer(),
-            Text(_shortDate(now), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+            Text(_shortDate(now), style: appBodyStyle(fontSize: 11, color: kMutedColor)),
           ],
         ),
       ],
@@ -615,18 +624,18 @@ class _NeedsAttentionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.hourglass_bottom, color: kAccentColor, size: 18),
+        const AppIcon(AppIcons.hourglass, size: 18, color: kAccentColor),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             project.title,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 15),
             overflow: TextOverflow.ellipsis,
           ),
         ),
         Text(
           '${project.daysSinceActive}d idle',
-          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
       ],
     );

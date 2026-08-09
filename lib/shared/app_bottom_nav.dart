@@ -21,53 +21,38 @@ class AppBottomNav extends StatelessWidget {
       height: 76 + bottomInset,
       padding: EdgeInsets.only(bottom: bottomInset + 4),
       color: kNavyColor,
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _NavItem(
-                  icon: AppIcons.home,
-                  label: 'Home',
-                  isActive: currentIndex == 0,
-                  onTap: () => onTap(0),
-                ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: AppIcons.feed,
-                  label: 'Feed',
-                  isActive: currentIndex == 1,
-                  onTap: () => onTap(1),
-                ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: AppIcons.followed,
-                  label: 'Followed',
-                  isActive: currentIndex == 2,
-                  onTap: () => onTap(2),
-                ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: AppIcons.profile,
-                  label: 'Profile',
-                  isActive: currentIndex == 3,
-                  onTap: () => onTap(3),
-                ),
-              ),
-            ],
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.home,
+              label: 'Home',
+              isActive: currentIndex == 0,
+              onTap: () => onTap(0),
+            ),
           ),
-          // Sized and positioned to intentionally overflow past the bottom of
-          // the screen, so the mascot's legs/feet run off the edge. Decorative
-          // only — taps pass through to whatever is underneath.
-          Positioned(
-            bottom: -18 - bottomInset,
-            right: 10,
-            child: IgnorePointer(
-              child: Image.asset('assets/branding/mascot.png', height: 64),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.feed,
+              label: 'Feed',
+              isActive: currentIndex == 1,
+              onTap: () => onTap(1),
+            ),
+          ),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.followed,
+              label: 'Followed',
+              isActive: currentIndex == 2,
+              onTap: () => onTap(2),
+            ),
+          ),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.profile,
+              label: 'Profile',
+              isActive: currentIndex == 3,
+              onTap: () => onTap(3),
             ),
           ),
         ],

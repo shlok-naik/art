@@ -28,7 +28,7 @@ class MyPostsScreen extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          AppNavyHeader(
+          AppScreenHeader(
             title: 'My posts',
             trailing: InkWell(
               onTap: () => ref.read(_isGridViewProvider.notifier).state = !isGrid,
@@ -39,7 +39,7 @@ class MyPostsScreen extends ConsumerWidget {
                   message: isGrid ? 'Switch to list view' : 'Switch to grid view',
                   child: AppIcon(
                     isGrid ? AppIcons.feed : AppIcons.grid,
-                    color: Colors.white,
+                    color: kInkColor,
                   ),
                 ),
               ),
@@ -139,49 +139,54 @@ class _PostTile extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          AspectRatio(
-            aspectRatio: isGrid ? 1 : 4 / 3,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+          MuseumFrame(
+            radius: 6,
+            matWidth: 6,
+            child: AspectRatio(
+              aspectRatio: isGrid ? 1 : 4 / 3,
               child: (photoUrl == null || photoUrl.isEmpty)
-                  ? Container(
-                      color: kSurfaceColor,
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
-                    )
+                  ? const _MissingPhoto()
                   : CachedNetworkImage(
                       imageUrl: photoUrl,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(color: kSurfaceColor),
-                      errorWidget: (context, url, error) => Container(
-                        color: kSurfaceColor,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
-                      ),
+                      errorWidget: (context, url, error) => const _MissingPhoto(),
                     ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             post.displayTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            style: appHeadlineStyle(fontSize: 14, italic: true),
           ),
-          const SizedBox(height: 3),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AppIcon(AppIcons.heartFilled, size: 14, color: kAccentColor),
-              const SizedBox(width: 5),
+              const AppIcon(AppIcons.heartFilled, size: 11, color: kGoldColor),
+              const SizedBox(width: 4),
               Text(
                 '${formatCount(total)} reactions',
-                style: appBodyStyle(fontSize: 12, color: kMutedColor),
+                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MissingPhoto extends StatelessWidget {
+  const _MissingPhoto();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kSurfaceColor,
+      alignment: Alignment.center,
+      child: const AppIcon(AppIcons.image, size: 36, color: kMutedColor),
     );
   }
 }

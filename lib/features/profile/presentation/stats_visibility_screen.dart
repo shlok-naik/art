@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../data/profile_model.dart';
 import '../domain/stat_key.dart';
@@ -62,7 +63,7 @@ class _StatsVisibilityScreenState extends ConsumerState<StatsVisibilityScreen> {
           children: [
             Text(
               "Pick what shows on your public Stats page — visible to anyone who taps 'View stats' on your profile.",
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
             const SizedBox(height: 16),
             if (_errorText != null) ...[
@@ -105,10 +106,10 @@ class _StatToggleTile extends StatelessWidget {
       decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
       child: Row(
         children: [
-          Icon(statKey.icon, size: 20, color: kAccentColor),
+          AppIcon(statKey.icon, size: 20, color: kAccentColor),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(statKey.label, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black)),
+            child: Text(statKey.label, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           Switch(
             value: isVisible,

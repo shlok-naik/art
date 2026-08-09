@@ -1,3 +1,5 @@
+import '../../../shared/app_icons.dart';
+
 enum EmojiReaction { heart, laugh, wow, sad, angry }
 
 bool isVoteReactionType(String reactionType) => reactionType == 'up' || reactionType == 'down';
@@ -29,12 +31,15 @@ class SessionReactions {
   }
 }
 
-const emojiGlyphs = {
-  EmojiReaction.heart: '❤️',
-  EmojiReaction.laugh: '😆',
-  EmojiReaction.wow: '😮',
-  EmojiReaction.sad: '😢',
-  EmojiReaction.angry: '😠',
+/// Line-icon (not emoji) per reaction — keys into [AppIcons]. The redesign
+/// carries no color emoji in the UI, so every reaction renders as an
+/// outline glyph in the same 24x24 / 1.8-stroke set as the rest of the app.
+const emojiIcons = {
+  EmojiReaction.heart: AppIcons.heartFilled,
+  EmojiReaction.laugh: AppIcons.smile,
+  EmojiReaction.wow: AppIcons.surprise,
+  EmojiReaction.sad: AppIcons.frown,
+  EmojiReaction.angry: AppIcons.angry,
 };
 
 /// Reaction counts for a single session, broken down by type. Build one from

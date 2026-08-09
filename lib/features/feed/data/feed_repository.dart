@@ -53,26 +53,13 @@ class FeedRepository {
       };
     }
 
-    final sessionIds = [for (final session in sessions) session['id'].toString()];
-    var viewCounts = const <String, int>{};
-    if (sessionIds.isNotEmpty) {
-      final viewRows = await _client
-          .from('session_view_counts')
-          .select('session_id, view_count')
-          .inFilter('session_id', sessionIds);
-      viewCounts = {
-        for (final row in List<Map<String, dynamic>>.from(viewRows))
-          row['session_id'].toString(): int.tryParse(row['view_count'].toString()) ?? 0,
-      };
-    }
-
     return [
       for (final session in sessions)
         FeedPost.fromRow(
           session: session,
           project: (session['projects'] as Map?)?.cast<String, dynamic>() ?? const {},
           artist: usernames[(session['projects'] as Map?)?['user_id']?.toString()] ?? 'unknown',
-          views: viewCounts[session['id'].toString()] ?? 0,
+          views: int.tryParse(session['view_count']?.toString() ?? '') ?? 0,
         ),
     ];
   }

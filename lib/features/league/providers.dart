@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 
 import '../auth/providers.dart';
 import '../profile/providers.dart';
 import '../projects/providers.dart';
 import 'data/league_chat_repository.dart';
 import 'data/league_repository.dart';
+import 'data/trophy_celebration_store.dart';
 import 'domain/league.dart';
 import 'domain/league_chat_message.dart';
 import 'domain/league_region.dart';
@@ -17,6 +17,8 @@ final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
 final leagueChatRepositoryProvider = Provider<LeagueChatRepository>((ref) {
   return LeagueChatRepository(ref.watch(supabaseClientProvider));
 });
+
+final trophyCelebrationStoreProvider = Provider<TrophyCelebrationStore>((ref) => TrophyCelebrationStore());
 
 /// The current weekly league for the signed-in user's region — materialized
 /// lazily server-side by the `get_or_create_current_league()` Postgres
@@ -81,8 +83,6 @@ final myLeagueTrophiesProvider = FutureProvider.autoDispose.family<List<LeagueTr
 /// guards against: two near-simultaneous evaluations of
 /// [newlyWonTrophiesProvider] both reading `league_trophy_celebrations`
 /// before either write lands, both concluding the same trophy is new.
-final celebratedTrophyLeagueIdsProvider = StateProvider<Set<String>>((ref) => {});
-
 /// Trophies the signed-in user has won but hasn't seen the celebration
 /// screen for yet — computing this value marks them seen (persists a row
 /// per newly-found trophy) as a side effect, then returns just the ones
@@ -100,16 +100,14 @@ final newlyWonTrophiesProvider = FutureProvider.autoDispose<List<LeagueTrophy>>(
   final trophies = await repo.fetchTrophies(userId);
   if (trophies.isEmpty) return const [];
 
-  final celebrated = await repo.fetchCelebratedTrophyLeagueIds(userId);
+  final store = ref.watch(trophyCelebrationStoreProvider);
+  final celebrated = await store.getSeenLeagueIds(userId);
   final newlyWon = <LeagueTrophy>[];
   for (final trophy in trophies) {
     if (!celebrated.contains(trophy.leagueId)) {
-      await repo.markTrophyCelebrated(userId: userId, leagueId: trophy.leagueId);
+      await store.markSeen(userId, trophy.leagueId);
       newlyWon.add(trophy);
     }
-  }
-  if (newlyWon.isNotEmpty) {
-    ref.invalidate(myLeagueTrophiesProvider(userId));
   }
   return newlyWon;
 });

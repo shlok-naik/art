@@ -4,10 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../auth/providers.dart';
@@ -45,9 +45,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Fire-and-forget: opening the full detail view is a view event. Safe
-    // to also fire from the feed card — the server upsert dedupes by
-    // (session_id, viewer_id).
+    // Fire-and-forget: opening the full detail view records an aggregate view.
     ref.read(sessionsRepositoryProvider).recordView(widget.post.id);
   }
 
@@ -205,97 +203,72 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: (_photoUrl == null || _photoUrl!.isEmpty)
-                ? Container(
-                    width: double.infinity,
-                    height: 260,
-                    color: Colors.grey.shade200,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.image_not_supported, size: 64, color: Colors.black38),
-                  )
-                : CachedNetworkImage(
-                    imageUrl: _photoUrl!,
-                    width: double.infinity,
-                    height: 260,
-                    fit: BoxFit.cover,
-                  ),
+          MuseumFrame(
+            radius: 10,
+            matWidth: 6,
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: (_photoUrl == null || _photoUrl!.isEmpty)
+                  ? Container(
+                      color: kSurfaceColor,
+                      alignment: Alignment.center,
+                      child: const AppIcon(AppIcons.image, size: 48, color: kMutedColor),
+                    )
+                  : CachedNetworkImage(imageUrl: _photoUrl!, fit: BoxFit.cover),
+            ),
           ),
           if (_isOwner) ...[
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: AppOutlinedPillButton(
+                    label: 'Edit photo',
                     onPressed: () => setState(() => _stage = _Stage.photoSource),
-                    style: OutlinedButton.styleFrom(
-                      shape: const StadiumBorder(),
-                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit Photo'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: AppOutlinedPillButton(
+                    label: 'Edit details',
                     onPressed: () => setState(() => _stage = _Stage.editingDetails),
-                    style: OutlinedButton.styleFrom(
-                      shape: const StadiumBorder(),
-                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    icon: const Icon(Icons.tune),
-                    label: const Text('Edit Details'),
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 20),
-          Text(
-            _title,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 26),
-          ),
+          const SizedBox(height: 14),
+          Text(_title, style: appBodyStyle(fontSize: 24, fontWeight: FontWeight.w600)),
           if (_title != post.projectTitle) ...[
             const SizedBox(height: 2),
             Text(
               'Part of ${post.projectTitle}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500, color: kMutedColor),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
+              // Views stays plain ink — gold is reserved for engagement
+              // (likes/reactions/ratings), not raw view counts.
+              Expanded(child: AppDetailStat(label: 'Views', value: formatCount(post.views))),
               Expanded(
                 child: AppDetailStat(
-                  icon: Icons.visibility_outlined,
-                  label: 'Views',
-                  value: formatCount(post.views),
-                ),
-              ),
-              Expanded(
-                child: AppDetailStat(
-                  icon: Icons.event_outlined,
                   label: 'Date posted',
                   value: formatMonthDayYear(post.datePosted),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text('Details', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 8),
-          Text(_description, style: GoogleFonts.chewy(fontSize: 15)),
+          const SizedBox(height: 18),
+          Text('Details', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(_description, style: appBodyStyle(fontSize: 14, color: kMutedColor)),
           const SizedBox(height: 16),
-          Text('Tools Used', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text('Tools used', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           if (_toolsUsed.isEmpty)
-            Text('None recorded', style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54))
+            Text('None recorded', style: appBodyStyle(fontSize: 14, color: kMutedColor))
           else
             Wrap(
               spacing: 8,
@@ -304,37 +277,34 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 for (final tool in _toolsUsed)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: kBorderColor, width: kBorderWidth),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(tool, style: GoogleFonts.chewy(fontSize: 14)),
+                    decoration: appFlatCardDecoration(radius: 20),
+                    child: Text(tool, style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                   ),
               ],
             ),
           const SizedBox(height: 16),
-          Text('Time Taken', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text('Time taken', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(post.timeTaken, style: GoogleFonts.chewy(fontSize: 15)),
-          const SizedBox(height: 20),
-          Text('Reactions', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 10),
+          Text(post.timeTaken, style: appBodyStyle(fontSize: 14, color: kMutedColor)),
+          const SizedBox(height: 18),
+          Text('Reactions', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
           _ReactionBreakdown(counts: counts),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Comments', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text('Comments', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               TextButton.icon(
                 onPressed: () => showCommentsSheet(
                   context,
                   sessionId: post.id,
                   postOwnerUserId: post.userId,
                 ),
-                icon: const Icon(Icons.mode_comment_outlined, size: 18, color: kAccentColor),
+                icon: const AppIcon(AppIcons.comment, size: 16, color: kAccentColor),
                 label: Text(
                   'View (${ref.watch(sessionCommentsProvider(post.id)).value?.length ?? 0})',
-                  style: GoogleFonts.chewy(fontSize: 14, color: kAccentColor),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                 ),
               ),
             ],
@@ -389,16 +359,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         body = _buildViewingBody();
     }
 
-    return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: appThemedAppBar(context, 'Post'),
-        body: SafeArea(child: body),
-        bottomNavigationBar: AppBottomNav(
-          currentIndex: -1,
-          onTap: (i) => goToMainTab(context, ref, i),
-        ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: appThemedAppBar(context, 'Post'),
+      body: SafeArea(child: body),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: -1,
+        onTap: (i) => goToMainTab(context, ref, i),
       ),
     );
   }
@@ -415,34 +382,38 @@ class _ReactionBreakdown extends StatelessWidget {
       spacing: 12,
       runSpacing: 12,
       children: [
-        _ReactionChip(glyph: '👍', count: counts.upCount),
-        _ReactionChip(glyph: '👎', count: counts.downCount),
+        _ReactionChip(icon: AppIcons.heartFilled, count: counts.upCount),
+        _ReactionChip(icon: AppIcons.thumbDown, count: counts.downCount),
         for (final reaction in EmojiReaction.values)
-          _ReactionChip(glyph: emojiGlyphs[reaction]!, count: counts.emojiCounts[reaction]!),
+          _ReactionChip(icon: emojiIcons[reaction]!, count: counts.emojiCounts[reaction]!),
       ],
     );
   }
 }
 
+/// One reaction type's total: flat surface pill, ink icon + ink count. Ink
+/// rather than gold — the design reserves gold for the headline engagement
+/// numbers (feed likes, grid reaction totals, ratings), and a full row of
+/// gold pills would drown that signal.
 class _ReactionChip extends StatelessWidget {
-  const _ReactionChip({required this.glyph, required this.count});
+  const _ReactionChip({required this.icon, required this.count});
 
-  final String glyph;
+  final String icon;
   final int count;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: appCardDecoration(radius: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: appFlatCardDecoration(radius: 20),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(glyph, style: const TextStyle(fontSize: 18)),
+          AppIcon(icon, size: 14, color: kInkColor),
           const SizedBox(width: 6),
           Text(
             formatCount(count),
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ],
       ),

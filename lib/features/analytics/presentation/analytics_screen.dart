@@ -23,7 +23,7 @@ class AnalyticsScreen extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const AppNavyHeader(title: 'Analytics'),
+          const AppScreenHeader(title: 'Analytics'),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),

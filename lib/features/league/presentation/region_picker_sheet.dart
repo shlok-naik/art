@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league_region.dart';
 
@@ -32,11 +32,11 @@ class _RegionPickerSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pick your region', style: GoogleFonts.chewy(fontSize: 22, color: Colors.black)),
+            Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(
               "You'll compete in this region's weekly league.",
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
             const SizedBox(height: 16),
             for (final entry in leagueRegions.entries) ...[
@@ -49,7 +49,7 @@ class _RegionPickerSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: entry.key == current ? kAccentTintColor : Colors.white,
-                    border: Border.all(color: kBorderColor, width: kBorderWidth),
+                    border: Border.all(color: kHairlineColor, width: 1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -57,10 +57,10 @@ class _RegionPickerSheet extends StatelessWidget {
                       Expanded(
                         child: Text(
                           entry.value,
-                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black),
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600),
                         ),
                       ),
-                      if (entry.key == current) const Icon(Icons.check_circle, color: kAccentColor, size: 20),
+                      if (entry.key == current) const AppIcon(AppIcons.checkCircle, color: kAccentColor, size: 20),
                     ],
                   ),
                 ),

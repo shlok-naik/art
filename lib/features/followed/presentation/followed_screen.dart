@@ -33,7 +33,7 @@ class FollowedScreen extends ConsumerWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Image.asset('assets/branding/mascot.png', height: 80),
+                            const AppIcon(AppIcons.followed, size: 40, color: kMutedColor, strokeWidth: 1.4),
                             const SizedBox(height: 10),
                             Text('Nobody here yet', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),

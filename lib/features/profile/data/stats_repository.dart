@@ -178,9 +178,9 @@ class StatsRepository {
     for (var h = 1; h < 24; h++) {
       if (hourCounts[h] > hourCounts[peakHour]) peakHour = h;
     }
-    if (peakHour >= 5 && peakHour < 11) return 'Early Bird 🐦';
-    if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler ☀️';
-    if (peakHour >= 17 && peakHour < 22) return 'Evening Artist 🎨';
-    return 'Night Owl 🦉';
+    if (peakHour >= 5 && peakHour < 11) return 'Early Bird';
+    if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler';
+    if (peakHour >= 17 && peakHour < 22) return 'Evening Artist';
+    return 'Night Owl';
   }
 }

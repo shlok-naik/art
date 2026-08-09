@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../feed/providers.dart';
@@ -39,7 +40,7 @@ class StatsScreen extends ConsumerWidget {
             if (profile == null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                child: Text('Profile not found.', style: appBodyStyle(fontSize: 16, color: kInkColor)),
               );
             }
             final visibleKeys = statKeysFromStorage(profile.visibleStats);
@@ -54,7 +55,7 @@ class StatsScreen extends ConsumerWidget {
                     style: GoogleFonts.rubikMonoOne(fontSize: 16, color: kAccentColor),
                   ),
                   const SizedBox(height: 2),
-                  Text(profile.displayName, style: GoogleFonts.chewy(fontSize: 22, color: Colors.black)),
+                  Text(profile.displayName, style: appBodyStyle(fontSize: 22, color: kInkColor)),
                   const SizedBox(height: 20),
                   if (visibleKeys.isEmpty)
                     Container(
@@ -64,7 +65,7 @@ class StatsScreen extends ConsumerWidget {
                       child: Text(
                         "This artist hasn't chosen to show any stats yet.",
                         textAlign: TextAlign.center,
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                       ),
                     )
                   else ...[
@@ -152,7 +153,7 @@ class _StatTile extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(statKey.icon, size: 20, color: kAccentColor),
+          AppIcon(statKey.icon, size: 20, color: kAccentColor),
           const SizedBox(height: 8),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -163,14 +164,14 @@ class _StatTile extends ConsumerWidget {
               style: appBodyStyle(
                 fontSize: isBadge ? 15 : 20,
                 fontWeight: FontWeight.w900,
-                color: Colors.black,
+                color: kInkColor,
               ),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             statKey.label,
-            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
           ),
         ],
       ),
@@ -194,7 +195,7 @@ class _StageBreakdownChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Time per stage', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Time per stage', style: appBodyStyle(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -237,7 +238,7 @@ class _StageBar extends StatelessWidget {
           width: 92,
           child: Text(
             stage.stage,
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -250,7 +251,7 @@ class _StageBar extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -275,8 +276,8 @@ class _StageBar extends StatelessWidget {
             textAlign: TextAlign.right,
             style: appBodyStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: stage.totalMinutes == 0 ? Colors.black38 : kAccentColor,
+              fontWeight: FontWeight.w600,
+              color: stage.totalMinutes == 0 ? kMutedColor : kAccentColor,
             ),
           ),
         ),
@@ -301,7 +302,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Difficulty spread', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Difficulty spread', style: appBodyStyle(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -329,7 +330,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
                                     heightFactor: maxCount == 0 ? 0 : histogram[i] / maxCount,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: histogram[i] == 0 ? Colors.grey.shade200 : kAccentColor,
+                                        color: histogram[i] == 0 ? kHairlineColor : kAccentColor,
                                         borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
                                       ),
                                     ),
@@ -347,7 +348,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
                               child: Text(
                                 '$i',
                                 textAlign: TextAlign.center,
-                                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
                               ),
                             ),
                         ],
@@ -375,7 +376,7 @@ class _ProjectStatusChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Project status', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Project status', style: appBodyStyle(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -426,7 +427,7 @@ class _StatusBar extends StatelessWidget {
           width: 92,
           child: Text(
             label,
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -439,7 +440,7 @@ class _StatusBar extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -462,7 +463,7 @@ class _StatusBar extends StatelessWidget {
           child: Text(
             '$count',
             textAlign: TextAlign.right,
-            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color),
+            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
           ),
         ),
       ],

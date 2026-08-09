@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 import 'all_achievements_screen.dart';
@@ -20,17 +21,21 @@ class AchievementChip extends StatelessWidget {
         message: achievement.description,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-          decoration: appFlatCardDecoration(radius: 20),
+          decoration: BoxDecoration(
+            color: kNavyColor,
+            border: Border.all(color: kGoldColor, width: 1),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(achievement.emoji, style: const TextStyle(fontSize: 14)),
+              AppIcon(achievement.icon, size: 14, color: kGoldColor),
               const SizedBox(width: 6),
               Text(
                 achievement.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kGoldColor),
               ),
             ],
           ),

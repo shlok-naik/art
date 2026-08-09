@@ -31,7 +31,7 @@ class LeagueScreen extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          AppNavyHeader(
+          AppScreenHeader(
             title: 'League',
             trailing: league == null
                 ? null
@@ -42,7 +42,7 @@ class LeagueScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
                       padding: EdgeInsets.all(2),
-                      child: AppIcon(AppIcons.comment, color: Colors.white, strokeWidth: 2),
+                      child: AppIcon(AppIcons.comment, color: kInkColor, strokeWidth: 2),
                     ),
                   ),
           ),
@@ -107,7 +107,7 @@ class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🌍', style: TextStyle(fontSize: 44)),
+            const AppIcon(AppIcons.globe, size: 40, color: kNavyColor, strokeWidth: 1.4),
             const SizedBox(height: 12),
             Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
@@ -221,7 +221,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                             style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                           ),
                           const SizedBox(width: 2),
-                          const Icon(Icons.chevron_right, size: 16, color: kAccentColor),
+                          const AppIcon(AppIcons.chevronRight, size: 16, color: kAccentColor),
                         ],
                       ),
                     ),
@@ -297,7 +297,13 @@ class _ThemeBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: appFlatCardDecoration(color: kAccentTintColor),
+      // Navy plaque with a gold hairline — the same museum framing the
+      // photos get, applied to the season's headline moment.
+      decoration: BoxDecoration(
+        color: kNavyColor,
+        border: Border.all(color: kGoldColor, width: 1),
+        borderRadius: BorderRadius.circular(kCardRadius),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -305,22 +311,34 @@ class _ThemeBanner extends StatelessWidget {
           Row(
             children: [
               Text(
-                "This season's theme",
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
+                "THIS SEASON'S THEME",
+                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor)
+                    .copyWith(letterSpacing: 0.55),
               ),
               const Spacer(),
               Text(
                 leagueRegionLabel(league.region),
-                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
+                style: appBodyStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 2),
-          Text(league.themeTitle, style: appHeadlineStyle()),
+          Text(
+            league.themeTitle,
+            style: appHeadlineStyle(fontSize: 22, color: Colors.white, italic: true),
+          ),
           const SizedBox(height: 2),
           Text(
             league.themeDescription,
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
+            style: appBodyStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -367,7 +385,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.timer_off_outlined, color: kMutedColor, size: 18),
+            const AppIcon(AppIcons.clock, size: 18, color: kMutedColor),
             const SizedBox(width: 8),
             Text(
               'Voting closed',
@@ -445,7 +463,6 @@ class _Leaderboard extends StatelessWidget {
   final List<LeagueSubmission> submissions;
   final String? myUserId;
 
-  static const _medals = ['🥇', '🥈', '🥉'];
   static const _topCount = 10;
 
   @override
@@ -516,38 +533,33 @@ class _LeaderboardRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(
-              width: 24,
-              child: Text(
-                rank < _Leaderboard._medals.length ? _Leaderboard._medals[rank] : '#${rank + 1}',
-                style: const TextStyle(fontSize: 15),
-                textAlign: TextAlign.center,
+            AppRankBadge(rank: rank + 1, size: 22),
+            const SizedBox(width: 8),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                border: Border.all(color: kGoldColor, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            const SizedBox(width: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              clipBehavior: Clip.antiAlias,
               child: submission.photoUrl.isEmpty
                   ? Container(
-                      width: 34,
-                      height: 34,
                       color: kHairlineColor,
-                      child: const Icon(Icons.image_not_supported, size: 16, color: kMutedColor),
+                      alignment: Alignment.center,
+                      child: const AppIcon(AppIcons.image, size: 14, color: kMutedColor),
                     )
-                  : CachedNetworkImage(imageUrl: submission.photoUrl, width: 34, height: 34, fit: BoxFit.cover),
+                  : CachedNetworkImage(imageUrl: submission.photoUrl, fit: BoxFit.cover),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
-                style: appBodyStyle(fontSize: 14),
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Text(
-              '★ ${submission.stars}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
-            ),
+            AppStarCount(label: '${submission.stars}', fontSize: 12),
           ],
         ),
       ),
@@ -570,7 +582,7 @@ class _PastChampionCard extends ConsumerWidget {
       decoration: appFlatCardDecoration(),
       child: Row(
         children: [
-          const AppIcon(AppIcons.trophy, size: 30, strokeWidth: 1.6),
+          const AppIcon(AppIcons.trophy, size: 30, color: kGoldColor, strokeWidth: 1.6),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -578,10 +590,18 @@ class _PastChampionCard extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text("Last season's champion", style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                Text(
-                  '@${champion.artistUsername} · ★ ${champion.stars}',
-                  style: appBodyStyle(fontSize: 12, color: kMutedColor),
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '@${champion.artistUsername}',
+                        style: appBodyStyle(fontSize: 12, color: kMutedColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    AppStarCount(label: '${champion.stars}', fontSize: 12),
+                  ],
                 ),
               ],
             ),
@@ -684,7 +704,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                           ? Container(
                               color: kHairlineColor,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 24, color: kMutedColor),
+                              child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
                             )
                           : CachedNetworkImage(
                               imageUrl: submission.photoUrl,
@@ -694,7 +714,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                               errorWidget: (context, url, error) => Container(
                                 color: kHairlineColor,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported, size: 24, color: kMutedColor),
+                                child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
                               ),
                             ),
                     ),
@@ -742,7 +762,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
             child: Text(
               '★ ${submission.stars}',
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kGoldColor),
             ),
           ),
         ],

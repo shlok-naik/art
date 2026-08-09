@@ -130,7 +130,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       backgroundColor: Colors.white,
       body: Column(
           children: [
-            const AppNavyHeader(title: 'Projects'),
+            const AppScreenHeader(title: 'Projects'),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(

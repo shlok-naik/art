@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/moderation_service.dart';
 import '../../profile/providers.dart';
@@ -70,15 +70,15 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Profanity detected', style: GoogleFonts.chewy(fontWeight: FontWeight.bold)),
+            title: Text('Profanity detected', style: appBodyStyle(fontWeight: FontWeight.w600)),
             content: Text(
               'Some words in your comment were censored before posting.',
-              style: GoogleFonts.chewy(),
+              style: appBodyStyle(),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK', style: GoogleFonts.chewy(color: kAccentColor)),
+                child: Text('OK', style: appBodyStyle(color: kAccentColor)),
               ),
             ],
           ),
@@ -135,7 +135,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     final currentUserId = ref.watch(currentProfileProvider).value?.id;
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: FractionallySizedBox(
@@ -148,13 +148,13 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                   height: 4,
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.black26,
+                    color: kMutedColor,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 Text(
                   'Comments',
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                 ),
                 const SizedBox(height: 8),
                 const Divider(height: 1),
@@ -166,7 +166,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           child: Text(
                             'No comments yet — be the first to say something.',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                            style: appBodyStyle(fontSize: 15, color: kMutedColor),
                           ),
                         );
                       }
@@ -206,14 +206,14 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           maxLength: 500,
                           minLines: 1,
                           maxLines: 4,
-                          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                          style: appBodyStyle(fontSize: 15, color: kInkColor),
                           decoration: InputDecoration(
                             hintText: 'Add a comment...',
-                            hintStyle: GoogleFonts.chewy(color: Colors.black38, fontSize: 15),
+                            hintStyle: appBodyStyle(color: kMutedColor, fontSize: 15),
                             counterText: '',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
-                              borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                              borderSide: const BorderSide(color: kHairlineColor, width: 1),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           ),
@@ -228,7 +228,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                 height: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Icon(Icons.send, color: kAccentColor),
+                            : const AppIcon(AppIcons.send, size: 20, color: kAccentColor),
                       ),
                     ],
                   ),
@@ -269,33 +269,33 @@ class _CommentTile extends StatelessWidget {
                 children: [
                   Text(
                     '@${comment.username}',
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     _formatCommentTime(comment.createdAt),
-                    style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                    style: appBodyStyle(fontSize: 12, color: kMutedColor),
                   ),
                 ],
               ),
               const SizedBox(height: 2),
-              Text(comment.body, style: GoogleFonts.chewy(fontSize: 15)),
+              Text(comment.body, style: appBodyStyle(fontSize: 15)),
             ],
           ),
         ),
         PopupMenuButton<void>(
-          icon: const Icon(Icons.more_horiz, size: 18, color: Colors.black45),
+          icon: const AppIcon(AppIcons.more, size: 18, color: kMutedColor),
           padding: EdgeInsets.zero,
           itemBuilder: (context) => [
             if (canDelete)
               PopupMenuItem(
                 onTap: onDelete,
-                child: Text('Delete', style: GoogleFonts.chewy(fontSize: 14)),
+                child: Text('Delete', style: appBodyStyle(fontSize: 14)),
               )
             else
               PopupMenuItem(
                 onTap: onReport,
-                child: Text('Report', style: GoogleFonts.chewy(fontSize: 14)),
+                child: Text('Report', style: appBodyStyle(fontSize: 14)),
               ),
           ],
         ),

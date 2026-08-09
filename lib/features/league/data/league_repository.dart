@@ -120,21 +120,8 @@ class LeagueRepository {
   }
 
   /// League ids [userId] has already seen the win-celebration screen for.
-  Future<Set<String>> fetchCelebratedTrophyLeagueIds(String userId) async {
-    final rows =
-        await _client.from('league_trophy_celebrations').select('league_id').eq('user_id', userId);
-    return {for (final row in List<Map<String, dynamic>>.from(rows)) row['league_id'].toString()};
-  }
-
   /// Records that [userId] has seen the celebration for winning [leagueId],
   /// so it isn't shown again. Upserts with `ignoreDuplicates` for the same
   /// reason achievement unlocks do — a re-check of an already-seen trophy
   /// should be a silent no-op, not a duplicate-key error.
-  Future<void> markTrophyCelebrated({required String userId, required String leagueId}) async {
-    await _client.from('league_trophy_celebrations').upsert(
-      {'user_id': userId, 'league_id': leagueId},
-      onConflict: 'user_id,league_id',
-      ignoreDuplicates: true,
-    );
-  }
 }

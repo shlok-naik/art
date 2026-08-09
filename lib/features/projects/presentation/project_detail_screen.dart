@@ -5,10 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../achievements/providers.dart';
@@ -216,12 +216,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         children: [
           Text(
             isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16, color: kAccentColor),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16, color: kAccentColor),
           ),
           const SizedBox(height: 8),
           Text(
             formatDurationHms(_elapsed),
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: Colors.black),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 64, color: kInkColor),
           ),
           const SizedBox(height: 32),
           Row(
@@ -231,12 +231,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 onPressed: _togglePause,
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
-                  side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: kHairlineColor, width: 1),
+                  foregroundColor: kInkColor,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
-                icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
+                icon: AppIcon(isPaused ? AppIcons.play : AppIcons.pause, size: 20, color: Colors.white),
                 label: Text(isPaused ? 'Resume' : 'Pause'),
               ),
               const SizedBox(width: 16),
@@ -247,9 +247,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   backgroundColor: kAccentColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
-                icon: const Icon(Icons.stop),
+                icon: const AppIcon(AppIcons.stop, size: 18, color: Colors.white),
                 label: const Text('End'),
               ),
             ],
@@ -272,17 +272,17 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: kSuccessBgColor,
-              border: Border.all(color: kBorderColor, width: kBorderWidth),
+              border: Border.all(color: kHairlineColor, width: 1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
+                const AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'This project is finished — 100% complete and locked. No new sessions can be added.',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kSuccessTextColor),
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kSuccessTextColor),
                   ),
                 ),
               ],
@@ -303,7 +303,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('Past Sessions', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+            child: Text('Past Sessions', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20)),
           ),
         ),
         const SizedBox(height: 8),
@@ -314,7 +314,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 return Center(
                   child: Text(
                     'No sessions logged yet.',
-                    style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                    style: appBodyStyle(fontSize: 15, color: kMutedColor),
                   ),
                 );
               }
@@ -347,7 +347,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     },
                     child: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: appCardDecoration(),
+                      decoration: appFlatCardDecoration(),
                       child: Row(
                         children: [
                           ClipRRect(
@@ -356,8 +356,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                 ? Container(
                                     width: 52,
                                     height: 52,
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.image_not_supported, color: Colors.black38),
+                                    color: kHairlineColor,
+                                    child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
                                   )
                                 : CachedNetworkImage(
                                     imageUrl: photoUrl,
@@ -373,16 +373,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                               children: [
                                 Text(
                                   formatDurationHms(Duration(seconds: durationSeconds)),
-                                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 Text(
                                   'Logged: ${formatDateValue(session['created_at'])}',
-                                  style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                                  style: appBodyStyle(fontSize: 13, color: kMutedColor),
                                 ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: Colors.black38),
+                          const AppIcon(AppIcons.chevronRight, size: 18, color: kMutedColor),
                         ],
                       ),
                     ),
@@ -454,7 +454,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     }
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, title),

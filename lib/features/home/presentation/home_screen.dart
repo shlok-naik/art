@@ -74,14 +74,24 @@ class HomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Unfinished',
-                          style: appBodyStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: kNavyColor,
-                          ).copyWith(letterSpacing: -0.3),
+                        // Scales down rather than wrapping or clipping — on
+                        // the narrowest phones the wordmark and the Pro pill
+                        // together exceed the row's width.
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Unfinished',
+                              style: appBodyStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: kNavyColor,
+                              ).copyWith(letterSpacing: -0.3),
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         _BuyProPill(
                           isPro: ref.watch(isProProvider),
                           onPressed: () => Navigator.of(context).push(
@@ -160,10 +170,14 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text(
-                          'Recent activity',
-                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        Flexible(
+                          child: Text(
+                            'Recent activity',
+                            overflow: TextOverflow.ellipsis,
+                            style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         InkWell(
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const MyPostsScreen()),
@@ -252,9 +266,9 @@ class _HeroProjectCard extends StatelessWidget {
           ? null
           : () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project))),
-      borderRadius: BorderRadius.circular(20),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(25),
+      child: MuseumFrame(
+        radius: 20,
         child: AspectRatio(
           aspectRatio: 4 / 3,
           child: Stack(
@@ -525,11 +539,11 @@ class _RecentActivityRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const AppIcon(AppIcons.heartFilled, size: 15, color: kAccentColor),
+          const AppIcon(AppIcons.heartFilled, size: 15, color: kGoldColor),
           const SizedBox(width: 4),
           Text(
             '$reactionsTotal',
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kGoldColor),
           ),
         ],
       ),

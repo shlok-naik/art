@@ -3,14 +3,13 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 import '../providers.dart';
 
 /// Full achievement catalog for [userId], locked entries included (dimmed,
-/// shown as 🔒). Tapping any tile — locked or unlocked — opens
+/// shown locked). Tapping any tile — locked or unlocked — opens
 /// [showAchievementDetail] with its description; unlocked ones get a
 /// confetti burst, matching the celebration screen's visual language.
 class AllAchievementsScreen extends ConsumerWidget {
@@ -62,25 +61,37 @@ class _AchievementTile extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => showAchievementDetail(context, achievement: achievement, isUnlocked: isUnlocked),
-      child: Opacity(
-        opacity: isUnlocked ? 1 : 0.4,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-          decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(isUnlocked ? achievement.emoji : '🔒', style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 3),
-              Text(
-                achievement.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+      // Both states sit on navy; unlocked earns the gold hairline and gold
+      // icon/text, locked stays borderless and dimmed white.
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+        decoration: BoxDecoration(
+          color: kNavyColor,
+          borderRadius: BorderRadius.circular(14),
+          border: isUnlocked ? Border.all(color: kGoldColor, width: 1) : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon(
+              isUnlocked ? achievement.icon : AppIcons.lock,
+              size: 20,
+              color: isUnlocked ? kGoldColor : Colors.white.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              achievement.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: appBodyStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: isUnlocked ? kGoldColor : Colors.white.withValues(alpha: 0.4),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -144,27 +155,27 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
                 Text(
                   achievement.title,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                  style: appHeadlineStyle(fontSize: 22, color: kNavyColor, italic: true),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   achievement.description,
                   textAlign: TextAlign.center,
-                  style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
+                  style: appBodyStyle(fontSize: 14, color: kMutedColor),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isUnlocked ? kSuccessBgColor : const Color(0xFFF0F0F0),
+                    color: isUnlocked ? kSuccessBgColor : kSurfaceColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     isUnlocked ? 'Unlocked' : 'Locked',
                     style: appBodyStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: isUnlocked ? kSuccessTextColor : const Color(0xFF888888),
+                      fontWeight: FontWeight.w600,
+                      color: isUnlocked ? kSuccessTextColor : kMutedColor,
                     ),
                   ),
                 ),
@@ -176,12 +187,11 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
                     padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                     decoration: BoxDecoration(
                       color: kAccentColor,
-                      border: Border.all(color: kBorderColor, width: kBorderWidth),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
                       'Close',
-                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
+                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
                   ),
                 ),
@@ -195,11 +205,16 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: kBorderColor, width: kBorderWidth),
+                color: kNavyColor,
+                border: isUnlocked ? Border.all(color: kGoldColor, width: 1.5) : null,
               ),
               alignment: Alignment.center,
-              child: Text(isUnlocked ? achievement.emoji : '🔒', style: const TextStyle(fontSize: 34)),
+              child: AppIcon(
+                isUnlocked ? achievement.icon : AppIcons.lock,
+                size: 34,
+                color: isUnlocked ? kGoldColor : Colors.white.withValues(alpha: 0.4),
+                strokeWidth: 1.5,
+              ),
             ),
           ),
           if (isUnlocked)
@@ -212,7 +227,7 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
               minBlastForce: 6,
               gravity: 0.3,
               shouldLoop: false,
-              colors: const [Colors.white, kAccentColor, Colors.amber, Colors.pinkAccent, Colors.lightBlueAccent],
+              colors: const [Colors.white, kAccentColor, kGoldColor, kNavyColor, Colors.lightBlueAccent],
             ),
         ],
       ),

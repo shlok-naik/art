@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/formatters.dart';
 import '../../achievements/domain/achievement.dart';
@@ -41,7 +42,7 @@ class PublicProfileScreen extends ConsumerWidget {
             if (profile == null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                child: Text('Profile not found.', style: appBodyStyle(fontSize: 16, color: kInkColor)),
               );
             }
             final postsAsync = ref.watch(userPostsProvider(userId));
@@ -63,17 +64,17 @@ class PublicProfileScreen extends ConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: kBorderColor, width: kBorderWidth),
+                            border: Border.all(color: kHairlineColor, width: 1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(Icons.arrow_back, size: 18, color: Colors.black),
+                          child: const AppIcon(AppIcons.back, size: 18, color: kInkColor),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           '@${profile.username}',
-                          style: GoogleFonts.chewy(fontSize: 20, color: Colors.black),
+                          style: appBodyStyle(fontSize: 20, color: kInkColor),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -87,10 +88,10 @@ class PublicProfileScreen extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              border: Border.all(color: kBorderColor, width: kBorderWidth),
+                              border: Border.all(color: kHairlineColor, width: 1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                            child: const AppIcon(AppIcons.pencil, size: 18, color: kInkColor),
                           ),
                         ),
                       ],
@@ -113,11 +114,11 @@ class PublicProfileScreen extends ConsumerWidget {
                               height: 72,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.grey.shade200,
-                                border: Border.all(color: kBorderColor, width: kBorderWidth),
+                                color: kHairlineColor,
+                                border: Border.all(color: kHairlineColor, width: 1),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(Icons.person, size: 36, color: Colors.black26),
+                              child: const AppIcon(AppIcons.profile, size: 34, color: kMutedColor),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -127,7 +128,7 @@ class PublicProfileScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     profile.displayName,
-                                    style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                                    style: appBodyStyle(fontSize: 22, color: kInkColor),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
@@ -145,7 +146,7 @@ class PublicProfileScreen extends ConsumerWidget {
                           const SizedBox(height: 10),
                           Text(
                             profile.bio!,
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                           ),
                         ],
                         if (!isOwnProfile) ...[
@@ -161,14 +162,14 @@ class PublicProfileScreen extends ConsumerWidget {
                                 label: 'Posts',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 1, height: 32, color: kHairlineColor),
                             Expanded(
                               child: AppStatColumn(
                                 value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 1, height: 32, color: kHairlineColor),
                             Expanded(
                               child: AppStatColumn(
                                 value: followingCount == null ? '—' : formatCount(followingCount),
@@ -188,17 +189,17 @@ class PublicProfileScreen extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              border: Border.all(color: kBorderColor, width: kBorderWidth),
+                              border: Border.all(color: kHairlineColor, width: 1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.bar_chart, size: 18, color: Colors.black),
+                                const AppIcon(AppIcons.barChart, size: 18, color: kInkColor),
                                 const SizedBox(width: 6),
                                 Text(
                                   'View stats',
-                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kInkColor),
                                 ),
                               ],
                             ),
@@ -296,15 +297,15 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isFollowing ? kAccentTintColor : kAccentColor,
-            border: Border.all(color: kBorderColor, width: kBorderWidth),
+            border: Border.all(color: kHairlineColor, width: 1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             isFollowing ? 'Unfollow' : 'Follow',
             style: appBodyStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isFollowing ? Colors.black : Colors.white,
+              fontWeight: FontWeight.w600,
+              color: isFollowing ? kInkColor : Colors.white,
             ),
           ),
         ),
@@ -330,7 +331,7 @@ class _ProjectsRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Projects', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Projects', style: appBodyStyle(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 10),
         SizedBox(
           height: 100,
@@ -385,18 +386,18 @@ class _ProjectCircle extends StatelessWidget {
               child: ClipOval(
                 child: photoUrl == null || photoUrl.isEmpty
                     ? Container(
-                        color: Colors.grey.shade200,
+                        color: kHairlineColor,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 18, color: Colors.black26),
+                        child: const AppIcon(AppIcons.image, size: 18, color: kMutedColor),
                       )
                     : CachedNetworkImage(
                         imageUrl: photoUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                        placeholder: (context, url) => Container(color: kSurfaceColor),
                         errorWidget: (context, url, error) => Container(
-                          color: Colors.grey.shade200,
+                          color: kHairlineColor,
                           alignment: Alignment.center,
-                          child: const Icon(Icons.image_not_supported, size: 18, color: Colors.black26),
+                          child: const AppIcon(AppIcons.image, size: 18, color: kMutedColor),
                         ),
                       ),
               ),
@@ -407,7 +408,7 @@ class _ProjectCircle extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black),
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kInkColor),
             ),
           ],
         ),
@@ -433,11 +434,11 @@ class _AchievementsRow extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Achievements', style: appBodyStyle(fontSize: 18, color: kInkColor)),
             const SizedBox(width: 8),
             Text(
               '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
             const Spacer(),
             InkWell(
@@ -449,7 +450,7 @@ class _AchievementsRow extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Text(
                   'View all',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                 ),
               ),
             ),
@@ -459,7 +460,7 @@ class _AchievementsRow extends ConsumerWidget {
         if (unlockedAchievements == null || unlockedAchievements.isEmpty)
           Text(
             'No achievements yet.',
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
           )
         else
           Wrap(
@@ -501,7 +502,7 @@ class _MutualFollowersLine extends ConsumerWidget {
 
     return Text(
       label,
-      style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+      style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kMutedColor),
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -532,9 +533,9 @@ class _PinnedPostCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.push_pin, size: 16, color: kAccentColor),
+            const AppIcon(AppIcons.pin, size: 15, color: kAccentColor),
             const SizedBox(width: 6),
-            Text('Pinned', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Pinned', style: appBodyStyle(fontSize: 18, color: kInkColor)),
           ],
         ),
         const SizedBox(height: 8),
@@ -550,18 +551,18 @@ class _PinnedPostCard extends StatelessWidget {
               aspectRatio: 16 / 9,
               child: photoUrl == null || photoUrl.isEmpty
                   ? Container(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       alignment: Alignment.center,
-                      child: const Icon(Icons.image_not_supported, size: 32, color: Colors.black26),
+                      child: const AppIcon(AppIcons.image, size: 30, color: kMutedColor),
                     )
                   : CachedNetworkImage(
                       imageUrl: photoUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                      placeholder: (context, url) => Container(color: kSurfaceColor),
                       errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
+                        color: kHairlineColor,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 32, color: Colors.black26),
+                        child: const AppIcon(AppIcons.image, size: 30, color: kMutedColor),
                       ),
                     ),
             ),
@@ -629,13 +630,13 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       builder: (context) => AlertDialog(
         title: Text(
           isPinned ? 'Unpin this post?' : 'Pin this post?',
-          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+          style: appBodyStyle(fontSize: 18, color: kInkColor),
         ),
         content: Text(
           isPinned
               ? "It'll no longer be featured at the top of your profile."
               : "It'll be featured at the top of your profile, above the grid.",
-          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
@@ -670,11 +671,11 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       children: [
         Row(
           children: [
-            Text('Posts', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Posts', style: appBodyStyle(fontSize: 18, color: kInkColor)),
             const Spacer(),
             if (projectTitles.length > 1)
               _ThemedMenuButton<String?>(
-                icon: Icons.filter_list,
+                icon: AppIcons.filter,
                 label: 'Filter',
                 value: _projectFilter,
                 items: [
@@ -685,7 +686,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
               ),
             const SizedBox(width: 10),
             _ThemedMenuButton<_PostSort>(
-              icon: Icons.sort,
+              icon: AppIcons.sort,
               label: 'Sort',
               value: _sort,
               items: [for (final sort in _PostSort.values) (value: sort, label: sort.label)],
@@ -712,7 +713,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
             child: Text(
               widget.posts.isEmpty ? 'No posts yet.' : 'No posts match this filter.',
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
           )
         else
@@ -741,30 +742,25 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                     children: [
                       photoUrl == null || photoUrl.isEmpty
                           ? Container(
-                              color: Colors.grey.shade200,
+                              color: kHairlineColor,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 20, color: Colors.black26),
+                              child: const AppIcon(AppIcons.image, size: 20, color: kMutedColor),
                             )
                           : CachedNetworkImage(
                               imageUrl: photoUrl,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                              placeholder: (context, url) => Container(color: kSurfaceColor),
                               errorWidget: (context, url, error) => Container(
-                                color: Colors.grey.shade200,
+                                color: kHairlineColor,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported, size: 20, color: Colors.black26),
+                                child: const AppIcon(AppIcons.image, size: 20, color: kMutedColor),
                               ),
                             ),
                       if (isPinned)
                         const Positioned(
                           top: 4,
                           left: 4,
-                          child: Icon(
-                            Icons.push_pin,
-                            size: 14,
-                            color: Colors.white,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                          ),
+                          child: AppIcon(AppIcons.pin, size: 14, color: Colors.white),
                         ),
                       Positioned(
                         right: 4,
@@ -772,17 +768,12 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.remove_red_eye,
-                              size: 12,
-                              color: Colors.white,
-                              shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                            ),
+                            const AppIcon(AppIcons.eye, size: 12, color: Colors.white),
                             const SizedBox(width: 3),
                             Text(
                               formatCount(post.views),
-                              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)
-                                  .copyWith(shadows: const [Shadow(color: Colors.black54, blurRadius: 4)]),
+                              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)
+                                  .copyWith(shadows: const [Shadow(color: kMutedColor, blurRadius: 4)]),
                             ),
                           ],
                         ),
@@ -799,7 +790,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
 }
 
 /// A sort/filter trigger + dropdown menu styled like the rest of the app —
-/// flat black border, rounded pill trigger, Chewy-labelled options with a
+/// hairline border, rounded pill trigger, Inter-labelled options with a
 /// checkmark on the current selection — instead of the default Material
 /// popup menu look.
 class _ThemedMenuButton<T> extends StatelessWidget {
@@ -811,7 +802,7 @@ class _ThemedMenuButton<T> extends StatelessWidget {
     required this.onSelected,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final T value;
   final List<({T value, String label})> items;
@@ -827,7 +818,7 @@ class _ThemedMenuButton<T> extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        side: const BorderSide(color: kHairlineColor, width: 1),
       ),
       itemBuilder: (context) => [
         for (final item in items)
@@ -838,13 +829,13 @@ class _ThemedMenuButton<T> extends StatelessWidget {
                 Expanded(
                   child: Text(
                     item.label,
-                    style: GoogleFonts.chewy(
+                    style: appBodyStyle(
                       fontSize: 15,
-                      color: item.value == value ? kAccentColor : Colors.black,
+                      color: item.value == value ? kAccentColor : kInkColor,
                     ),
                   ),
                 ),
-                if (item.value == value) const Icon(Icons.check, size: 18, color: kAccentColor),
+                if (item.value == value) const AppIcon(AppIcons.check, size: 16, color: kAccentColor),
               ],
             ),
           ),
@@ -852,15 +843,15 @@ class _ThemedMenuButton<T> extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          border: Border.all(color: kHairlineColor, width: 1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: Colors.black),
+            AppIcon(icon, size: 15, color: kInkColor),
             const SizedBox(width: 4),
-            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kInkColor)),
           ],
         ),
       ),

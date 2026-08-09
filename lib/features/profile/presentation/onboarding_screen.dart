@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 
@@ -16,9 +15,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _page = 0;
 
+  /// The first page carries the wordmark hero in place of the old mascot
+  /// illustration; the rest are plain title + body.
   static const _pages = [
     (
-      title: "Hey, I'm Bud 👋",
+      title: 'Welcome',
       body: "Let's set up your profile in under a minute.",
     ),
     (
@@ -61,7 +62,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: widget.onComplete,
-                  child: Text('Skip', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+                  child: Text(
+                    'Skip',
+                    style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kNavyColor),
+                  ),
                 ),
               ),
               Expanded(
@@ -74,21 +78,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Transform.flip(
-                          flipX: true,
-                          child: Image.asset('assets/branding/mascot.png', height: 150),
-                        ),
-                        const SizedBox(height: 24),
+                        if (index == 0) ...[
+                          const AppWordmark(fontSize: 40),
+                          const SizedBox(height: 26),
+                        ],
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.chewy(fontSize: 27, color: Colors.black),
+                          style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           page.body,
                           textAlign: TextAlign.center,
-                          style: appBodyStyle(fontSize: 16, color: const Color(0xFF666666)),
+                          style: appBodyStyle(fontSize: 15, color: kMutedColor).copyWith(height: 1.5),
                         ),
                       ],
                     );
@@ -104,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       height: 8,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
-                        color: index == _page ? kAccentColor : const Color(0xFFE5DED4),
+                        color: index == _page ? kAccentColor : kHairlineColor,
                         shape: BoxShape.circle,
                       ),
                     ),

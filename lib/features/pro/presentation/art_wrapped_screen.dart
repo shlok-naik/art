@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../analytics/providers.dart';
 import '../../shell/main_shell.dart';
@@ -27,17 +27,19 @@ class ArtWrappedScreen extends ConsumerWidget {
     final statsAsync = ref.watch(artWrappedProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: kAccentColor,
         appBar: AppBar(
           backgroundColor: kAccentColor,
+          surfaceTintColor: kAccentColor,
           elevation: 0,
+          scrolledUnderElevation: 0,
           foregroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.white),
           title: Text(
             'Your Art Wrapped',
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20, color: Colors.white),
           ),
         ),
         body: SafeArea(
@@ -50,7 +52,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                     child: Text(
                       'Log a few sessions to unlock your recap.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 16, color: Colors.white),
+                      style: appBodyStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                 );
@@ -62,22 +64,22 @@ class ArtWrappedScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'You put in',
-                      style: GoogleFonts.chewy(fontSize: 18, color: Colors.white70),
+                      style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70),
                     ),
                     Text(
                       _formatMinutes(stats.totalMinutes),
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 56, color: Colors.white),
+                      style: appHeadlineStyle(fontSize: 52, color: Colors.white, fontWeight: FontWeight.w600),
                     ),
                     Text(
                       'across ${stats.sessionCount} session${stats.sessionCount == 1 ? '' : 's'}',
-                      style: GoogleFonts.chewy(fontSize: 18, color: Colors.white70),
+                      style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70),
                     ),
                     const SizedBox(height: 28),
                     Row(
                       children: [
                         Expanded(
                           child: _WrappedStatCard(
-                            emoji: '🎨',
+                            icon: AppIcons.folder,
                             label: 'Projects',
                             value: '${stats.projectCount}',
                             sublabel: '${stats.finishedProjectCount} finished',
@@ -86,7 +88,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _WrappedStatCard(
-                            emoji: '🔥',
+                            icon: AppIcons.flame,
                             label: 'Best streak',
                             value: '${stats.currentStreakDays}',
                             sublabel: stats.currentStreakDays == 1 ? 'day' : 'days',
@@ -99,7 +101,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: _WrappedStatCard(
-                            emoji: '💪',
+                            icon: AppIcons.barChart,
                             label: 'Hardest stage',
                             value: stats.hardestStage ?? '—',
                           ),
@@ -107,7 +109,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _WrappedStatCard(
-                            emoji: '🖌️',
+                            icon: AppIcons.pencil,
                             label: 'Go-to tool',
                             value: stats.topTool ?? '—',
                           ),
@@ -117,7 +119,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                     if (stats.personalityBadge != null) ...[
                       const SizedBox(height: 12),
                       _WrappedStatCard(
-                        emoji: '⏰',
+                        icon: AppIcons.clock,
                         label: 'You are a',
                         value: stats.personalityBadge!,
                         fullWidth: true,
@@ -127,7 +129,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                     Text(
                       'Screenshot this to share your year in art.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 14, color: Colors.white70),
+                      style: appBodyStyle(fontSize: 14, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -154,14 +156,14 @@ class ArtWrappedScreen extends ConsumerWidget {
 
 class _WrappedStatCard extends StatelessWidget {
   const _WrappedStatCard({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.value,
     this.sublabel,
     this.fullWidth = false,
   });
 
-  final String emoji;
+  final String icon;
   final String label;
   final String value;
   final String? sublabel;
@@ -175,22 +177,21 @@ class _WrappedStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54)),
+          AppIcon(icon, size: 18, color: kNavyColor),
+          const SizedBox(height: 4),
+          Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kMutedColor)),
           Text(
             value,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
             overflow: TextOverflow.ellipsis,
           ),
           if (sublabel != null)
-            Text(sublabel!, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45)),
+            Text(sublabel!, style: appBodyStyle(fontSize: 12, color: kMutedColor)),
         ],
       ),
     );

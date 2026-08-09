@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/app_styles.dart';
@@ -52,62 +51,63 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: appThemedAppBar(context, 'Sign up'),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: _signUpSuccess
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Check your email to confirm your account.',
-                          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
-                        AppPrimaryButton(
-                          label: 'Back to login',
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: appThemedAppBar(context, 'Sign up'),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+            child: _signUpSuccess
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Check your email to confirm your account.',
+                        style: appBodyStyle(fontSize: 15, color: kMutedColor),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      AppPrimaryButton(
+                        label: 'Back to login',
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Sign up',
+                        style: appHeadlineStyle(fontSize: 26, color: kNavyColor, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _emailController,
+                        decoration: appInputDecoration('Email'),
+                        keyboardType: TextInputType.emailAddress,
+                        style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: appInputDecoration('Password'),
+                        obscureText: true,
+                        style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 22),
+                      if (_errorText != null) ...[
+                        AppErrorText(_errorText!),
+                        const SizedBox(height: 12),
                       ],
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('SIGN UP', style: appHeadlineStyle(fontSize: 48)),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: _emailController,
-                          decoration: appInputDecoration('Email'),
-                          keyboardType: TextInputType.emailAddress,
-                          style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _passwordController,
-                          decoration: appInputDecoration('Password'),
-                          obscureText: true,
-                          style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
-                        ),
-                        const SizedBox(height: 20),
-                        if (_errorText != null) ...[
-                          AppErrorText(_errorText!),
-                          const SizedBox(height: 12),
-                        ],
-                        AppPrimaryButton(
-                          label: 'Sign up',
-                          isLoading: _isLoading,
-                          onPressed: _signUp,
-                        ),
-                      ],
-                    ),
-            ),
+                      AppPrimaryButton(
+                        label: 'Sign up',
+                        isLoading: _isLoading,
+                        onPressed: _signUp,
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
