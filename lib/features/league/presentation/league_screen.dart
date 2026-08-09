@@ -14,6 +14,7 @@ import '../../shell/main_shell.dart';
 import '../domain/league.dart';
 import '../domain/league_region.dart';
 import '../providers.dart';
+import 'league_chat_screen.dart';
 import 'league_voting_feed_screen.dart';
 import 'region_picker_sheet.dart';
 import 'submit_to_league_screen.dart';
@@ -24,12 +25,27 @@ class LeagueScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final leagueAsync = ref.watch(currentLeagueProvider);
+    final league = leagueAsync.value;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const AppNavyHeader(title: 'League'),
+          AppNavyHeader(
+            title: 'League',
+            trailing: league == null
+                ? null
+                : InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LeagueChatScreen(leagueId: league.id)),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: AppIcon(AppIcons.comment, color: Colors.white, strokeWidth: 2),
+                    ),
+                  ),
+          ),
           Expanded(
             child: leagueAsync.when(
               data: (league) => _LeagueBody(league: league),

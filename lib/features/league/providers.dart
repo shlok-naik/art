@@ -4,12 +4,18 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../auth/providers.dart';
 import '../profile/providers.dart';
 import '../projects/providers.dart';
+import 'data/league_chat_repository.dart';
 import 'data/league_repository.dart';
 import 'domain/league.dart';
+import 'domain/league_chat_message.dart';
 import 'domain/league_region.dart';
 
 final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
   return LeagueRepository(ref.watch(supabaseClientProvider));
+});
+
+final leagueChatRepositoryProvider = Provider<LeagueChatRepository>((ref) {
+  return LeagueChatRepository(ref.watch(supabaseClientProvider));
 });
 
 /// The current weekly league for the signed-in user's region — materialized
@@ -134,3 +140,79 @@ final myProjectsWithCoverProvider =
       if (coverByProjectId[project['id'].toString()] case final cover?) (project, cover),
   ];
 });
+
+/// Chat messages for [leagueId], oldest first, kept live by a realtime
+/// subscription — the app's first realtime feature. [build] fetches history
+/// once, then opens a channel that appends each new message as it's
+/// inserted, so every open League Chat screen updates without polling or a
+/// pull-to-refresh.
+final leagueChatMessagesProvider = AsyncNotifierProvider.autoDispose
+    .family<LeagueChatNotifier, List<LeagueChatMessage>, String>(LeagueChatNotifier.new);
+
+class LeagueChatNotifier extends AsyncNotifier<List<LeagueChatMessage>> {
+  LeagueChatNotifier(this._leagueId);
+
+  final String _leagueId;
+
+  @override
+  Future<List<LeagueChatMessage>> build() async {
+    final repo = ref.watch(leagueChatRepositoryProvider);
+    final messages = await repo.fetchMessages(_leagueId);
+
+    final channel = repo.subscribeToNewMessages(_leagueId, _handleInsert);
+    ref.onDispose(() => channel.unsubscribe());
+
+    return messages;
+  }
+
+  final _knownUsernames = <String, String>{};
+
+  Future<void> _handleInsert(Map<String, dynamic> row) async {
+    final current = state.value;
+    if (current == null) return;
+    final id = row['id'].toString();
+    // Already have it — either it's our own optimistic send echoing back, or
+    // a duplicate delivery.
+    if (current.any((m) => m.id == id)) return;
+
+    final userId = row['user_id'].toString();
+    var username = _knownUsernames[userId];
+    if (username == null) {
+      username = await ref.read(leagueChatRepositoryProvider).fetchUsername(userId);
+      _knownUsernames[userId] = username;
+    }
+
+    final latest = state.value;
+    if (latest == null || latest.any((m) => m.id == id)) return;
+    state = AsyncData([...latest, LeagueChatMessage.fromRow(row, username: username)]);
+  }
+
+  /// Moderates and sends [body], appending it locally right away — the
+  /// realtime echo of our own insert is deduped against this by id in
+  /// [_handleInsert].
+  Future<void> send(String body) async {
+    final profile = await ref.read(currentProfileProvider.future);
+    if (profile == null) throw Exception('Not signed in');
+    _knownUsernames[profile.id] = profile.username;
+
+    final repo = ref.read(leagueChatRepositoryProvider);
+    final row = await repo.sendMessage(leagueId: _leagueId, body: body);
+
+    final current = state.value;
+    if (current == null) return;
+    final id = row['id'].toString();
+    if (current.any((m) => m.id == id)) return;
+    state = AsyncData([...current, LeagueChatMessage.fromRow(row, username: profile.username)]);
+  }
+
+  Future<void> delete(String messageId) async {
+    await ref.read(leagueChatRepositoryProvider).deleteMessage(messageId);
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.where((m) => m.id != messageId).toList());
+  }
+
+  Future<void> report(String messageId) {
+    return ref.read(leagueChatRepositoryProvider).reportMessage(messageId);
+  }
+}
