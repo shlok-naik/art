@@ -65,17 +65,8 @@ class MainShell extends ConsumerWidget {
     ref.listen<AsyncValue<List<LeagueTrophy>>>(newlyWonTrophiesProvider, (previous, next) {
       final trophies = next.value;
       if (trophies == null || trophies.isEmpty) return;
-
-      final celebratedNotifier = ref.read(celebratedTrophyLeagueIdsProvider.notifier);
-      final alreadyCelebrated = celebratedNotifier.state;
-      final toCelebrate = [
-        for (final trophy in trophies)
-          if (!alreadyCelebrated.contains(trophy.leagueId)) trophy,
-      ];
-      if (toCelebrate.isEmpty) return;
-
-      celebratedNotifier.state = {...alreadyCelebrated, for (final t in toCelebrate) t.leagueId};
-      _celebrateTrophies(context, toCelebrate);
+      // The provider returns only trophies not yet celebrated on this device.
+      _celebrateTrophies(context, trophies);
     });
 
     return Scaffold(

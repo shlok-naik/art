@@ -132,7 +132,7 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
         bottom: false,
         child: Column(
           children: [
-            const AppNavyHeader(title: 'League Chat'),
+            const AppScreenHeader(title: 'League Chat'),
             Expanded(
               child: messagesAsync.when(
                 data: (messages) {
