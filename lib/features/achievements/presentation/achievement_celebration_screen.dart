@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
+import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 
@@ -46,52 +46,51 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
           SafeArea(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.space24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Achievement unlocked!',
-                      style: GoogleFonts.chewy(fontSize: 20, color: Colors.white),
+                      style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Container(
                       width: 160,
                       height: 160,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(color: kBorderColor, width: kBorderWidth),
+                        color: kNavyColor,
+                        border: Border.all(color: kGoldColor, width: 2),
                       ),
                       alignment: Alignment.center,
-                      child: Text(achievement.emoji, style: const TextStyle(fontSize: 80)),
+                      child: AppIcon(achievement.icon, size: 80, color: kGoldColor, strokeWidth: 1.2),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.space24),
                     Text(
                       achievement.title,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 28, color: Colors.white),
+                      style: appHeadlineStyle(fontSize: 30, color: Colors.white, italic: true),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.space8),
                     Text(
                       achievement.description,
                       textAlign: TextAlign.center,
-                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     const SizedBox(height: 36),
                     InkWell(
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(24),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32, vertical: AppSpacing.space12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: kBorderColor, width: kBorderWidth),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Text(
                           'Nice!',
-                          style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kAccentColor),
+                          style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600, color: kAccentColor),
                         ),
                       ),
                     ),
@@ -109,7 +108,7 @@ class _AchievementCelebrationScreenState extends State<AchievementCelebrationScr
             minBlastForce: 8,
             gravity: 0.3,
             shouldLoop: false,
-            colors: const [Colors.white, kAccentColor, Colors.amber, Colors.pinkAccent, Colors.lightBlueAccent],
+            colors: const [Colors.white, kGoldColor, kNavyColor, Colors.lightBlueAccent],
           ),
         ],
       ),

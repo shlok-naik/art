@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'app_icons.dart';
+import 'app_spacing.dart';
 
 import 'app_styles.dart';
 
 /// Persistent bottom nav shown across the four main tabs (Home, Feed,
 /// Followed, Profile) so any of them is reachable from any other, without
 /// affecting the back-button behavior of screens pushed on top via
-/// Navigator (those still cover this bar, as usual).
+/// Navigator (those still cover this bar, as usual). Navy bar with the
+/// active tab's icon sitting in a cobalt pill.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({super.key, required this.currentIndex, required this.onTap});
 
@@ -15,67 +18,43 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 104,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      height: 76 + bottomInset,
+      padding: EdgeInsets.only(bottom: bottomInset + 4),
+      color: kNavyColor,
+      child: Row(
         children: [
-          Container(
-            height: 104,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: kBorderColor, width: kBorderWidth)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: _NavItem(
-                    icon: Icons.home,
-                    label: 'Home',
-                    isActive: currentIndex == 0,
-                    onTap: () => onTap(0),
-                  ),
-                ),
-                Expanded(
-                  child: _NavItem(
-                    icon: Icons.article_outlined,
-                    label: 'Feed',
-                    isActive: currentIndex == 1,
-                    onTap: () => onTap(1),
-                  ),
-                ),
-                const SizedBox(width: 70),
-                Expanded(
-                  child: _NavItem(
-                    icon: Icons.groups_outlined,
-                    label: 'Followed',
-                    isActive: currentIndex == 2,
-                    onTap: () => onTap(2),
-                  ),
-                ),
-                Expanded(
-                  child: _NavItem(
-                    icon: Icons.person_outline,
-                    label: 'Profile',
-                    isActive: currentIndex == 3,
-                    onTap: () => onTap(3),
-                  ),
-                ),
-              ],
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.home,
+              label: 'Home',
+              isActive: currentIndex == 0,
+              onTap: () => onTap(0),
             ),
           ),
-          // Sized and positioned to intentionally overflow past the bottom of the
-          // screen, so the mascot's legs/feet run off the edge. Height is kept
-          // low enough that the top of the mascot doesn't creep above this bar
-          // and paint over content sitting above it.
-          Positioned(
-            bottom: -32,
-            child: GestureDetector(
-              onTap: () {},
-              child: Image.asset('assets/branding/mascot.png', height: 128),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.feed,
+              label: 'Feed',
+              isActive: currentIndex == 1,
+              onTap: () => onTap(1),
+            ),
+          ),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.followed,
+              label: 'Followed',
+              isActive: currentIndex == 2,
+              onTap: () => onTap(2),
+            ),
+          ),
+          Expanded(
+            child: _NavItem(
+              icon: AppIcons.profile,
+              label: 'Profile',
+              isActive: currentIndex == 3,
+              onTap: () => onTap(3),
             ),
           ),
         ],
@@ -92,37 +71,45 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? kAccentColor : Colors.black;
-    final child = CircleAvatar(
-      radius: 16,
-      backgroundColor: Colors.transparent,
-      child: Icon(icon, color: color),
-    );
-
     return InkWell(
       onTap: onTap,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          child,
-          if (label.isNotEmpty)
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.chewy(
-                fontSize: 12,
-                color: color,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          if (isActive)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
+              decoration: const BoxDecoration(
+                color: kAccentColor,
+                borderRadius: BorderRadius.all(Radius.circular(999)),
               ),
+              child: AppIcon(icon, color: Colors.white),
+            )
+          else
+            Padding(
+              // Keeps icon centers level between the pill-wrapped active icon
+              // and bare inactive ones.
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8),
+              child: AppIcon(icon, color: Colors.white70),
             ),
+          const SizedBox(height: AppSpacing.space4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: appBodyStyle(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              color: isActive ? Colors.white : Colors.white70,
+            ),
+          ),
         ],
       ),
     );

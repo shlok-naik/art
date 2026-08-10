@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../providers.dart';
 
@@ -83,7 +83,7 @@ class StageRadarChart extends StatelessWidget {
       top: y - 9,
       width: 32,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(4),
@@ -91,9 +91,9 @@ class StageRadarChart extends StatelessWidget {
         child: Text(
           average.toStringAsFixed(1),
           textAlign: TextAlign.center,
-          style: GoogleFonts.chewy(
+          style: appBodyStyle(
             fontSize: 10,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: kAccentColor,
           ),
         ),
@@ -127,7 +127,7 @@ class StageRadarChart extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: GoogleFonts.chewy(fontSize: 11, fontWeight: FontWeight.bold),
+        style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -167,7 +167,7 @@ class _RadarChartPainter extends CustomPainter {
     if (count < 3) return;
 
     final gridPaint = Paint()
-      ..color = Colors.black12
+      ..color = kHairlineColor
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -198,11 +198,11 @@ class _RadarChartPainter extends CustomPainter {
     final compare = compareStages;
     if (compare != null) {
       final comparePaint = Paint()
-        ..color = Colors.black26
+        ..color = kHairlineColor
         ..style = PaintingStyle.fill;
       final compareStroke = Paint()
-        ..color = Colors.black45
-        ..strokeWidth = 2
+        ..color = kMutedColor
+        ..strokeWidth = 1.5
         ..style = PaintingStyle.stroke;
       final comparePath = _polygonPath(compare, center, radius, count);
       canvas.drawPath(comparePath, comparePaint);
@@ -215,7 +215,7 @@ class _RadarChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     final dataStroke = Paint()
       ..color = kAccentColor
-      ..strokeWidth = 2
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
     final dataPath = _polygonPath(stages, center, radius, count);

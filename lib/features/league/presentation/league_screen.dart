@@ -3,109 +3,62 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
+import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
-import '../../projects/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
+import '../domain/league_region.dart';
 import '../providers.dart';
-import 'league_project_sessions_screen.dart';
+import 'league_chat_screen.dart';
+import 'league_voting_feed_screen.dart';
+import 'region_picker_sheet.dart';
 import 'submit_to_league_screen.dart';
 
-class LeagueScreen extends ConsumerStatefulWidget {
+class LeagueScreen extends ConsumerWidget {
   const LeagueScreen({super.key});
 
   @override
-  ConsumerState<LeagueScreen> createState() => _LeagueScreenState();
-}
-
-class _LeagueScreenState extends ConsumerState<LeagueScreen> {
-  // Guards against re-running the check on every rebuild of this widget
-  // instance — the actual "already seen" state lives in LeagueSeenStore
-  // (SharedPreferences), so it stays correct across screen instances too.
-  bool _checkedForNewLeague = false;
-
-  Future<void> _maybePromptNewLeague(League league) async {
-    if (_checkedForNewLeague) return;
-    _checkedForNewLeague = true;
-
-    final seenStore = ref.read(leagueSeenStoreProvider);
-    final lastSeenId = await seenStore.getLastSeenLeagueId();
-    // null means this is the very first league this device has ever seen
-    // (fresh install) — that's not a "restart", so just record it silently.
-    final isRestart = lastSeenId != null && lastSeenId != league.id;
-
-    await seenStore.markSeen(league.id);
-    ref.invalidate(isCurrentLeagueUnseenProvider);
-    if (!isRestart || !mounted) return;
-
-    final wantsNewProject = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
-        title: Text('New league: ${league.themeTitle}', style: GoogleFonts.chewy(fontSize: 20)),
-        content: Text(
-          'Do you want to create a new project for this league?',
-          style: GoogleFonts.chewy(fontSize: 15),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('No', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Yes', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
-          ),
-        ],
-      ),
-    );
-    if (wantsNewProject != true || !mounted) return;
-
-    try {
-      final project = await ref.read(projectsRepositoryProvider).createProject({'title': league.themeTitle});
-      ref.invalidate(projectsListProvider);
-      if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create project: $e')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final leagueAsync = ref.watch(currentLeagueProvider);
+    final league = leagueAsync.value;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: appThemedAppBar(context, 'League'),
-      body: SafeArea(
-        child: leagueAsync.when(
-          data: (league) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => _maybePromptNewLeague(league));
-            return _LeagueBody(league: league);
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
+      body: Column(
+        children: [
+          AppScreenHeader(
+            title: 'League',
+            trailing: league == null
+                ? null
+                : InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LeagueChatScreen(leagueId: league.id)),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(AppSpacing.space4),
+                      child: AppIcon(AppIcons.comment, color: kInkColor, strokeWidth: 2),
+                    ),
+                  ),
+          ),
+          Expanded(
+            child: leagueAsync.when(
+              data: (league) => _LeagueBody(league: league),
+              loading: () => const AppSkeletonScreen(),
+              error: (error, stack) =>
+                  error is NoRegionSelectedException ? const _RegionPickerPrompt() : AppErrorState(
+                    error: error,
+                    onRetry: () => ref.invalidate(currentLeagueProvider),
+                  ),
             ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: Consumer(
         builder: (context, ref, _) => AppBottomNav(
@@ -117,9 +70,81 @@ class _LeagueScreenState extends ConsumerState<LeagueScreen> {
   }
 }
 
-/// Which submissions grid the tab toggle below the "Submissions" header is
-/// currently showing.
-enum _SubmissionsTab { mine, everyone }
+/// Shown in place of the league body when the signed-in user hasn't picked
+/// a region yet — regional leagues need one to know which week's league row
+/// to materialize/join.
+class _RegionPickerPrompt extends ConsumerStatefulWidget {
+  const _RegionPickerPrompt();
+
+  @override
+  ConsumerState<_RegionPickerPrompt> createState() => _RegionPickerPromptState();
+}
+
+class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
+  bool _isSaving = false;
+
+  Future<void> _choose() async {
+    final region = await pickLeagueRegion(context);
+    if (region == null || !mounted) return;
+
+    setState(() => _isSaving = true);
+    final userId = ref.read(authRepositoryProvider).currentUser?.id;
+    try {
+      if (userId != null) {
+        await ref.read(profileRepositoryProvider).updateRegion(userId: userId, region: region);
+        ref.invalidate(currentProfileProvider);
+        ref.invalidate(currentLeagueProvider);
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.space24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppIcon(AppIcons.globe, size: 40, color: kNavyColor, strokeWidth: 1.4),
+            const SizedBox(height: AppSpacing.space12),
+            Text('Pick your region', style: appBodyStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            const SizedBox(height: AppSpacing.space8),
+            Text(
+              "Leagues run per-region so the leaderboard stays close — pick where you'd like to compete.",
+              textAlign: TextAlign.center,
+              style: appBodyStyle(fontSize: 14, color: kMutedColor),
+            ),
+            const SizedBox(height: AppSpacing.space20),
+            InkWell(
+              onTap: _isSaving ? null : _choose,
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space12),
+                decoration: BoxDecoration(
+                  color: kAccentColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(
+                        'Choose region',
+                        style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _LeagueBody extends ConsumerStatefulWidget {
   const _LeagueBody({required this.league});
@@ -131,20 +156,17 @@ class _LeagueBody extends ConsumerStatefulWidget {
 }
 
 class _LeagueBodyState extends ConsumerState<_LeagueBody> {
-  _SubmissionsTab _tab = _SubmissionsTab.mine;
-
   @override
   Widget build(BuildContext context) {
     final league = widget.league;
     final submissionsAsync = ref.watch(leagueSubmissionsProvider(league.id));
-    final myVoteAsync = ref.watch(myLeagueVoteProvider(league.id));
     final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
 
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(currentLeagueProvider);
         ref.invalidate(leagueSubmissionsProvider(league.id));
-        ref.invalidate(myLeagueVoteProvider(league.id));
+        ref.invalidate(myLeagueRatingsProvider(league.id));
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -153,20 +175,22 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _CountdownTimer(league: league),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             _ThemeBanner(league: league),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             submissionsAsync.when(
               data: (submissions) => _Leaderboard(submissions: submissions, myUserId: myUserId),
               loading: () => const SizedBox.shrink(),
               error: (error, stack) => const SizedBox.shrink(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.space16),
             const _PastChampionCard(),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.space20),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                Text('Submissions', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 if (league.isSubmissionOpen)
                   InkWell(
@@ -175,47 +199,62 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
                       child: Text(
                         'Submit',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
+                      ),
+                    ),
+                  )
+                else if (league.isVotingOpen)
+                  InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LeagueVotingFeedScreen(league: league)),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Rate Entries',
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
+                          ),
+                          const SizedBox(width: AppSpacing.space4),
+                          const AppIcon(AppIcons.chevronRight, size: 16, color: kAccentColor),
+                        ],
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.space4),
             Text(
-              'Vote for your favorite — no self-voting!',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              league.isSubmissionOpen
+                  ? 'Submissions close Friday 2pm London — rating opens right after.'
+                  : league.isVotingOpen
+                      ? 'Rate every entry 1-5 stars — no self-rating!'
+                      : 'Voting has closed for this round.',
+              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
             ),
-            const SizedBox(height: 12),
-            _SubmissionsTabToggle(
-              selected: _tab,
-              onChanged: (tab) => setState(() => _tab = tab),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             submissionsAsync.when(
               data: (submissions) {
-                final visible = submissions.where((s) {
-                  return _tab == _SubmissionsTab.mine ? s.userId == myUserId : s.userId != myUserId;
-                }).toList();
+                final visible = submissions.where((s) => s.userId == myUserId).toList();
 
                 if (visible.isEmpty) {
                   return Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                    decoration: appHardCardDecoration(radius: 18),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
+                    decoration: appFlatCardDecoration(),
                     child: Text(
-                      _tab == _SubmissionsTab.mine
-                          ? "You haven't submitted a project yet — tap Submit above."
-                          : 'No other submissions yet.',
+                      "You haven't submitted a project yet — tap Submit above.",
                       textAlign: TextAlign.center,
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+                      style: appBodyStyle(fontSize: 13, color: kMutedColor),
                     ),
                   );
                 }
-                final myVoteId = myVoteAsync.value;
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -231,16 +270,16 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                     return _SubmissionCard(
                       submission: submission,
                       isMine: submission.userId == myUserId,
-                      hasVoted: myVoteId != null,
-                      isMyVote: submission.id == myVoteId,
-                      isVotingOpen: league.isVotingOpen,
-                      isSubmissionOpen: league.isSubmissionOpen,
+                      canUnsubmit: submission.userId == myUserId && league.isSubmissionOpen,
                     );
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => AppErrorText('Error: $error'),
+              loading: () => const AppSkeletonScreen(),
+              error: (error, stack) => AppErrorState(
+                error: error,
+                onRetry: () => ref.invalidate(leagueSubmissionsProvider(league.id)),
+              ),
             ),
           ],
         ),
@@ -258,22 +297,49 @@ class _ThemeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: appHardCardDecoration(radius: 18, color: kAccentTintColor),
+      padding: const EdgeInsets.all(AppSpacing.space16),
+      // Navy plaque with a gold hairline — the same museum framing the
+      // photos get, applied to the season's headline moment.
+      decoration: BoxDecoration(
+        color: kNavyColor,
+        border: Border.all(color: kGoldColor, width: 1),
+        borderRadius: BorderRadius.circular(kCardRadius),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "THIS SEASON'S THEME",
-            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor),
+          Row(
+            children: [
+              Text(
+                "THIS SEASON'S THEME",
+                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor)
+                    .copyWith(letterSpacing: 0.55),
+              ),
+              const Spacer(),
+              Text(
+                leagueRegionLabel(league.region),
+                style: appBodyStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(league.themeTitle, style: appHeadlineStyle(fontSize: 38)),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.space4),
+          Text(
+            league.themeTitle,
+            style: appHeadlineStyle(fontSize: 22, color: Colors.white, italic: true),
+          ),
+          const SizedBox(height: AppSpacing.space4),
           Text(
             league.themeDescription,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
+            style: appBodyStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -281,10 +347,10 @@ class _ThemeBanner extends StatelessWidget {
   }
 }
 
-/// Live countdown to whichever boundary is next for [league]'s current
-/// phase — submissions closing (Friday), voting closing (Sunday), or the
-/// next league starting (Monday) — ticking every second so it stays
-/// accurate without needing a pull-to-refresh.
+/// Live countdown to the current phase's boundary (submissions closing,
+/// then voting closing), ticking every second so days/hours/minutes/
+/// seconds — and the phase label itself — stay accurate without needing a
+/// pull-to-refresh across a Friday-2pm or Sunday-midnight transition.
 class _CountdownTimer extends StatefulWidget {
   const _CountdownTimer({required this.league});
 
@@ -311,19 +377,27 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    final league = widget.league;
-    final (label, icon, target) = switch (league.phase) {
-      LeaguePhase.submissions => ('Submissions close in', Icons.upload_outlined, league.submissionsCloseAt),
-      LeaguePhase.votingOnly => ('Voting closes in', Icons.how_to_vote_outlined, league.votingClosesAt),
-      LeaguePhase.ended => ('New league starts in', Icons.refresh, league.endsAt),
-    };
-    final remaining = target.difference(DateTime.now().toUtc());
-    if (remaining.isNegative) {
-      // Between ticks right at a phase boundary — next second's rebuild
-      // will pick up the new phase.
-      return const SizedBox(height: 76);
+    final boundary = widget.league.nextPhaseBoundary;
+    if (boundary == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space16),
+        decoration: appFlatCardDecoration(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const AppIcon(AppIcons.clock, size: 18, color: kMutedColor),
+            const SizedBox(width: AppSpacing.space8),
+            Text(
+              'Voting closed',
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
+            ),
+          ],
+        ),
+      );
     }
 
+    final remaining = boundary.difference(DateTime.now().toUtc());
     final days = remaining.inDays;
     final hours = remaining.inHours.remainder(24);
     final minutes = remaining.inMinutes.remainder(60);
@@ -331,27 +405,23 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: appHardCardDecoration(radius: 18),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space8),
+      decoration: appFlatCardDecoration(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: kAccentColor, size: 16),
-              const SizedBox(width: 6),
-              Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor)),
-            ],
+          Text(
+            widget.league.phaseLabel,
+            style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _CountdownUnit(value: days, label: 'DAYS'),
-              _CountdownUnit(value: hours, label: 'HRS'),
-              _CountdownUnit(value: minutes, label: 'MIN'),
-              _CountdownUnit(value: seconds, label: 'SEC'),
+              _CountdownUnit(value: days, label: 'days'),
+              _CountdownUnit(value: hours, label: 'hrs'),
+              _CountdownUnit(value: minutes, label: 'min'),
+              _CountdownUnit(value: seconds, label: 'sec'),
             ],
           ),
         ],
@@ -371,67 +441,13 @@ class _CountdownUnit extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value.toString().padLeft(2, '0'), style: GoogleFonts.chewy(fontSize: 26, color: Colors.black)),
-        const SizedBox(height: 2),
         Text(
-          label,
-          style: appBodyStyle(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+          value.toString().padLeft(2, '0'),
+          style: appBodyStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
+        const SizedBox(height: AppSpacing.space4),
+        Text(label, style: appBodyStyle(fontSize: 10, color: kMutedColor)),
       ],
-    );
-  }
-}
-
-/// Pill-shaped two-way toggle between "My Submissions" and "Everyone" —
-/// there's no existing TabBar pattern elsewhere in the app, so this follows
-/// the same hand-rolled hard-card look as the rest of the league screen
-/// instead of introducing Flutter's TabBar/TabController.
-class _SubmissionsTabToggle extends StatelessWidget {
-  const _SubmissionsTabToggle({required this.selected, required this.onChanged});
-
-  final _SubmissionsTab selected;
-  final ValueChanged<_SubmissionsTab> onChanged;
-
-  Widget _segment(String label, _SubmissionsTab tab) {
-    final isSelected = tab == selected;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(tab),
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? kAccentColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            label,
-            style: appBodyStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isSelected ? Colors.white : Colors.black54,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
-      ),
-      child: Row(
-        children: [
-          _segment('My Submissions', _SubmissionsTab.mine),
-          _segment('Everyone', _SubmissionsTab.everyone),
-        ],
-      ),
     );
   }
 }
@@ -448,7 +464,6 @@ class _Leaderboard extends StatelessWidget {
   final List<LeagueSubmission> submissions;
   final String? myUserId;
 
-  static const _medals = ['🥇', '🥈', '🥉'];
   static const _topCount = 10;
 
   @override
@@ -463,33 +478,27 @@ class _Leaderboard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: appHardCardDecoration(radius: 18),
+      padding: const EdgeInsets.all(AppSpacing.space16),
+      decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.leaderboard, color: kAccentColor, size: 20),
-              const SizedBox(width: 6),
-              Text('Current Standings', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-            ],
-          ),
-          const SizedBox(height: 12),
+          Text('Current standings', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppSpacing.space12),
           for (var i = 0; i < top.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
+            if (i > 0) const SizedBox(height: AppSpacing.space12),
             _LeaderboardRow(rank: i, submission: top[i], isMe: i == myRank),
           ],
           if (myRank >= 0 && !myRowShownInTop) ...[
-            const SizedBox(height: 12),
-            const Divider(color: kBorderColor, height: 1, thickness: kBorderWidth),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.space12),
+            const Divider(color: kHairlineColor, height: 1, thickness: 1),
+            const SizedBox(height: AppSpacing.space12),
             Text(
-              'YOUR RANK',
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF888888)),
+              'Your rank',
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.space8),
             _LeaderboardRow(rank: myRank, submission: submissions[myRank], isMe: true),
           ],
         ],
@@ -510,48 +519,48 @@ class _LeaderboardRow extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(8),
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailScreen(
+            project: submission.projectRow,
+            artistUsername: submission.artistUsername,
+          ),
+        ),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        padding: const EdgeInsets.all(AppSpacing.space8),
         decoration: BoxDecoration(
           color: isMe ? kAccentTintColor : null,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
-            SizedBox(
-              width: 26,
-              child: Text(
-                rank < _Leaderboard._medals.length ? _Leaderboard._medals[rank] : '#${rank + 1}',
-                style: const TextStyle(fontSize: 16),
-                textAlign: TextAlign.center,
+            AppRankBadge(rank: rank + 1, size: 22),
+            const SizedBox(width: AppSpacing.space8),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                border: Border.all(color: kGoldColor, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            const SizedBox(width: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              clipBehavior: Clip.antiAlias,
               child: submission.photoUrl.isEmpty
                   ? Container(
-                      width: 36,
-                      height: 36,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported, size: 16, color: Colors.black26),
+                      color: kHairlineColor,
+                      alignment: Alignment.center,
+                      child: const AppIcon(AppIcons.image, size: 14, color: kMutedColor),
                     )
-                  : CachedNetworkImage(imageUrl: submission.photoUrl, width: 36, height: 36, fit: BoxFit.cover),
+                  : CachedNetworkImage(imageUrl: submission.photoUrl, fit: BoxFit.cover),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.space12),
             Expanded(
               child: Text(
                 isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
-                style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Text(
-              '${submission.votes} vote${submission.votes == 1 ? '' : 's'}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF555555)),
-            ),
+            AppStarCount(label: '${submission.stars}', fontSize: 12),
           ],
         ),
       ),
@@ -570,22 +579,30 @@ class _PastChampionCard extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: appHardCardDecoration(radius: 18),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+      decoration: appFlatCardDecoration(),
       child: Row(
         children: [
-          const Text('🏆', style: TextStyle(fontSize: 32)),
-          const SizedBox(width: 14),
+          const AppIcon(AppIcons.trophy, size: 30, color: kGoldColor, strokeWidth: 1.6),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
-                Text(
-                  '@${champion.artistUsername} — ${champion.votes} vote${champion.votes == 1 ? '' : 's'}',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
-                  overflow: TextOverflow.ellipsis,
+                Text("Last season's champion", style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '@${champion.artistUsername}',
+                        style: appBodyStyle(fontSize: 12, color: kMutedColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.space8),
+                    AppStarCount(label: '${champion.stars}', fontSize: 12),
+                  ],
                 ),
               ],
             ),
@@ -600,88 +617,46 @@ class _SubmissionCard extends ConsumerStatefulWidget {
   const _SubmissionCard({
     required this.submission,
     required this.isMine,
-    required this.hasVoted,
-    required this.isMyVote,
-    required this.isVotingOpen,
-    required this.isSubmissionOpen,
+    required this.canUnsubmit,
   });
 
   final LeagueSubmission submission;
   final bool isMine;
-  final bool hasVoted;
-  final bool isMyVote;
-  final bool isVotingOpen;
-
-  /// Whether submissions can still be added/withdrawn (Mon–Fri) — separate
-  /// from [isVotingOpen], which stays true through the weekend after
-  /// submissions have already locked.
-  final bool isSubmissionOpen;
+  final bool canUnsubmit;
 
   @override
   ConsumerState<_SubmissionCard> createState() => _SubmissionCardState();
 }
 
 class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
-  bool _isVoting = false;
   bool _isUnsubmitting = false;
-
-  Future<void> _vote() async {
-    setState(() => _isVoting = true);
-    try {
-      await ref.read(leagueRepositoryProvider).vote(
-            leagueId: widget.submission.leagueId,
-            submissionId: widget.submission.id,
-          );
-      ref.invalidate(myLeagueVoteProvider(widget.submission.leagueId));
-      ref.invalidate(leagueSubmissionsProvider(widget.submission.leagueId));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to vote: $e')));
-    } finally {
-      if (mounted) setState(() => _isVoting = false);
-    }
-  }
-
-  /// Tapping the heart on a submission you've already voted for retracts
-  /// the vote instead of re-casting it (which would be a harmless no-op
-  /// anyway, since it's the same submission).
-  Future<void> _unvote() async {
-    setState(() => _isVoting = true);
-    try {
-      await ref.read(leagueRepositoryProvider).unvote(widget.submission.leagueId);
-      ref.invalidate(myLeagueVoteProvider(widget.submission.leagueId));
-      ref.invalidate(leagueSubmissionsProvider(widget.submission.leagueId));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to unvote: $e')));
-    } finally {
-      if (mounted) setState(() => _isVoting = false);
-    }
-  }
 
   Future<void> _confirmUnsubmit() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Pulling "${widget.submission.projectTitle}"?',
+          style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        title: Text('Pulling "${widget.submission.projectTitle}"?', style: GoogleFonts.chewy(fontSize: 20)),
         content: Text(
           "Just checking — is this because you found a stronger piece to enter, or because you're being "
           "harsh on your own work? If it's the second one, leave it up.",
-          style: GoogleFonts.chewy(fontSize: 15),
+          style: appBodyStyle(fontSize: 14, color: kMutedColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Never mind, keep it', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Never mind, keep it', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Pull it', style: GoogleFonts.chewy(color: Colors.red.shade700, fontSize: 15)),
+            child: Text(
+              'Pull it',
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red.shade700),
+            ),
           ),
         ],
       ),
@@ -702,12 +677,11 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
   @override
   Widget build(BuildContext context) {
     final submission = widget.submission;
-    final canVote = widget.isVotingOpen && !widget.isMine && !_isVoting;
-    final canUnsubmit = widget.isMine && widget.isSubmissionOpen;
+    final canUnsubmit = widget.canUnsubmit;
 
     return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: appHardCardDecoration(radius: 14, shadowOffset: 3),
+      padding: const EdgeInsets.all(AppSpacing.space8),
+      decoration: appFlatCardDecoration(radius: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -718,25 +692,30 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => LeagueProjectSessionsScreen(submission: submission)),
+                      MaterialPageRoute(
+                        builder: (_) => ProjectDetailScreen(
+                          project: submission.projectRow,
+                          artistUsername: submission.artistUsername,
+                        ),
+                      ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: submission.photoUrl.isEmpty
                           ? Container(
-                              color: Colors.grey.shade200,
+                              color: kHairlineColor,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                              child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
                             )
                           : CachedNetworkImage(
                               imageUrl: submission.photoUrl,
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                              placeholder: (context, url) => Container(color: kSurfaceColor),
                               errorWidget: (context, url, error) => Container(
-                                color: Colors.grey.shade200,
+                                color: kHairlineColor,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported, size: 24, color: Colors.black26),
+                                child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
                               ),
                             ),
                     ),
@@ -749,11 +728,10 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                     child: GestureDetector(
                       onTap: _isUnsubmitting ? null : _confirmUnsubmit,
                       child: Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(AppSpacing.space4),
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
-                          border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
                         ),
                         child: _isUnsubmitting
                             ? const SizedBox(
@@ -761,48 +739,31 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                                 width: 10,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: kAccentColor),
                               )
-                            : const Icon(Icons.close, size: 12, color: kAccentColor),
+                            : const AppIcon(AppIcons.x, size: 10, color: kAccentColor),
                       ),
                     ),
                   ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space8),
           Text(
             '@${submission.artistUsername}',
-            style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+            style: appBodyStyle(fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
-          InkWell(
-            onTap: canVote ? (widget.isMyVote ? _unvote : _vote) : null,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: widget.isMyVote ? kAccentTintColor : null,
-                border: Border.all(color: kBorderColor, width: kBorderWidth),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: _isVoting
-                  ? const SizedBox(
-                      height: 15,
-                      width: 15,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(widget.isMyVote ? '❤️' : '🤍', style: const TextStyle(fontSize: 15)),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${submission.votes}',
-                          style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
-                        ),
-                      ],
-                    ),
+          const SizedBox(height: AppSpacing.space8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '★ ${submission.stars}',
+              textAlign: TextAlign.center,
+              style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kGoldColor),
             ),
           ),
         ],

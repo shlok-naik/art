@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../league/domain/league_region.dart';
+import '../../league/presentation/region_picker_sheet.dart';
+import '../../league/providers.dart';
 import '../data/profile_model.dart';
 import '../data/profile_repository.dart';
 import '../providers.dart';
@@ -25,6 +29,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _passwordController = TextEditingController();
   bool _isSaving = false;
   String? _errorText;
+  late String? _region;
 
   @override
   void initState() {
@@ -32,6 +37,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _displayNameController = TextEditingController(text: widget.profile.displayName);
     _usernameController = TextEditingController(text: widget.profile.username);
     _bioController = TextEditingController(text: widget.profile.bio ?? '');
+    _region = widget.profile.region;
   }
 
   @override
@@ -74,6 +80,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             displayName: displayName,
             bio: bio.isEmpty ? null : bio,
           );
+      final region = _region;
+      if (region != null && region != widget.profile.region) {
+        await ref.read(profileRepositoryProvider).updateRegion(userId: userId, region: region);
+        ref.invalidate(currentLeagueProvider);
+      }
       if (password.isNotEmpty) {
         await ref.read(authRepositoryProvider).updatePassword(password);
       }
@@ -110,26 +121,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: appThemedAppBar(context, 'Edit Profile'),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.space20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Your details', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
-              const SizedBox(height: 16),
+              Text('Your details', style: appBodyStyle(fontSize: 20, color: kInkColor)),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _displayNameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Display name'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _usernameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Username'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.space16),
               TextField(
                 controller: _bioController,
                 enabled: !_isSaving,
@@ -138,14 +149,50 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('Bio (optional)'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 12),
-              Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.space16),
+              Text('League region', style: appBodyStyle(fontSize: 20, color: kInkColor)),
+              const SizedBox(height: AppSpacing.space4),
+              Text(
+                "Which region's weekly league you compete in.",
+                style: appBodyStyle(fontSize: 13, color: kMutedColor),
+              ),
+              const SizedBox(height: AppSpacing.space12),
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _isSaving
+                    ? null
+                    : () async {
+                        final picked = await pickLeagueRegion(context, current: _region);
+                        if (picked != null) setState(() => _region = picked);
+                      },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: kHairlineColor, width: 1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _region == null ? 'Not set' : leagueRegionLabel(_region!),
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInkColor),
+                        ),
+                      ),
+                      const AppIcon(AppIcons.chevronRight, size: 18, color: kMutedColor),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space12),
+              Text('Change password', style: appBodyStyle(fontSize: 20, color: kInkColor)),
+              const SizedBox(height: AppSpacing.space4),
               Text(
                 'Leave this blank to keep your current password.',
-                style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
+                style: appBodyStyle(fontSize: 13, color: kMutedColor),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.space12),
               TextField(
                 controller: _passwordController,
                 enabled: !_isSaving,
@@ -153,10 +200,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('New password'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.space20),
               if (_errorText != null) ...[
                 AppErrorText(_errorText!),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.space12),
               ],
               AppPrimaryButton(label: 'Save changes', isLoading: _isSaving, onPressed: _save),
             ],

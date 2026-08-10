@@ -39,6 +39,15 @@ $backend = Start-Process -FilePath "backend\.venv\Scripts\uvicorn.exe" `
     -ArgumentList "--app-dir", "backend", "main:app", "--reload", "--port", "8000" `
     -NoNewWindow -PassThru
 
+Write-Host "Opening league test-mode controller in a new window..."
+# A separate window, not a forwarded keystroke inside this one: flutter run
+# reads raw stdin itself for its own hot-keys (r/R/q/...), so splicing a
+# custom key into that same stream would make it see a non-terminal stdin
+# and silently disable its whole interactive hotkey set.
+$simulator = Start-Process powershell -ArgumentList @(
+    '-NoExit', '-Command', "Set-Location `"$PSScriptRoot`"; dart run tool/simulate_league.dart"
+) -PassThru
+
 try {
     Start-Sleep -Seconds 2
     Write-Host "Starting frontend (flutter run)..."
@@ -50,5 +59,8 @@ finally {
         # uvicorn --reload forks a child worker process, so kill the whole
         # tree rather than just the parent PID.
         taskkill /PID $backend.Id /T /F | Out-Null
+    }
+    if ($simulator -and -not $simulator.HasExited) {
+        taskkill /PID $simulator.Id /T /F | Out-Null
     }
 }

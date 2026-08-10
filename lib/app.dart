@@ -9,6 +9,8 @@ import 'features/profile/presentation/onboarding_screen.dart';
 import 'features/profile/presentation/profile_setup_screen.dart';
 import 'features/profile/providers.dart';
 import 'features/shell/main_shell.dart';
+import 'shared/app_styles.dart';
+import 'shared/app_theme.dart';
 import 'shared/joke_notification_service.dart';
 import 'shared/onesignal_service.dart';
 import 'shared/revenue_cat_service.dart';
@@ -106,6 +108,7 @@ class _AppState extends ConsumerState<App> {
       child: MaterialApp(
         navigatorKey: _navigatorKey,
         title: 'Unfinished',
+        theme: buildAppTheme(),
         home: const AuthGate(),
       ),
     );
@@ -129,7 +132,7 @@ class AuthGate extends ConsumerWidget {
       },
       loading: () => const SplashScreen(),
       error: (error, stack) => Scaffold(
-        body: Center(child: Text('Error: $error')),
+        body: SafeArea(child: AppErrorState(error: error)),
       ),
     );
   }
@@ -159,7 +162,12 @@ class _ProfileGateState extends ConsumerState<_ProfileGate> {
       },
       loading: () => const SplashScreen(),
       error: (error, stack) => Scaffold(
-        body: Center(child: Text('Error: $error')),
+        body: SafeArea(
+          child: AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(currentProfileProvider),
+          ),
+        ),
       ),
     );
   }

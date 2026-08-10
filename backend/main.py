@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from better_profanity import profanity
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,11 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 profanity.load_censor_words()
 
 # The Flutter app talks to Supabase directly (supabase_flutter + RLS); this
-# backend no longer proxies CRUD. It exists for server-side work that can't
-# live in the app: the RevenueCat webhook and the league promotion/relegation
-# job, plus anything better run server-side — currently comment moderation,
-# via a local wordlist censor (better-profanity) rather than a paid/keyed
-# external API.
+# backend doesn't proxy CRUD. It exists for anything better run server-side.
+# Today that's just comment moderation, via a local wordlist censor
+# (better-profanity) rather than a paid/keyed external API; future
+# server-side work (e.g. a RevenueCat webhook) would live here too.
 app = FastAPI(title="art backend")
 
 app.add_middleware(
@@ -28,7 +27,9 @@ def health():
 
 
 class ModerationRequest(BaseModel):
-    text: str
+    # Comments are capped at 500 chars client-side; 2000 gives headroom for
+    # any future longer field while still bounding abuse of the endpoint.
+    text: str = Field(max_length=2000)
 
 
 class ModerationResponse(BaseModel):

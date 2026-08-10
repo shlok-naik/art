@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 
@@ -13,7 +14,6 @@ class FollowedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final followingAsync = ref.watch(followingListProvider);
     final suggestedAsync = ref.watch(suggestedArtistsProvider);
-    final following = followingAsync.value ?? const [];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -23,53 +23,59 @@ class FollowedScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
-              const SizedBox(height: 20),
-              if (followingAsync.hasError)
-                AppErrorText('Failed to load followed artists: ${followingAsync.error}')
-              else if (following.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                  decoration: appHardCardDecoration(radius: 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset('assets/branding/mascot.png', height: 80),
-                      const SizedBox(height: 10),
-                      Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Follow other artists to see their posts here.',
-                        textAlign: TextAlign.center,
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+              Text('Followed', style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+              const SizedBox(height: AppSpacing.space20),
+              followingAsync.when(
+                data: (following) => following.isEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
+                        decoration: appFlatCardDecoration(radius: 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const AppIcon(AppIcons.followed, size: 40, color: kMutedColor, strokeWidth: 1.4),
+                            const SizedBox(height: AppSpacing.space12),
+                            Text('Nobody here yet', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: AppSpacing.space4),
+                            Text(
+                              'Follow other artists to see their posts here.',
+                              textAlign: TextAlign.center,
+                              style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          for (final profile in following)
+                            _ArtistTile(
+                              key: ValueKey('following-${profile['id']}'),
+                              userId: profile['id'].toString(),
+                              handle: profile['username']?.toString() ?? '',
+                              subtitle: profile['display_name']?.toString() ?? '',
+                              isFollowing: true,
+                            ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              else
-                for (final profile in following) ...[
-                  _ArtistTile(
-                    key: ValueKey('following-${profile['id']}'),
-                    userId: profile['id'].toString(),
-                    handle: profile['username']?.toString() ?? '',
-                    subtitle: profile['display_name']?.toString() ?? '',
-                    isFollowing: true,
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              const SizedBox(height: 20),
-              Text('Suggested artists', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
-              const SizedBox(height: 10),
+                loading: () => const AppSkeletonScreen(rows: 3, padding: EdgeInsets.zero),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(followingListProvider),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space24),
+              Text('Suggested artists', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const SizedBox(height: AppSpacing.space8),
               suggestedAsync.when(
                 data: (suggested) => suggested.isEmpty
                     ? Text(
                         'No suggestions right now.',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                        style: appBodyStyle(fontSize: 13, color: kMutedColor),
                       )
                     : Column(
                         children: [
-                          for (final profile in suggested) ...[
+                          for (final profile in suggested)
                             _ArtistTile(
                               key: ValueKey('suggested-${profile['id']}'),
                               userId: profile['id'].toString(),
@@ -77,15 +83,13 @@ class FollowedScreen extends ConsumerWidget {
                               subtitle: profile['display_name']?.toString() ?? '',
                               isFollowing: false,
                             ),
-                            const SizedBox(height: 10),
-                          ],
                         ],
                       ),
-                loading: () => Text(
-                  'No suggestions right now.',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                loading: () => const AppSkeletonScreen(rows: 2, padding: EdgeInsets.zero),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(suggestedArtistsProvider),
                 ),
-                error: (error, _) => AppErrorText('Failed to load suggestions: $error'),
               ),
             ],
           ),
@@ -127,28 +131,26 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         title: Text(
           _isFollowing ? 'Unfollow @${widget.handle}?' : 'Follow @${widget.handle}?',
-          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+          style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
         content: Text(
           'Are you sure you want to ${_isFollowing ? 'unfollow' : 'follow'} @${widget.handle}?',
-          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: appBodyStyle(fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
+            child: Text('Cancel', style: appBodyStyle(fontWeight: FontWeight.w600, color: kMutedColor)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               _isFollowing ? 'Unfollow' : 'Follow',
-              style: appBodyStyle(fontWeight: FontWeight.w800, color: kAccentColor),
+              style: appBodyStyle(fontWeight: FontWeight.w600, color: kAccentColor),
             ),
           ),
         ],
@@ -187,37 +189,34 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
 
   @override
   Widget build(BuildContext context) {
-    // The whole card navigates to the profile — the Follow/Unfollow button
+    // The whole row navigates to the profile — the Follow/Unfollow button
     // is a nested InkWell, so Flutter's gesture arena routes taps on it to
     // the button alone rather than also bubbling up to this outer tap.
     return InkWell(
       onTap: _openProfile,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
+        ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey.shade200,
-                border: Border.all(color: kBorderColor, width: kBorderWidth),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.person, size: 22, color: Colors.black26),
+            AppInitialsAvatar(
+              name: widget.subtitle.isNotEmpty ? widget.subtitle : widget.handle,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: Colors.black), overflow: TextOverflow.ellipsis),
+                  Text(
+                    '@${widget.handle}',
+                    style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (widget.subtitle.isNotEmpty)
-                    Text(widget.subtitle, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
+                    Text(widget.subtitle, style: appBodyStyle(fontSize: 12, color: kMutedColor)),
                 ],
               ),
             ),
@@ -225,15 +224,21 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
               onTap: _isSubmitting ? null : _confirmToggleFollow,
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _isFollowing ? kAccentTintColor : null,
-                  border: Border.all(color: kBorderColor, width: kBorderWidth),
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
+                decoration: _isFollowing
+                    ? BoxDecoration(
+                        color: kSurfaceColor,
+                        borderRadius: BorderRadius.circular(20),
+                      )
+                    : BoxDecoration(
+                        border: Border.all(color: kHairlineColor, width: 1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                 child: Text(
                   _isFollowing ? 'Unfollow' : 'Follow',
-                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+                  style: _isFollowing
+                      ? appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500)
+                      : appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kAccentColor),
                 ),
               ),
             ),

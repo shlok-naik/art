@@ -3,9 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_model.dart';
 
 /// Thrown when an update touches a column that doesn't exist yet on this
-/// database — i.e. one of the additive migrations in supabase/add_*.sql
-/// hasn't been applied. Callers can catch this to show a friendlier message
-/// than the raw Postgres error, and to know whether anything still saved.
+/// database — i.e. the schema is out of date with the app. Callers can
+/// catch this to show a friendlier message than the raw Postgres error,
+/// and to know whether anything still saved.
 class MissingColumnException implements Exception {
   const MissingColumnException(this.message);
 
@@ -89,6 +89,20 @@ class ProfileRepository {
     } catch (e) {
       if (!_isUndefinedColumn(e)) rethrow;
       throw const MissingColumnException('Pinning needs a pending database update.');
+    }
+  }
+
+  /// Sets which [leagueRegions] key (see league_region.dart) this user
+  /// competes in — required before they can enter a weekly league.
+  Future<void> updateRegion({
+    required String userId,
+    required String region,
+  }) async {
+    try {
+      await _client.from('profiles').update({'region': region}).eq('id', userId);
+    } catch (e) {
+      if (!_isUndefinedColumn(e)) rethrow;
+      throw const MissingColumnException('Regional leagues need a pending database update.');
     }
   }
 }

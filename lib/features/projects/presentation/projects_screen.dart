@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
+import '../../../shared/formatters.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 import 'project_detail_screen.dart';
-
-const _monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-String _formatCreatedAt(dynamic value) {
-  if (value == null) return '—';
-  final date = DateTime.tryParse(value.toString());
-  if (date == null) return value.toString();
-  return '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-}
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -65,23 +55,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
-        title: Text('Finish project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Finish project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         content: Text(
           '"$title" will be marked 100% complete and locked — no new sessions can be added afterward.',
-          style: GoogleFonts.chewy(fontSize: 15),
+          style: appBodyStyle(fontSize: 14, color: kMutedColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Finish', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+            child: Text('Finish', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kAccentColor)),
           ),
         ],
       ),
@@ -107,20 +94,17 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        ),
-        title: Text('Delete project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
-        content: Text('This will permanently delete "$title".', style: GoogleFonts.chewy(fontSize: 15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+        content: Text('This will permanently delete "$title".', style: appBodyStyle(fontSize: 14, color: kMutedColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+            child: Text('Delete', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red.shade700)),
           ),
         ],
       ),
@@ -145,10 +129,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: appThemedAppBar(context, 'Projects'),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
+            const AppScreenHeader(title: 'Projects'),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -157,36 +140,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   Expanded(
                     child: TextField(
                       controller: _nameController,
-                      decoration: appInputDecoration('New project name').copyWith(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth),
-                        ),
-                        labelStyle: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black45),
-                      ),
-                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
+                      decoration: appInputDecoration('New project name'),
+                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space12),
                   InkWell(
                     onTap: _isCreating ? null : _createProject,
-                    borderRadius: BorderRadius.circular(23),
+                    borderRadius: BorderRadius.circular(22),
                     child: Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: kAccentColor,
-                        border: Border.all(color: kBorderColor, width: kBorderWidth),
-                        boxShadow: hardShadow(offset: 3),
                       ),
                       alignment: Alignment.center,
                       child: _isCreating
@@ -195,7 +162,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : const Icon(Icons.add, color: Colors.white, size: 24),
+                          : const AppIcon(AppIcons.plus, color: Colors.white, strokeWidth: 2),
                     ),
                   ),
                 ],
@@ -203,7 +170,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
             if (_errorText != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
                 child: AppErrorText(_errorText!),
               ),
             Expanded(
@@ -213,7 +180,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     return Center(
                       child: Text(
                         'No projects yet.',
-                        style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                        style: appBodyStyle(fontSize: 14, color: kMutedColor),
                       ),
                     );
                   }
@@ -228,7 +195,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           project: project,
                           onOpen: () async {
                             final projectId = project['id'].toString();
-                            await ref.read(recentProjectStoreProvider).recordOpened(projectId);
+                            await ref.read(projectsRepositoryProvider).recordOpened(projectId);
                             ref.invalidate(projectsListProvider);
                             ref.invalidate(lastOpenedProjectProvider);
                             if (!context.mounted) return;
@@ -240,19 +207,19 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           onDelete: () => _deleteProject(project),
                         );
                       },
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.space12),
                     ),
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(
-                  child: AppErrorText('Failed to load projects: $error'),
+                loading: () => const AppSkeletonScreen(),
+                error: (error, _) => AppErrorState(
+                  error: error,
+                  onRetry: () => ref.invalidate(projectsListProvider),
                 ),
               ),
             ),
           ],
         ),
-      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: -1,
         onTap: (i) => goToMainTab(context, ref, i),
@@ -277,7 +244,7 @@ class _ProjectCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = project['title']?.toString() ?? project['id'].toString();
-    final createdAt = _formatCreatedAt(project['created_at']);
+    final createdAt = formatDateValue(project['created_at']);
     final completionPercent =
         int.tryParse(project['completion_percent']?.toString() ?? '') ?? 0;
     final isFinished = completionPercent == 100;
@@ -287,8 +254,8 @@ class _ProjectCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onOpen,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+        decoration: appFlatCardDecoration(),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -297,17 +264,17 @@ class _ProjectCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-                  const SizedBox(height: 3),
+                  Text(title, style: appHeadlineStyle(fontSize: 19)),
+                  const SizedBox(height: AppSpacing.space4),
                   Text(
                     sessionCount == null
                         ? 'Created $createdAt'
                         : 'Created $createdAt · $sessionCount session${sessionCount == 1 ? '' : 's'}',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
+                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppSpacing.space8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
                     decoration: BoxDecoration(
                       color: isFinished ? kSuccessBgColor : kAccentTintColor,
                       borderRadius: BorderRadius.circular(12),
@@ -316,7 +283,7 @@ class _ProjectCard extends ConsumerWidget {
                       isFinished ? 'Finished' : 'In progress',
                       style: appBodyStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: isFinished ? kSuccessTextColor : kAccentColor,
                       ),
                     ),
@@ -332,16 +299,16 @@ class _ProjectCard extends ConsumerWidget {
                     onTap: onFinish,
                     borderRadius: BorderRadius.circular(20),
                     child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.check_circle_outline, color: kSuccessTextColor, size: 20),
+                      padding: EdgeInsets.all(AppSpacing.space8),
+                      child: AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
                     ),
                   ),
                 InkWell(
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(20),
                   child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close, color: Colors.black, size: 20),
+                    padding: EdgeInsets.all(AppSpacing.space8),
+                    child: AppIcon(AppIcons.x, size: 20),
                   ),
                 ),
               ],

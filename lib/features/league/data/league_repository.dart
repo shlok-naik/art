@@ -7,13 +7,17 @@ class LeagueRepository {
 
   final SupabaseClient _client;
 
-  /// The current 2-week league, lazily materialized server-side by
-  /// `get_or_create_current_league()` — see add_league_tables.sql for why
-  /// this is a security-definer function rather than a client upsert.
-  Future<League> fetchCurrentLeague() async {
+  /// The current weekly league for [region], lazily materialized
+  /// server-side by the `get_or_create_current_league()` Postgres function
+  /// — security definer, so period boundaries and themes are computed from
+  /// now() server-side rather than trusted from the client. [region] is
+  /// still passed through as an ordinary argument (not trusted for
+  /// anything sensitive) — it only selects which of that week's parallel
+  /// per-region rows comes back.
+  Future<League> fetchCurrentLeague(String region) async {
     // The function returns a single `leagues` row (not SETOF), so PostgREST
     // hands it back as one JSON object rather than a one-element array.
-    final result = await _client.rpc('get_or_create_current_league');
+    final result = await _client.rpc('get_or_create_current_league', params: {'p_region': region});
     return League.fromRow(Map<String, dynamic>.from(result as Map));
   }
 
@@ -24,22 +28,24 @@ class LeagueRepository {
         .from('league_submission_details')
         .select()
         .eq('league_id', leagueId)
-        .order('votes', ascending: false);
+        .order('stars', ascending: false);
     return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueSubmission.fromRow(row)];
   }
 
-  /// The submission id the signed-in user has voted for in [leagueId], if
-  /// any — drives which submission card shows as "your vote".
-  Future<String?> fetchMyVote(String leagueId) async {
+  /// The signed-in user's ratings in [leagueId], keyed by submission id —
+  /// drives which stars show as already-filled in the voting feed.
+  Future<Map<String, int>> fetchMyRatings(String leagueId) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) return null;
-    final row = await _client
-        .from('league_votes')
-        .select('submission_id')
+    if (userId == null) return const {};
+    final rows = await _client
+        .from('league_ratings')
+        .select('submission_id, rating')
         .eq('league_id', leagueId)
-        .eq('voter_id', userId)
-        .maybeSingle();
-    return row?['submission_id']?.toString();
+        .eq('rater_id', userId);
+    return {
+      for (final row in List<Map<String, dynamic>>.from(rows))
+        row['submission_id'].toString(): int.tryParse(row['rating']?.toString() ?? '') ?? 0,
+    };
   }
 
   /// Submits [projectId] (with its current cover [photoUrl]) as one of the
@@ -67,8 +73,7 @@ class LeagueRepository {
   }
 
   /// Withdraws the signed-in user's own submission. RLS rejects this once
-  /// the league has ended (see "users delete their own submission while the
-  /// league is open" in add_league_tables.sql).
+  /// the submission phase has closed.
   Future<void> unsubmit(String submissionId) async {
     final deleted = await _client.from('league_submissions').delete().eq('id', submissionId).select('id');
     if (deleted.isEmpty) {
@@ -76,39 +81,62 @@ class LeagueRepository {
     }
   }
 
-  /// Casts (or changes) the signed-in user's vote for [submissionId] in
-  /// [leagueId]. RLS rejects this if the submission is the voter's own.
-  Future<void> vote({required String leagueId, required String submissionId}) async {
+  /// Casts (or changes) the signed-in user's 1-5 star rating for
+  /// [submissionId] in [leagueId]. RLS rejects this outside the voting
+  /// phase or if the submission is the voter's own.
+  Future<void> rateSubmission({
+    required String leagueId,
+    required String submissionId,
+    required int rating,
+  }) async {
     final userId = _client.auth.currentUser!.id;
-    await _client.from('league_votes').upsert(
-      {'league_id': leagueId, 'voter_id': userId, 'submission_id': submissionId},
-      onConflict: 'league_id,voter_id',
+    await _client.from('league_ratings').upsert(
+      {'league_id': leagueId, 'rater_id': userId, 'submission_id': submissionId, 'rating': rating},
+      onConflict: 'league_id,rater_id,submission_id',
     );
   }
 
-  /// Retracts the signed-in user's vote in [leagueId], if they've cast one.
-  /// RLS rejects this once the league has ended (see "users retract their
-  /// own vote while the league is open" in add_league_tables.sql).
-  Future<void> unvote(String leagueId) async {
-    final userId = _client.auth.currentUser!.id;
-    await _client.from('league_votes').delete().eq('league_id', leagueId).eq('voter_id', userId);
+  /// The winning submission of the most recently *ended* league in
+  /// [region], if there is one yet — used for the "Last Season's Champion"
+  /// card. "Most recently ended" is ambiguous without a region once
+  /// several leagues (one per region) can end in the same week, so this is
+  /// a function rather than a plain view select.
+  Future<LeagueChampion?> fetchLatestChampion(String region) async {
+    final result = await _client.rpc('latest_league_champion', params: {'p_region': region});
+    if (result == null) return null;
+    return LeagueChampion.fromRow(Map<String, dynamic>.from(result as Map));
   }
 
-  /// The winning submission of the most recently *ended* league, if there
-  /// is one yet — used for the "Last Season's Champion" card.
-  Future<LeagueChampion?> fetchLatestChampion() async {
-    final pastLeagues = await _client
-        .from('leagues')
-        .select('id')
-        .lt('ends_at', DateTime.now().toUtc().toIso8601String())
-        .order('ends_at', ascending: false)
-        .limit(1);
-    final pastLeagueRows = List<Map<String, dynamic>>.from(pastLeagues);
-    if (pastLeagueRows.isEmpty) return null;
-    final leagueId = pastLeagueRows.first['id'].toString();
+  /// Every league [userId] has won, most recent first — the trophy cabinet
+  /// shown on their profile. Backed by the `league_trophies` view (winner
+  /// per league, joined with that league's theme/date).
+  Future<List<LeagueTrophy>> fetchTrophies(String userId) async {
+    final rows = await _client
+        .from('league_trophies')
+        .select()
+        .eq('user_id', userId)
+        .order('starts_at', ascending: false);
+    return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueTrophy.fromRow(row)];
+  }
 
-    final row =
-        await _client.from('league_champions').select().eq('league_id', leagueId).maybeSingle();
-    return row == null ? null : LeagueChampion.fromRow(row);
+  /// League ids [userId] has already seen the win-celebration screen for.
+  Future<Set<String>> fetchCelebratedLeagueIds(String userId) async {
+    final rows = await _client
+        .from('league_trophy_celebrations')
+        .select('league_id')
+        .eq('user_id', userId);
+    return {for (final row in List<Map<String, dynamic>>.from(rows)) row['league_id'].toString()};
+  }
+
+  /// Records that [userId] has seen the celebration for winning [leagueId],
+  /// so it isn't shown again. Upserts with `ignoreDuplicates` for the same
+  /// reason achievement unlocks do — a re-check of an already-seen trophy
+  /// should be a silent no-op, not a duplicate-key error.
+  Future<void> markTrophyCelebrated(String userId, String leagueId) async {
+    await _client.from('league_trophy_celebrations').upsert(
+      {'user_id': userId, 'league_id': leagueId},
+      onConflict: 'user_id,league_id',
+      ignoreDuplicates: true,
+    );
   }
 }

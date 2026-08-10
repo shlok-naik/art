@@ -83,8 +83,7 @@ class StatsRepository {
     final longestMinutes = durations.isEmpty ? 0.0 : durations.reduce((a, b) => a > b ? a : b);
 
     final difficulties = [
-      for (final s in sessions)
-        if (double.tryParse(s['difficulty']?.toString() ?? '') case final d?) d,
+      for (final s in sessions) ?double.tryParse(s['difficulty']?.toString() ?? ''),
     ];
     final averageDifficulty =
         difficulties.isEmpty ? null : difficulties.fold<double>(0, (sum, d) => sum + d) / difficulties.length;
@@ -179,9 +178,9 @@ class StatsRepository {
     for (var h = 1; h < 24; h++) {
       if (hourCounts[h] > hourCounts[peakHour]) peakHour = h;
     }
-    if (peakHour >= 5 && peakHour < 11) return 'Early Bird 🐦';
-    if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler ☀️';
-    if (peakHour >= 17 && peakHour < 22) return 'Evening Artist 🎨';
-    return 'Night Owl 🦉';
+    if (peakHour >= 5 && peakHour < 11) return 'Early Bird';
+    if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler';
+    if (peakHour >= 17 && peakHour < 22) return 'Evening Artist';
+    return 'Night Owl';
   }
 }

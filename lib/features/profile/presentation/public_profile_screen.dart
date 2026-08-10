@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
+import '../../../shared/formatters.dart';
 import '../../achievements/domain/achievement.dart';
 import '../../achievements/presentation/achievement_chip.dart';
 import '../../achievements/presentation/all_achievements_screen.dart';
@@ -11,18 +14,12 @@ import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
+import '../../posts/presentation/post_detail_screen.dart';
+import '../../projects/presentation/project_detail_screen.dart';
 import '../domain/project_gallery.dart';
 import '../providers.dart';
-import 'project_gallery_screen.dart';
-import 'session_photo_viewer_screen.dart';
 import 'stats_screen.dart';
 import 'stats_visibility_screen.dart';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 /// Read-only view of another artist's profile — reached by tapping a
 /// username/avatar in the feed or the Followed list. Avatar upload and
@@ -45,12 +42,13 @@ class PublicProfileScreen extends ConsumerWidget {
           data: (profile) {
             if (profile == null) {
               return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                padding: const EdgeInsets.all(AppSpacing.space16),
+                child: Text('Profile not found.', style: appBodyStyle(fontSize: 16, color: kInkColor)),
               );
             }
             final postsAsync = ref.watch(userPostsProvider(userId));
-            final posts = postsAsync.value ?? const [];
+            final posts = postsAsync.value ?? const <FeedPost>[];
+            final postsCount = postsAsync.value?.length;
             final followersCount = ref.watch(followCountsProvider(userId)).value?.followers;
             final followingCount = ref.watch(followCountsProvider(userId)).value?.following;
 
@@ -65,45 +63,45 @@ class PublicProfileScreen extends ConsumerWidget {
                         onTap: () => Navigator.of(context).pop(),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(AppSpacing.space8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: kBorderColor, width: kBorderWidth),
+                            border: Border.all(color: kHairlineColor, width: 1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(Icons.arrow_back, size: 18, color: Colors.black),
+                          child: const AppIcon(AppIcons.back, size: 18, color: kInkColor),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.space12),
                       Expanded(
                         child: Text(
                           '@${profile.username}',
-                          style: GoogleFonts.chewy(fontSize: 20, color: Colors.black),
+                          style: appBodyStyle(fontSize: 20, color: kInkColor),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (isOwnProfile) ...[
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.space12),
                         InkWell(
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => StatsVisibilityScreen(profile: profile)),
                           ),
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
-                            padding: const EdgeInsets.all(6),
+                            padding: const EdgeInsets.all(AppSpacing.space8),
                             decoration: BoxDecoration(
-                              border: Border.all(color: kBorderColor, width: kBorderWidth),
+                              border: Border.all(color: kHairlineColor, width: 1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                            child: const AppIcon(AppIcons.pencil, size: 18, color: kInkColor),
                           ),
                         ),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.space16),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.space16),
                     decoration: appHardCardDecoration(radius: 18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,13 +115,13 @@ class PublicProfileScreen extends ConsumerWidget {
                               height: 72,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.grey.shade200,
-                                border: Border.all(color: kBorderColor, width: kBorderWidth),
+                                color: kHairlineColor,
+                                border: Border.all(color: kHairlineColor, width: 1),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(Icons.person, size: 36, color: Colors.black26),
+                              child: const AppIcon(AppIcons.profile, size: 34, color: kMutedColor),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: AppSpacing.space16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,10 +129,10 @@ class PublicProfileScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     profile.displayName,
-                                    style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                                    style: appBodyStyle(fontSize: 22, color: kInkColor),
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: AppSpacing.space4),
                                   Text(
                                     '@${profile.username}',
                                     style: GoogleFonts.rubikMonoOne(fontSize: 15, color: kAccentColor),
@@ -146,42 +144,42 @@ class PublicProfileScreen extends ConsumerWidget {
                           ],
                         ),
                         if (profile.bio != null) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: AppSpacing.space12),
                           Text(
                             profile.bio!,
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF444444)),
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                           ),
                         ],
                         if (!isOwnProfile) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.space8),
                           _MutualFollowersLine(userId: userId),
                         ],
-                        const SizedBox(height: 14),
+                        const SizedBox(height: AppSpacing.space16),
                         Row(
                           children: [
                             Expanded(
-                              child: _StatColumn(
-                                value: _formatCount(posts.length),
+                              child: AppStatColumn(
+                                value: postsCount == null ? '—' : formatCount(postsCount),
                                 label: 'Posts',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 1, height: 32, color: kHairlineColor),
                             Expanded(
-                              child: _StatColumn(
-                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                              child: AppStatColumn(
+                                value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 1, height: 32, color: kHairlineColor),
                             Expanded(
-                              child: _StatColumn(
-                                value: followingCount == null ? '—' : _formatCount(followingCount),
+                              child: AppStatColumn(
+                                value: followingCount == null ? '—' : formatCount(followingCount),
                                 label: 'Following',
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: AppSpacing.space16),
                         InkWell(
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => StatsScreen(userId: userId)),
@@ -189,41 +187,41 @@ class PublicProfileScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              border: Border.all(color: kBorderColor, width: kBorderWidth),
+                              border: Border.all(color: kHairlineColor, width: 1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.bar_chart, size: 18, color: Colors.black),
-                                const SizedBox(width: 6),
+                                const AppIcon(AppIcons.barChart, size: 18, color: kInkColor),
+                                const SizedBox(width: AppSpacing.space8),
                                 Text(
                                   'View stats',
-                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kInkColor),
                                 ),
                               ],
                             ),
                           ),
                         ),
                         if (!isOwnProfile) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: AppSpacing.space12),
                           _FollowButton(userId: userId),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.space20),
                   _ProjectsRow(userId: userId, artist: profile.username),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.space20),
                   _AchievementsRow(userId: userId),
                   if (profile.pinnedPostId != null) ...[
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     _PinnedPostCard(pinnedPostId: profile.pinnedPostId!, posts: posts),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.space20),
                   _PostsSection(
                     postsAsync: postsAsync,
                     posts: posts,
@@ -235,12 +233,10 @@ class PublicProfileScreen extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          loading: () => const AppSkeletonScreen(),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(profileByIdProvider(userId)),
           ),
         ),
       ),
@@ -298,19 +294,19 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         onTap: _isSubmitting ? null : () => _toggleFollow(isFollowing),
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isFollowing ? kAccentTintColor : kAccentColor,
-            border: Border.all(color: kBorderColor, width: kBorderWidth),
+            border: Border.all(color: kHairlineColor, width: 1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             isFollowing ? 'Unfollow' : 'Follow',
             style: appBodyStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isFollowing ? Colors.black : Colors.white,
+              fontWeight: FontWeight.w600,
+              color: isFollowing ? kInkColor : Colors.white,
             ),
           ),
         ),
@@ -336,21 +332,24 @@ class _ProjectsRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Projects', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-        const SizedBox(height: 10),
+        Text('Projects', style: appBodyStyle(fontSize: 18, color: kInkColor)),
+        const SizedBox(height: AppSpacing.space12),
         SizedBox(
           height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: galleries.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 14),
+            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.space16),
             itemBuilder: (context, index) {
               final gallery = galleries[index];
               return _ProjectCircle(
                 gallery: gallery,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => ProjectGalleryScreen(gallery: gallery, artist: artist),
+                    builder: (_) => ProjectDetailScreen(
+                      project: gallery.project,
+                      artistUsername: artist,
+                    ),
                   ),
                 ),
               );
@@ -380,7 +379,7 @@ class _ProjectCircle extends StatelessWidget {
             Container(
               width: 64,
               height: 64,
-              padding: const EdgeInsets.all(2.5),
+              padding: const EdgeInsets.all(AppSpacing.space4),
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.fromBorderSide(BorderSide(color: kAccentColor, width: 2.5)),
@@ -388,29 +387,29 @@ class _ProjectCircle extends StatelessWidget {
               child: ClipOval(
                 child: photoUrl == null || photoUrl.isEmpty
                     ? Container(
-                        color: Colors.grey.shade200,
+                        color: kHairlineColor,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 18, color: Colors.black26),
+                        child: const AppIcon(AppIcons.image, size: 18, color: kMutedColor),
                       )
                     : CachedNetworkImage(
                         imageUrl: photoUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                        placeholder: (context, url) => Container(color: kSurfaceColor),
                         errorWidget: (context, url, error) => Container(
-                          color: Colors.grey.shade200,
+                          color: kHairlineColor,
                           alignment: Alignment.center,
-                          child: const Icon(Icons.image_not_supported, size: 18, color: Colors.black26),
+                          child: const AppIcon(AppIcons.image, size: 18, color: kMutedColor),
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               gallery.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black),
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kInkColor),
             ),
           ],
         ),
@@ -436,11 +435,11 @@ class _AchievementsRow extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-            const SizedBox(width: 8),
+            Text('Achievements', style: appBodyStyle(fontSize: 18, color: kInkColor)),
+            const SizedBox(width: AppSpacing.space8),
             Text(
               '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
             const Spacer(),
             InkWell(
@@ -449,20 +448,20 @@ class _AchievementsRow extends ConsumerWidget {
               ),
               borderRadius: BorderRadius.circular(16),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
                 child: Text(
                   'View all',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kAccentColor),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         if (unlockedAchievements == null || unlockedAchievements.isEmpty)
           Text(
             'No achievements yet.',
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
           )
         else
           Wrap(
@@ -504,26 +503,8 @@ class _MutualFollowersLine extends ConsumerWidget {
 
     return Text(
       label,
-      style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+      style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kMutedColor),
       overflow: TextOverflow.ellipsis,
-    );
-  }
-}
-
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-        const SizedBox(height: 2),
-        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
-      ],
     );
   }
 }
@@ -553,15 +534,15 @@ class _PinnedPostCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.push_pin, size: 16, color: kAccentColor),
-            const SizedBox(width: 6),
-            Text('Pinned', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            const AppIcon(AppIcons.pin, size: 15, color: kAccentColor),
+            const SizedBox(width: AppSpacing.space8),
+            Text('Pinned', style: appBodyStyle(fontSize: 18, color: kInkColor)),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space8),
         GestureDetector(
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SessionPhotoViewerScreen(post: pinnedPost!)),
+            MaterialPageRoute(builder: (_) => PostDetailScreen(post: pinnedPost!)),
           ),
           child: Container(
             width: double.infinity,
@@ -571,18 +552,18 @@ class _PinnedPostCard extends StatelessWidget {
               aspectRatio: 16 / 9,
               child: photoUrl == null || photoUrl.isEmpty
                   ? Container(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       alignment: Alignment.center,
-                      child: const Icon(Icons.image_not_supported, size: 32, color: Colors.black26),
+                      child: const AppIcon(AppIcons.image, size: 30, color: kMutedColor),
                     )
                   : CachedNetworkImage(
                       imageUrl: photoUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                      placeholder: (context, url) => Container(color: kSurfaceColor),
                       errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
+                        color: kHairlineColor,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 32, color: Colors.black26),
+                        child: const AppIcon(AppIcons.image, size: 30, color: kMutedColor),
                       ),
                     ),
             ),
@@ -650,13 +631,13 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       builder: (context) => AlertDialog(
         title: Text(
           isPinned ? 'Unpin this post?' : 'Pin this post?',
-          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+          style: appBodyStyle(fontSize: 18, color: kInkColor),
         ),
         content: Text(
           isPinned
               ? "It'll no longer be featured at the top of your profile."
               : "It'll be featured at the top of your profile, above the grid.",
-          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
@@ -691,11 +672,11 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       children: [
         Row(
           children: [
-            Text('Posts', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Posts', style: appBodyStyle(fontSize: 18, color: kInkColor)),
             const Spacer(),
             if (projectTitles.length > 1)
               _ThemedMenuButton<String?>(
-                icon: Icons.filter_list,
+                icon: AppIcons.filter,
                 label: 'Filter',
                 value: _projectFilter,
                 items: [
@@ -704,9 +685,9 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                 ],
                 onSelected: (value) => setState(() => _projectFilter = value),
               ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.space12),
             _ThemedMenuButton<_PostSort>(
-              icon: Icons.sort,
+              icon: AppIcons.sort,
               label: 'Sort',
               value: _sort,
               items: [for (final sort in _PostSort.values) (value: sort, label: sort.label)],
@@ -714,18 +695,23 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        if (widget.postsAsync.hasError)
-          AppErrorText('Failed to load posts: ${widget.postsAsync.error}')
+        const SizedBox(height: AppSpacing.space8),
+        if (widget.postsAsync.isLoading)
+          const AppSkeletonScreen(rows: 3, padding: EdgeInsets.symmetric(vertical: AppSpacing.space12))
+        else if (widget.postsAsync.hasError)
+          AppErrorState(
+            error: widget.postsAsync.error!,
+            onRetry: () => ref.invalidate(userPostsProvider(widget.userId)),
+          )
         else if (visiblePosts.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
             decoration: appHardCardDecoration(radius: 18),
             child: Text(
               widget.posts.isEmpty ? 'No posts yet.' : 'No posts match this filter.',
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
             ),
           )
         else
@@ -744,7 +730,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
               final isPinned = widget.pinnedPostId == post.id;
               return GestureDetector(
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SessionPhotoViewerScreen(post: post)),
+                  MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
                 ),
                 onLongPress: widget.isOwnProfile ? () => _togglePin(post) : null,
                 child: ClipRRect(
@@ -754,30 +740,25 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                     children: [
                       photoUrl == null || photoUrl.isEmpty
                           ? Container(
-                              color: Colors.grey.shade200,
+                              color: kHairlineColor,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 20, color: Colors.black26),
+                              child: const AppIcon(AppIcons.image, size: 20, color: kMutedColor),
                             )
                           : CachedNetworkImage(
                               imageUrl: photoUrl,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                              placeholder: (context, url) => Container(color: kSurfaceColor),
                               errorWidget: (context, url, error) => Container(
-                                color: Colors.grey.shade200,
+                                color: kHairlineColor,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported, size: 20, color: Colors.black26),
+                                child: const AppIcon(AppIcons.image, size: 20, color: kMutedColor),
                               ),
                             ),
                       if (isPinned)
                         const Positioned(
                           top: 4,
                           left: 4,
-                          child: Icon(
-                            Icons.push_pin,
-                            size: 14,
-                            color: Colors.white,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                          ),
+                          child: AppIcon(AppIcons.pin, size: 14, color: Colors.white),
                         ),
                       Positioned(
                         right: 4,
@@ -785,17 +766,12 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.remove_red_eye,
-                              size: 12,
-                              color: Colors.white,
-                              shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                            ),
-                            const SizedBox(width: 3),
+                            const AppIcon(AppIcons.eye, size: 12, color: Colors.white),
+                            const SizedBox(width: AppSpacing.space4),
                             Text(
-                              _formatCount(post.views),
-                              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)
-                                  .copyWith(shadows: const [Shadow(color: Colors.black54, blurRadius: 4)]),
+                              formatCount(post.views),
+                              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)
+                                  .copyWith(shadows: const [Shadow(color: kMutedColor, blurRadius: 4)]),
                             ),
                           ],
                         ),
@@ -812,7 +788,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
 }
 
 /// A sort/filter trigger + dropdown menu styled like the rest of the app —
-/// flat black border, rounded pill trigger, Chewy-labelled options with a
+/// hairline border, rounded pill trigger, Inter-labelled options with a
 /// checkmark on the current selection — instead of the default Material
 /// popup menu look.
 class _ThemedMenuButton<T> extends StatelessWidget {
@@ -824,7 +800,7 @@ class _ThemedMenuButton<T> extends StatelessWidget {
     required this.onSelected,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final T value;
   final List<({T value, String label})> items;
@@ -840,7 +816,7 @@ class _ThemedMenuButton<T> extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        side: const BorderSide(color: kHairlineColor, width: 1),
       ),
       itemBuilder: (context) => [
         for (final item in items)
@@ -851,29 +827,29 @@ class _ThemedMenuButton<T> extends StatelessWidget {
                 Expanded(
                   child: Text(
                     item.label,
-                    style: GoogleFonts.chewy(
+                    style: appBodyStyle(
                       fontSize: 15,
-                      color: item.value == value ? kAccentColor : Colors.black,
+                      color: item.value == value ? kAccentColor : kInkColor,
                     ),
                   ),
                 ),
-                if (item.value == value) const Icon(Icons.check, size: 18, color: kAccentColor),
+                if (item.value == value) const AppIcon(AppIcons.check, size: 16, color: kAccentColor),
               ],
             ),
           ),
       ],
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
         decoration: BoxDecoration(
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          border: Border.all(color: kHairlineColor, width: 1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: Colors.black),
-            const SizedBox(width: 4),
-            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+            AppIcon(icon, size: 15, color: kInkColor),
+            const SizedBox(width: AppSpacing.space4),
+            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kInkColor)),
           ],
         ),
       ),

@@ -2,25 +2,21 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
+import '../../../shared/formatters.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
 import '../../shell/main_shell.dart';
 import 'post_detail_screen.dart';
 
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
+final _isGridViewProvider = StateProvider<bool>((ref) => true);
 
-final _isGridViewProvider = StateProvider<bool>((ref) => false);
-
-/// The current user's own posts, viewable as a vertical one-by-one feed or a
-/// 2-column grid. Tapping any post opens it in full detail.
+/// The current user's own posts, viewable as a 2-column grid (default) or a
+/// vertical list. Tapping any post opens it in full detail.
 class MyPostsScreen extends ConsumerWidget {
   const MyPostsScreen({super.key});
 
@@ -29,52 +25,56 @@ class MyPostsScreen extends ConsumerWidget {
     final postsAsync = ref.watch(myPostsProvider);
     final isGrid = ref.watch(_isGridViewProvider);
 
-    return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: appThemedAppBar(
-          context,
-          'My Posts',
-          actions: [
-            IconButton(
-              icon: Icon(isGrid ? Icons.view_agenda_outlined : Icons.grid_view_outlined),
-              tooltip: isGrid ? 'Switch to list view' : 'Switch to grid view',
-              onPressed: () =>
-                  ref.read(_isGridViewProvider.notifier).state = !isGrid,
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: postsAsync.when(
-            data: (posts) {
-              if (posts.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'No posts yet — finish a session to see it here.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 16, color: Colors.black54),
-                    ),
-                  ),
-                );
-              }
-              return isGrid ? _PostGrid(posts: posts) : _PostList(posts: posts);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          AppScreenHeader(
+            title: 'My posts',
+            trailing: InkWell(
+              onTap: () => ref.read(_isGridViewProvider.notifier).state = !isGrid,
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: AppErrorText('Failed to load posts: $error'),
+                padding: const EdgeInsets.all(AppSpacing.space4),
+                child: Tooltip(
+                  message: isGrid ? 'Switch to list view' : 'Switch to grid view',
+                  child: AppIcon(
+                    isGrid ? AppIcons.feed : AppIcons.grid,
+                    color: kInkColor,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        bottomNavigationBar: AppBottomNav(
-          currentIndex: -1,
-          onTap: (i) => goToMainTab(context, ref, i),
-        ),
+          Expanded(
+            child: postsAsync.when(
+              data: (posts) {
+                if (posts.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.space24),
+                      child: Text(
+                        'No posts yet — finish a session to see it here.',
+                        textAlign: TextAlign.center,
+                        style: appBodyStyle(fontSize: 14, color: kMutedColor),
+                      ),
+                    ),
+                  );
+                }
+                return isGrid ? _PostGrid(posts: posts) : _PostList(posts: posts);
+              },
+              loading: () => const AppSkeletonScreen(rows: 4),
+              error: (error, _) => AppErrorState(
+                error: error,
+                onRetry: () => ref.invalidate(myPostsProvider),
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: -1,
+        onTap: (i) => goToMainTab(context, ref, i),
       ),
     );
   }
@@ -94,9 +94,9 @@ class _PostList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       itemCount: posts.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space16),
       itemBuilder: (context, index) => _PostTile(post: posts[index], isGrid: false),
     );
   }
@@ -110,7 +110,7 @@ class _PostGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       itemCount: posts.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -140,57 +140,54 @@ class _PostTile extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          AspectRatio(
-            aspectRatio: isGrid ? 1 : 4 / 3,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: kBorderColor, width: kBorderWidth),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: (photoUrl == null || photoUrl.isEmpty)
-                    ? Container(
-                        color: Colors.grey.shade200,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: CachedNetworkImage(
-                          imageUrl: photoUrl,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey.shade200,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
-                          ),
-                        ),
-                      ),
-              ),
+          MuseumFrame(
+            radius: 6,
+            matWidth: 6,
+            child: AspectRatio(
+              aspectRatio: isGrid ? 1 : 4 / 3,
+              child: (photoUrl == null || photoUrl.isEmpty)
+                  ? const _MissingPhoto()
+                  : CachedNetworkImage(
+                      imageUrl: photoUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(color: kSurfaceColor),
+                      errorWidget: (context, url, error) => const _MissingPhoto(),
+                    ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Text(
             post.displayTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: isGrid ? 15 : 18),
+            style: appHeadlineStyle(fontSize: 14, italic: true),
           ),
-          const SizedBox(height: 2),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.favorite, size: 16, color: kAccentColor),
-              const SizedBox(width: 4),
+              const AppIcon(AppIcons.heartFilled, size: 11, color: kGoldColor),
+              const SizedBox(width: AppSpacing.space4),
               Text(
-                '${_formatCount(total)} reactions',
-                style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                '${formatCount(total)} reactions',
+                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MissingPhoto extends StatelessWidget {
+  const _MissingPhoto();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kSurfaceColor,
+      alignment: Alignment.center,
+      child: const AppIcon(AppIcons.image, size: 36, color: kMutedColor),
     );
   }
 }

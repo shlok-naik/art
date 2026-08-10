@@ -40,6 +40,13 @@ class ProjectsRepository {
     return Map<String, dynamic>.from(row);
   }
 
+  /// Marks [id] as the signed-in user's most recently opened project — the
+  /// Home screen's hero card reads this straight from the row, so it's
+  /// consistent across every device/session instead of a device-local guess.
+  Future<void> recordOpened(String id) async {
+    await _client.from('projects').update({'last_opened_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id);
+  }
+
   Future<void> updateCompletion(String id, int completionPercent) async {
     await _client.from('projects').update({'completion_percent': completionPercent}).eq('id', id);
   }

@@ -3,8 +3,9 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 /// Lets the user choose how to attach a photo to their session: take a new
@@ -25,30 +26,30 @@ class PhotoSourcePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.space24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.add_a_photo_outlined, size: 56, color: kAccentColor),
-            const SizedBox(height: 12),
-            Text('Add a Photo', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24)),
-            const SizedBox(height: 4),
+            const AppIcon(AppIcons.camera, size: 52, color: kAccentColor),
+            const SizedBox(height: AppSpacing.space12),
+            Text('Add a Photo', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 24)),
+            const SizedBox(height: AppSpacing.space4),
             Text(
               'Capture or upload a photo to finish this session.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+              style: appBodyStyle(fontSize: 15, color: kMutedColor),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.space28),
             AppPrimaryButton(label: 'Take Photo', onPressed: onTakePhoto),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             _SourceButton(
-              icon: Icons.photo_library_outlined,
+              icon: AppIcons.image,
               label: 'Choose from Gallery',
               onPressed: onChooseFromGallery,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.space12),
             _SourceButton(
-              icon: Icons.upload_file_outlined,
+              icon: AppIcons.upload,
               label: 'Upload File',
               onPressed: onUploadFile,
             ),
@@ -62,7 +63,7 @@ class PhotoSourcePicker extends StatelessWidget {
 class _SourceButton extends StatelessWidget {
   const _SourceButton({required this.icon, required this.label, required this.onPressed});
 
-  final IconData icon;
+  final String icon;
   final String label;
   final VoidCallback onPressed;
 
@@ -74,12 +75,12 @@ class _SourceButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           shape: const StadiumBorder(),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+          side: const BorderSide(color: kHairlineColor, width: 1),
+          foregroundColor: kInkColor,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16),
+          textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
-        icon: Icon(icon),
+        icon: AppIcon(icon, size: 18, color: kInkColor),
         label: Text(label),
       ),
     );
@@ -165,7 +166,7 @@ class _SessionCameraViewState extends State<SessionCameraView> {
     if (_error != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.space24),
           child: AppErrorText(_error!),
         ),
       );
@@ -179,12 +180,12 @@ class _SessionCameraViewState extends State<SessionCameraView> {
         Expanded(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.space16),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: kBorderColor, width: kBorderWidth),
+                    border: Border.all(color: kHairlineColor, width: 1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: AspectRatio(
@@ -197,14 +198,14 @@ class _SessionCameraViewState extends State<SessionCameraView> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(bottom: 32, top: 8),
+          padding: const EdgeInsets.only(bottom: AppSpacing.space32, top: AppSpacing.space8),
           child: FloatingActionButton.large(
             onPressed: _capturing ? null : _capture,
             backgroundColor: kAccentColor,
             foregroundColor: Colors.white,
             child: _capturing
                 ? const CircularProgressIndicator(color: Colors.white)
-                : const Icon(Icons.camera_alt),
+                : const AppIcon(AppIcons.camera, size: 22, color: Colors.white),
           ),
         ),
       ],
@@ -242,13 +243,13 @@ class SessionPhotoReview extends StatelessWidget {
                 onPressed: isSubmitting ? null : onRetake,
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
-                  side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                  side: const BorderSide(color: kHairlineColor, width: 1),
                   backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                  foregroundColor: kInkColor,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space16),
+                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
-                icon: const Icon(Icons.replay),
+                icon: const AppIcon(AppIcons.replay, size: 20, color: kInkColor),
                 label: const Text('Retake'),
               ),
               ElevatedButton.icon(
@@ -257,8 +258,8 @@ class SessionPhotoReview extends StatelessWidget {
                   shape: const StadiumBorder(),
                   backgroundColor: kAccentColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space16),
+                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 icon: isSubmitting
                     ? const SizedBox(
@@ -266,7 +267,7 @@ class SessionPhotoReview extends StatelessWidget {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Icon(Icons.check),
+                    : const AppIcon(AppIcons.check, size: 20, color: Colors.white),
                 label: Text(isSubmitting ? 'Submitting…' : 'Submit'),
               ),
             ],

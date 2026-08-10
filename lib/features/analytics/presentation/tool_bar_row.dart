@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../providers.dart';
 
@@ -22,7 +22,7 @@ class ToolBarRow extends StatelessWidget {
           width: 92,
           child: Text(
             tool.tool,
-            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -35,7 +35,7 @@ class ToolBarRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -52,13 +52,13 @@ class ToolBarRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 24,
           child: Text(
             '${tool.count}',
             textAlign: TextAlign.right,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14, color: kAccentColor),
+            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kAccentColor),
           ),
         ),
       ],

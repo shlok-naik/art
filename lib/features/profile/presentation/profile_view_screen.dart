@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
+import '../../../shared/formatters.dart';
 import '../../achievements/domain/achievement.dart';
 import '../../achievements/presentation/achievement_chip.dart';
 import '../../achievements/presentation/all_achievements_screen.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
+import '../../league/presentation/league_trophy_chip.dart';
+import '../../league/presentation/trophy_cabinet_screen.dart';
 import '../../league/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
-
-String _formatCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-  return count.toString();
-}
 
 class ProfileViewScreen extends ConsumerWidget {
   const ProfileViewScreen({super.key});
@@ -34,16 +32,16 @@ class ProfileViewScreen extends ConsumerWidget {
           data: (profile) {
             if (profile == null) {
               return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('No profile found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                padding: const EdgeInsets.all(AppSpacing.space16),
+                child: Text('No profile found.', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w500)),
               );
             }
             final postsCount = ref.watch(myPostsProvider).value?.length;
             final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
+            final leagueRank = ref.watch(leagueRankProvider(profile.id)).value;
             final streakDays = ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
             final unlockedAchievements = ref.watch(unlockedAchievementsProvider(profile.id)).value;
-            final leagueRank = ref.watch(leagueRankForUserProvider(profile.id)).value;
-            final leagueRankText = leagueRank == null ? 'Unranked' : '#$leagueRank';
+            final leagueTrophies = ref.watch(myLeagueTrophiesProvider(profile.id)).value;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -52,29 +50,29 @@ class ProfileViewScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Profile', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
+                      Text('Profile', style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600)),
                       InkWell(
                         onTap: () => ref.read(authRepositoryProvider).signOut(),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: kBorderColor, width: kBorderWidth),
+                            color: kSurfaceColor,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'Log out',
-                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.space16),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: appHardCardDecoration(radius: 18),
+                    padding: const EdgeInsets.all(AppSpacing.space16),
+                    decoration: appFlatCardDecoration(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -82,18 +80,8 @@ class ProfileViewScreen extends ConsumerWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.grey.shade200,
-                                border: Border.all(color: kBorderColor, width: kBorderWidth),
-                              ),
-                              alignment: Alignment.center,
-                              child: const Icon(Icons.person, size: 36, color: Colors.black26),
-                            ),
-                            const SizedBox(width: 14),
+                            AppInitialsAvatar(name: profile.displayName, size: 72, color: kNavyColor),
+                            const SizedBox(width: AppSpacing.space16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,13 +89,13 @@ class ProfileViewScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     profile.displayName,
-                                    style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                                    style: appBodyStyle(fontSize: 20),
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: AppSpacing.space4),
                                   Text(
                                     '@${profile.username}',
-                                    style: GoogleFonts.rubikMonoOne(fontSize: 15, color: kAccentColor),
+                                    style: appBodyStyle(fontSize: 14, color: kMutedColor),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
@@ -119,40 +107,45 @@ class ProfileViewScreen extends ConsumerWidget {
                               ),
                               borderRadius: BorderRadius.circular(20),
                               child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: kBorderColor, width: kBorderWidth),
-                                  borderRadius: BorderRadius.circular(20),
+                                padding: const EdgeInsets.all(AppSpacing.space8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                                child: const AppIcon(AppIcons.pencil, size: 16),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: AppSpacing.space16),
                         Row(
                           children: [
                             Expanded(
-                              child: _StatColumn(
-                                value: postsCount == null ? '—' : _formatCount(postsCount),
+                              child: AppStatColumn(
+                                value: postsCount == null ? '—' : formatCount(postsCount),
                                 label: 'Posts',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 1, height: 28, color: kHairlineColor),
                             Expanded(
-                              child: _StatColumn(
-                                value: followersCount == null ? '—' : _formatCount(followersCount),
+                              child: AppStatColumn(
+                                value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
-                            Expanded(child: _StatColumn(value: leagueRankText, label: 'League rank')),
+                            Container(width: 1, height: 28, color: kHairlineColor),
+                            Expanded(
+                              child: AppStatColumn(
+                                value: leagueRank == null ? '—' : '#$leagueRank',
+                                label: 'League rank',
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.space12),
                   InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: profile.id)),
@@ -160,45 +153,59 @@ class ProfileViewScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        border: Border.all(color: kBorderColor, width: kBorderWidth),
+                        color: kSurfaceColor,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.remove_red_eye, size: 18, color: Colors.black),
-                          const SizedBox(width: 6),
+                          const AppIcon(AppIcons.eye, size: 16),
+                          const SizedBox(width: AppSpacing.space8),
                           Text(
                             'Preview public profile',
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    streakDays > 0 ? '$streakDays-day streak! 🔥' : 'No active streak',
-                    style: GoogleFonts.chewy(fontSize: 17, color: Colors.black),
+                  const SizedBox(height: AppSpacing.space16),
+                  Row(
+                    children: [
+                      AppIcon(
+                        AppIcons.flame,
+                        size: 18,
+                        color: streakDays > 0 ? kAccentColor : kMutedColor,
+                      ),
+                      const SizedBox(width: AppSpacing.space8),
+                      Text(
+                        streakDays > 0 ? '$streakDays-day streak!' : 'No active streak',
+                        style: appBodyStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: streakDays > 0 ? kAccentColor : kInkColor,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.space4),
                   Text(
                     streakDays > 0
                         ? "You're on fire — keep posting to grow your rank."
                         : 'Log a session today to start a streak.',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
+                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kMutedColor),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.space16),
                   Row(
                     children: [
-                      Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
-                      const SizedBox(width: 8),
+                      Text('Achievements', style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: AppSpacing.space8),
                       Text(
                         '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                        style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
                       ),
                       const Spacer(),
                       InkWell(
@@ -207,20 +214,20 @@ class ProfileViewScreen extends ConsumerWidget {
                         ),
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
                           child: Text(
                             'View all',
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kAccentColor),
+                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kAccentColor),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.space8),
                   if (unlockedAchievements == null || unlockedAchievements.isEmpty)
                     Text(
                       'No achievements yet — keep creating to earn your first one.',
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                      style: appBodyStyle(fontSize: 13, color: kMutedColor),
                     )
                   else
                     Wrap(
@@ -232,16 +239,53 @@ class ProfileViewScreen extends ConsumerWidget {
                             AchievementChip(achievement: achievement),
                       ],
                     ),
+                  const SizedBox(height: AppSpacing.space16),
+                  Row(
+                    children: [
+                      Text('Trophy Cabinet', style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: AppSpacing.space8),
+                      Text(
+                        '${leagueTrophies?.length ?? 0}',
+                        style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => TrophyCabinetScreen(userId: profile.id)),
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4, vertical: AppSpacing.space4),
+                          child: Text(
+                            'View all',
+                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kAccentColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.space8),
+                  if (leagueTrophies == null || leagueTrophies.isEmpty)
+                    Text(
+                      "No trophies yet — top the weekly league's leaderboard to win one.",
+                      style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final trophy in leagueTrophies) LeagueTrophyChip(trophy: trophy),
+                      ],
+                    ),
                 ],
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppErrorText('Error: $error'),
-            ),
+          loading: () => const AppSkeletonScreen(),
+          error: (error, stack) => AppErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(currentProfileProvider),
           ),
         ),
       ),
@@ -249,21 +293,4 @@ class ProfileViewScreen extends ConsumerWidget {
   }
 }
 
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-        const SizedBox(height: 2),
-        Text(label, style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
-      ],
-    );
-  }
-}
 

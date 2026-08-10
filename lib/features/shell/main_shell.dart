@@ -9,6 +9,9 @@ import '../achievements/providers.dart';
 import '../feed/presentation/feed_screen.dart';
 import '../followed/presentation/followed_screen.dart';
 import '../home/presentation/home_screen.dart';
+import '../league/domain/league.dart';
+import '../league/presentation/league_trophy_celebration_screen.dart';
+import '../league/providers.dart';
 import '../profile/presentation/profile_view_screen.dart';
 
 /// Which of the four main tabs is currently showing. Any screen, no matter
@@ -59,6 +62,13 @@ class MainShell extends ConsumerWidget {
       _celebrate(context, toCelebrate);
     });
 
+    ref.listen<AsyncValue<List<LeagueTrophy>>>(newlyWonTrophiesProvider, (previous, next) {
+      final trophies = next.value;
+      if (trophies == null || trophies.isEmpty) return;
+      // The provider returns only trophies not yet celebrated on this device.
+      _celebrateTrophies(context, trophies);
+    });
+
     return Scaffold(
       body: IndexedStack(index: index, children: _tabs),
       bottomNavigationBar: AppBottomNav(
@@ -77,6 +87,20 @@ class MainShell extends ConsumerWidget {
       for (final achievement in achievements) {
         await navigator.push(
           MaterialPageRoute(builder: (_) => AchievementCelebrationScreen(achievement: achievement)),
+        );
+      }
+    });
+  }
+
+  /// Pushes a celebration screen per newly-won league trophy, one after
+  /// another — mirrors [_celebrate], but for league wins rather than
+  /// achievement unlocks.
+  void _celebrateTrophies(BuildContext context, List<LeagueTrophy> trophies) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    Future(() async {
+      for (final trophy in trophies) {
+        await navigator.push(
+          MaterialPageRoute(builder: (_) => LeagueTrophyCelebrationScreen(trophy: trophy)),
         );
       }
     });

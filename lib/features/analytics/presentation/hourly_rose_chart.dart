@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 const _clockNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
@@ -43,7 +43,7 @@ class HourlyRoseChart extends StatelessWidget {
           maxCount: maxCount,
           label: 'AM',
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.space20),
         _SingleClockRose(
           hours: hourly.sublist(12, 24),
           minutes: minutes.sublist(12, 24),
@@ -125,16 +125,16 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
       children: [
         Text(
           widget.label,
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 15, color: kInkColor),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.space8),
         AspectRatio(
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
-              border: Border.all(color: kBorderColor, width: 3),
+              border: Border.all(color: kHairlineColor, width: 1),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -192,10 +192,10 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
       child: Text(
         _clockNumbers[index],
         textAlign: TextAlign.center,
-        style: GoogleFonts.chewy(
+        style: appBodyStyle(
           fontSize: isHovered ? 18 : 16,
-          fontWeight: FontWeight.bold,
-          color: isHovered ? kAccentColor : Colors.black,
+          fontWeight: FontWeight.w600,
+          color: isHovered ? kAccentColor : kInkColor,
         ),
       ),
     );
@@ -221,15 +221,15 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
       child: IgnorePointer(
         child: Container(
           width: tooltipWidth,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space8, vertical: AppSpacing.space8),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.85),
+            color: kNavyColor,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: GoogleFonts.chewy(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ),
       ),
@@ -254,11 +254,11 @@ class _ClockRosePainter extends CustomPainter {
 
     // Minute-style tick marks around the rim, like a real clock face.
     final majorTickPaint = Paint()
-      ..color = kBorderColor
-      ..strokeWidth = 2
+      ..color = kHairlineColor
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
     final minorTickPaint = Paint()
-      ..color = Colors.black38
+      ..color = kMutedColor
       ..strokeWidth = 1;
 
     for (var tick = 0; tick < 60; tick++) {
@@ -272,7 +272,7 @@ class _ClockRosePainter extends CustomPainter {
 
     // Concentric guide rings for the data.
     final gridPaint = Paint()
-      ..color = Colors.black12
+      ..color = kHairlineColor
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
     for (var ring = 1; ring <= _rings; ring++) {

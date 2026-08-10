@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/moderation_service.dart';
 import '../../profile/providers.dart';
 import '../domain/comment.dart';
@@ -70,15 +71,15 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Profanity detected', style: GoogleFonts.chewy(fontWeight: FontWeight.bold)),
+            title: Text('Profanity detected', style: appBodyStyle(fontWeight: FontWeight.w600)),
             content: Text(
               'Some words in your comment were censored before posting.',
-              style: GoogleFonts.chewy(),
+              style: appBodyStyle(),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK', style: GoogleFonts.chewy(color: kAccentColor)),
+                child: Text('OK', style: appBodyStyle(color: kAccentColor)),
               ),
             ],
           ),
@@ -135,7 +136,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     final currentUserId = ref.watch(currentProfileProvider).value?.id;
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: FractionallySizedBox(
@@ -146,17 +147,17 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                 Container(
                   width: 40,
                   height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
                   decoration: BoxDecoration(
-                    color: Colors.black26,
+                    color: kMutedColor,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 Text(
                   'Comments',
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.space8),
                 const Divider(height: 1),
                 Expanded(
                   child: commentsAsync.when(
@@ -166,14 +167,14 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           child: Text(
                             'No comments yet — be the first to say something.',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                            style: appBodyStyle(fontSize: 15, color: kMutedColor),
                           ),
                         );
                       }
                       return ListView.separated(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.space16),
                         itemCount: comments.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 14),
+                        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space16),
                         itemBuilder: (context, index) {
                           final comment = comments[index];
                           final canDelete = comment.userId == currentUserId ||
@@ -187,12 +188,10 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: AppErrorText('Failed to load comments: $error'),
-                      ),
+                    loading: () => const AppSkeletonScreen(rows: 4),
+                    error: (error, _) => AppErrorState(
+                      error: error,
+                      onRetry: () => ref.invalidate(sessionCommentsProvider(widget.sessionId)),
                     ),
                   ),
                 ),
@@ -208,20 +207,20 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           maxLength: 500,
                           minLines: 1,
                           maxLines: 4,
-                          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                          style: appBodyStyle(fontSize: 15, color: kInkColor),
                           decoration: InputDecoration(
                             hintText: 'Add a comment...',
-                            hintStyle: GoogleFonts.chewy(color: Colors.black38, fontSize: 15),
+                            hintStyle: appBodyStyle(color: kMutedColor, fontSize: 15),
                             counterText: '',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
-                              borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                              borderSide: const BorderSide(color: kHairlineColor, width: 1),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.space8),
                       IconButton(
                         onPressed: _isSubmitting ? null : _submit,
                         icon: _isSubmitting
@@ -230,7 +229,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                 height: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Icon(Icons.send, color: kAccentColor),
+                            : const AppIcon(AppIcons.send, size: 20, color: kAccentColor),
                       ),
                     ],
                   ),
@@ -271,33 +270,33 @@ class _CommentTile extends StatelessWidget {
                 children: [
                   Text(
                     '@${comment.username}',
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.space8),
                   Text(
                     _formatCommentTime(comment.createdAt),
-                    style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                    style: appBodyStyle(fontSize: 12, color: kMutedColor),
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
-              Text(comment.body, style: GoogleFonts.chewy(fontSize: 15)),
+              const SizedBox(height: AppSpacing.space4),
+              Text(comment.body, style: appBodyStyle(fontSize: 15)),
             ],
           ),
         ),
         PopupMenuButton<void>(
-          icon: const Icon(Icons.more_horiz, size: 18, color: Colors.black45),
+          icon: const AppIcon(AppIcons.more, size: 18, color: kMutedColor),
           padding: EdgeInsets.zero,
           itemBuilder: (context) => [
             if (canDelete)
               PopupMenuItem(
                 onTap: onDelete,
-                child: Text('Delete', style: GoogleFonts.chewy(fontSize: 14)),
+                child: Text('Delete', style: appBodyStyle(fontSize: 14)),
               )
             else
               PopupMenuItem(
                 onTap: onReport,
-                child: Text('Report', style: GoogleFonts.chewy(fontSize: 14)),
+                child: Text('Report', style: appBodyStyle(fontSize: 14)),
               ),
           ],
         ),

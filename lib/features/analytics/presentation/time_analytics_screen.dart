@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
 
@@ -25,7 +26,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
     final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Time Spent'),
@@ -37,7 +38,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                   child: Text(
                     'No time logged yet — finish a session to see analytics here.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.chewy(fontSize: 16),
+                    style: appBodyStyle(fontSize: 16),
                   ),
                 );
               }
@@ -48,11 +49,11 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Total time logged',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     _TotalTimeHero(minutes: time.totalMinutes),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.space16),
                     Row(
                       children: [
                         Expanded(
@@ -61,7 +62,7 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                             value: _formatMinutes(time.averageSessionMinutes),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _StatTile(
                             label: time.longestSession == null
@@ -74,18 +75,19 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Row(
                       children: [
                         Expanded(
                           child: _StatTile(
                             label: 'Current streak',
+                            icon: time.currentStreakDays == 0 ? null : AppIcons.flame,
                             value: time.currentStreakDays == 0
                                 ? '—'
-                                : '🔥 ${time.currentStreakDays} day${time.currentStreakDays == 1 ? '' : 's'}',
+                                : '${time.currentStreakDays} day${time.currentStreakDays == 1 ? '' : 's'}',
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: _StatTile(
                             label: 'You are a',
@@ -94,21 +96,21 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Time per stage',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: appCardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+                      decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final stage in time.perStage) ...[
                             _StageTimeRow(stage: stage, maxMinutes: time.perStage.first.totalMinutes),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
@@ -117,9 +119,10 @@ class TimeAnalyticsScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: AppErrorText('Failed to load analytics: $error'),
+            loading: () => const AppSkeletonScreen(),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(timeAnalyticsProvider),
             ),
           ),
         ),
@@ -141,16 +144,15 @@ class _TotalTimeHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.space20),
       decoration: BoxDecoration(
         color: kAccentColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.timer_outlined, color: Colors.white, size: 36),
-          const SizedBox(width: 14),
+          const AppIcon(AppIcons.clock, size: 30, color: Colors.white),
+          const SizedBox(width: AppSpacing.space16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,11 +160,11 @@ class _TotalTimeHero extends StatelessWidget {
               children: [
                 Text(
                   _formatMinutes(minutes),
-                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 34, color: Colors.white),
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 30, color: Colors.white),
                 ),
                 Text(
                   'across every project',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.white70),
+                  style: appBodyStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
             ),
@@ -174,30 +176,44 @@ class _TotalTimeHero extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value});
+  const _StatTile({required this.label, required this.value, this.icon});
 
   final String label;
   final String value;
+
+  /// Optional leading [AppIcons] glyph, cobalt like the value it sits with.
+  final String? icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: appCardDecoration(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
+      decoration: appFlatCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+            style: appBodyStyle(fontSize: 12, color: kMutedColor),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20, color: kAccentColor),
+          const SizedBox(height: AppSpacing.space4),
+          Row(
+            children: [
+              if (icon != null) ...[
+                AppIcon(icon!, size: 14, color: kAccentColor),
+                const SizedBox(width: AppSpacing.space4),
+              ],
+              Flexible(
+                child: Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -223,7 +239,7 @@ class _StageTimeRow extends StatelessWidget {
           width: 92,
           child: Text(
             stage.stage,
-            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -236,7 +252,7 @@ class _StageTimeRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -253,16 +269,16 @@ class _StageTimeRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 52,
           child: Text(
             minutes == null ? 'N/A' : _formatMinutes(minutes),
             textAlign: TextAlign.right,
-            style: GoogleFonts.chewy(
-              fontWeight: FontWeight.bold,
+            style: appBodyStyle(
+              fontWeight: FontWeight.w600,
               fontSize: 13,
-              color: minutes == null ? Colors.black38 : kAccentColor,
+              color: minutes == null ? kMutedColor : kAccentColor,
             ),
           ),
         ),

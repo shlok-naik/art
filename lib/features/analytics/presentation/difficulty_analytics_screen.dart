@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
+import '../../../shared/app_theme.dart';
 import '../../../shared/sparkline.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
@@ -18,7 +19,7 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
     final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: appBodyStyle(color: kInkColor),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Difficulty'),
@@ -30,7 +31,7 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                   child: Text(
                     'No difficulty data yet — log a session to see analytics here.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.chewy(fontSize: 16),
+                    style: appBodyStyle(fontSize: 16),
                   ),
                 );
               }
@@ -44,9 +45,9 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Hardest project',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     _HardestProjectHero(
                       project: hardest,
                       onTap: () => Navigator.of(context).push(
@@ -56,12 +57,12 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                       ),
                     ),
                     if (rest.isNotEmpty) ...[
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.space20),
                       Text(
                         'Other projects',
-                        style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                        style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.space12),
                       for (final project in rest) ...[
                         _ProjectDifficultyRow(
                           project: project,
@@ -71,28 +72,28 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: AppSpacing.space12),
                       ],
                     ],
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     Text(
                       'Difficulty distribution',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: appCardDecoration(),
+                      padding: const EdgeInsets.all(AppSpacing.space16),
+                      decoration: appFlatCardDecoration(),
                       child: _DifficultyHistogram(histogram: analytics.histogram),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.space20),
                     timeAsync.maybeWhen(
                       data: (time) {
                         final callout = _difficultyVsSpeedCallout(analytics.perStage, time.perStage);
                         if (callout == null) return const SizedBox.shrink();
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.space20),
                           child: _CalloutCard(text: callout),
                         );
                       },
@@ -100,18 +101,18 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                     ),
                     Text(
                       'Average difficulty per stage',
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: appCardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+                      decoration: appFlatCardDecoration(),
                       child: Column(
                         children: [
                           for (final stage in analytics.perStage) ...[
                             _StageBarRow(stage: stage),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.space12),
                           ],
                         ],
                       ),
@@ -120,9 +121,10 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: AppErrorText('Failed to load analytics: $error'),
+            loading: () => const AppSkeletonScreen(),
+            error: (error, _) => AppErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(difficultyAnalyticsProvider),
             ),
           ),
         ),
@@ -148,11 +150,11 @@ class _HardestProjectHero extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(AppSpacing.space20),
         decoration: BoxDecoration(
           color: kAccentColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          border: Border.all(color: kHairlineColor, width: 1),
         ),
         child: Row(
           children: [
@@ -163,8 +165,8 @@ class _HardestProjectHero extends StatelessWidget {
                 children: [
                   Text(
                     project.title,
-                    style: GoogleFonts.chewy(
-                      fontWeight: FontWeight.bold,
+                    style: appBodyStyle(
+                      fontWeight: FontWeight.w600,
                       fontSize: 24,
                       color: Colors.white,
                     ),
@@ -172,10 +174,10 @@ class _HardestProjectHero extends StatelessWidget {
                   ),
                   Text(
                     '${project.sessionCount} session${project.sessionCount == 1 ? '' : 's'}',
-                    style: GoogleFonts.chewy(fontSize: 14, color: Colors.white70),
+                    style: appBodyStyle(fontSize: 14, color: Colors.white70),
                   ),
                   if (project.history.length > 1) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.space12),
                     Sparkline(
                       values: project.history,
                       width: 140,
@@ -188,11 +190,11 @@ class _HardestProjectHero extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Text(
               project.average.toStringAsFixed(1),
-              style: GoogleFonts.chewy(
-                fontWeight: FontWeight.bold,
+              style: appBodyStyle(
+                fontWeight: FontWeight.w600,
                 fontSize: 40,
                 color: Colors.white,
               ),
@@ -217,8 +219,8 @@ class _ProjectDifficultyRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: appCardDecoration(),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
+        decoration: appFlatCardDecoration(),
         child: Row(
           children: [
             Expanded(
@@ -228,12 +230,12 @@ class _ProjectDifficultyRow extends StatelessWidget {
                 children: [
                   Text(
                     project.title,
-                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 17),
+                    style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 17),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '${project.sessionCount} session${project.sessionCount == 1 ? '' : 's'}',
-                    style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                    style: appBodyStyle(fontSize: 13, color: kMutedColor),
                   ),
                 ],
               ),
@@ -247,10 +249,10 @@ class _ProjectDifficultyRow extends StatelessWidget {
                 minValue: 1,
                 maxValue: 10,
               ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.space12),
             Text(
               '${project.average.toStringAsFixed(1)} / 10',
-              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18, color: kAccentColor),
+              style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),
             ),
           ],
         ),
@@ -273,7 +275,7 @@ class _StageBarRow extends StatelessWidget {
           width: 92,
           child: Text(
             stage.stage,
-            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
+            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -286,7 +288,7 @@ class _StageBarRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: kHairlineColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -303,16 +305,16 @@ class _StageBarRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.space12),
         SizedBox(
           width: 46,
           child: Text(
             average == null ? 'N/A' : average.toStringAsFixed(1),
             textAlign: TextAlign.right,
-            style: GoogleFonts.chewy(
-              fontWeight: FontWeight.bold,
+            style: appBodyStyle(
+              fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: average == null ? Colors.black38 : kAccentColor,
+              color: average == null ? kMutedColor : kAccentColor,
             ),
           ),
         ),
@@ -354,18 +356,18 @@ class _CalloutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
       decoration: BoxDecoration(
         color: kAccentTintColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorderColor, width: kBorderWidth),
+        border: Border.all(color: kHairlineColor, width: 1),
       ),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline, color: kAccentColor, size: 22),
-          const SizedBox(width: 10),
+          const AppIcon(AppIcons.bulb, size: 20, color: kAccentColor),
+          const SizedBox(width: AppSpacing.space12),
           Expanded(
-            child: Text(text, style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold)),
+            child: Text(text, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -393,13 +395,13 @@ class _DifficultyHistogram extends StatelessWidget {
                 for (var i = 0; i < histogram.length; i++)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                       child: FractionallySizedBox(
                         alignment: Alignment.bottomCenter,
                         heightFactor: maxCount == 0 ? 0 : histogram[i] / maxCount,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: histogram[i] == 0 ? Colors.grey.shade200 : kAccentColor,
+                            color: histogram[i] == 0 ? kHairlineColor : kAccentColor,
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
                           ),
                         ),
@@ -409,7 +411,7 @@ class _DifficultyHistogram extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.space8),
           Row(
             children: [
               for (var i = 1; i <= 10; i++)
@@ -417,7 +419,7 @@ class _DifficultyHistogram extends StatelessWidget {
                   child: Text(
                     '$i',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                    style: appBodyStyle(fontSize: 11, color: kMutedColor),
                   ),
                 ),
             ],

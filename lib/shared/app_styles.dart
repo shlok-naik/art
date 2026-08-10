@@ -1,87 +1,153 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Shared look-and-feel constants matching the home screen's comic-panel style:
-/// white background, black text/borders in the Chewy font, and a deep orange accent.
-const kBorderColor = Color(0xFF111111);
-const kBorderWidth = 2.0;
-const kAccentColor = Colors.deepOrange;
+import 'app_icons.dart';
+import 'app_spacing.dart';
 
-/// Accent-tinted background used for banners/callouts (streak card, theme banner).
-const kAccentTintColor = Color(0xFFFFF1EA);
+/// Shared look-and-feel constants for the navy/cobalt flat design: white
+/// background and white screen headers, navy reserved for the bottom tab bar
+/// and the museum treatments (photo mats, theme/achievement/trophy plaques),
+/// flat filled cards, Inter body text with Fraunces reserved for a few
+/// "creative content" headlines and the wordmark.
+const kNavyColor = Color(0xFF16233E);
+const kInkColor = Color(0xFF1B2740);
+const kMutedColor = Color(0xFF6B7280);
+const kHairlineColor = Color(0xFFE7EAF2);
+const kSurfaceColor = Color(0xFFF6F7FA);
+const kAccentColor = Color(0xFF2E5EFF);
+
+/// Museum gold — reserved strictly for the photo frame hairline and for
+/// engagement/rating numbers (likes, reactions, stars) and their labels.
+/// Deliberately *not* used for raw view counts or generic emphasis.
+const kGoldColor = Color(0xFFC9A227);
+
+/// Standard rounding applied to cards, buttons, and input fields.
+const kCardRadius = 12.0;
+
+/// Subtle card outline — replaces the old hard 2px black border on
+/// appHardCardDecoration.
+const kCardBorderColor = Color(0xFFE5E7EB);
+
+/// Accent-tinted background used for banners/callouts (streak badge, theme
+/// banner, "Go Pro" tile, follow-state chips).
+const kAccentTintColor = Color(0xFFEEF2FF);
 
 /// "Finished"/success status color pair (chip text on chip background).
 const kSuccessTextColor = Color(0xFF2E9E4E);
 const kSuccessBgColor = Color(0xFFE8F7EC);
 
-TextStyle appHeadlineStyle({double fontSize = 56, Color color = kAccentColor}) {
-  return GoogleFonts.chewy(fontSize: fontSize, height: 1.05, color: color);
+/// Fraunces serif — kept only for "creative content" headlines (league theme
+/// title, project titles); everything else is Inter.
+TextStyle appHeadlineStyle({
+  double fontSize = 28,
+  Color color = kInkColor,
+  FontWeight fontWeight = FontWeight.w500,
+  bool italic = false,
+}) {
+  return GoogleFonts.fraunces(
+    fontSize: fontSize,
+    height: 1.1,
+    fontWeight: fontWeight,
+    fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+    color: color,
+  );
 }
 
-/// Nunito is used for body copy, stats, numbers and meta text so Chewy stays
-/// reserved for headlines, buttons and nav labels.
+/// The "Unfinished" wordmark, set in italic Fraunces — this replaces the
+/// raster logo/mascot artwork everywhere it used to appear.
+class AppWordmark extends StatelessWidget {
+  const AppWordmark({super.key, this.fontSize = 26, this.color = kNavyColor});
+
+  final double fontSize;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Unfinished',
+      style: appHeadlineStyle(
+        fontSize: fontSize,
+        color: color,
+        fontWeight: FontWeight.w600,
+        italic: true,
+      ).copyWith(letterSpacing: -0.5),
+    );
+  }
+}
+
 TextStyle appBodyStyle({
   double fontSize = 15,
-  FontWeight fontWeight = FontWeight.w600,
-  Color color = Colors.black,
+  FontWeight fontWeight = FontWeight.w400,
+  Color color = kInkColor,
+  FontStyle fontStyle = FontStyle.normal,
 }) {
-  return GoogleFonts.nunito(fontSize: fontSize, fontWeight: fontWeight, color: color);
+  return GoogleFonts.inter(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    fontStyle: fontStyle,
+    color: color,
+  );
 }
 
-/// Flat "hard shadow" (offset only, no blur) used on virtually every card and
-/// button in the redesign — replaces plain unshadowed borders.
+/// Flat filled card — the redesign's standard card treatment, replacing
+/// appHardCardDecoration's white+border look on every covered screen.
+BoxDecoration appFlatCardDecoration({double radius = kCardRadius, Color color = kSurfaceColor}) =>
+    BoxDecoration(color: color, borderRadius: BorderRadius.circular(radius));
+
+/// Soft, low-blur shadow used on white cards in place of the old hard offset
+/// shadow — barely-there depth instead of a drawn outline.
 List<BoxShadow> hardShadow({double offset = 4}) {
-  return [BoxShadow(color: kBorderColor, offset: Offset(offset, offset), blurRadius: 0)];
+  return [BoxShadow(color: Colors.black.withValues(alpha: 0.04), offset: Offset(0, offset / 2), blurRadius: 10)];
 }
 
-/// Card decoration for the redesigned screens: 2px black border, rounded
-/// corners and a hard shadow. Kept separate from [appCardDecoration] (used by
-/// screens outside this redesign) so existing plain-bordered screens are unaffected.
+/// White card with a subtle grey outline, rounded corners and a soft
+/// shadow — used where a card needs to lift off a white background rather
+/// than sit in it (dialogs, elevated tiles). Flat surface fills come from
+/// [appFlatCardDecoration] instead.
 BoxDecoration appHardCardDecoration({
-  double radius = 18,
+  double radius = kCardRadius,
   double shadowOffset = 4,
   Color color = Colors.white,
-  Color borderColor = kBorderColor,
 }) {
   return BoxDecoration(
     color: color,
-    border: Border.all(color: borderColor, width: kBorderWidth),
+    border: Border.all(color: kCardBorderColor, width: 1),
     borderRadius: BorderRadius.circular(radius),
     boxShadow: hardShadow(offset: shadowOffset),
   );
 }
 
+/// White pushed-screen app bar with dark text and a 1px hairline underneath.
+/// Navy chrome is reserved for the bottom tab bar — a navy status-bar
+/// backdrop clashed with the system time/battery glyphs.
 AppBar appThemedAppBar(BuildContext context, String title, {List<Widget>? actions}) {
   return AppBar(
     backgroundColor: Colors.white,
     surfaceTintColor: Colors.white,
     elevation: 0,
-    foregroundColor: Colors.black,
-    iconTheme: const IconThemeData(color: Colors.black),
-    title: Text(title, style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black)),
+    scrolledUnderElevation: 0,
+    foregroundColor: kInkColor,
+    iconTheme: const IconThemeData(color: kInkColor),
+    title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: kInkColor)),
     actions: actions,
+    shape: const Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
   );
 }
 
 InputDecoration appInputDecoration(String label) {
   final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+    borderRadius: BorderRadius.circular(kCardRadius),
+    borderSide: BorderSide.none,
   );
   return InputDecoration(
     labelText: label,
-    labelStyle: GoogleFonts.chewy(color: Colors.black54, fontSize: 16),
+    labelStyle: GoogleFonts.inter(color: kMutedColor, fontSize: 14, fontWeight: FontWeight.w500),
+    filled: true,
+    fillColor: kSurfaceColor,
     border: border,
     enabledBorder: border,
-    focusedBorder: border.copyWith(borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth)),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-  );
-}
-
-BoxDecoration appCardDecoration({double radius = 12}) {
-  return BoxDecoration(
-    border: Border.all(color: kBorderColor, width: kBorderWidth),
-    borderRadius: BorderRadius.circular(radius),
+    focusedBorder: border,
+    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
   );
 }
 
@@ -103,9 +169,10 @@ class AppPrimaryButton extends StatelessWidget {
           backgroundColor: kAccentColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: kAccentColor.withValues(alpha: 0.5),
+          elevation: 0,
           shape: const StadiumBorder(),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16),
+          textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         child: isLoading
             ? const SizedBox(
@@ -119,13 +186,15 @@ class AppPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Outlined black-bordered pill button, matching the home screen's nav pills.
+/// Flat surface pill button — the redesign's secondary action (log out,
+/// preview profile). Name kept from the old outlined version so existing
+/// call sites restyle without a rename.
 class AppOutlinedPillButton extends StatelessWidget {
   const AppOutlinedPillButton({
     super.key,
     required this.label,
     required this.onPressed,
-    this.fontSize = 16,
+    this.fontSize = 13,
   });
 
   final String label;
@@ -134,14 +203,14 @@ class AppOutlinedPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
+    return TextButton(
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
+      style: TextButton.styleFrom(
         shape: const StadiumBorder(),
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: fontSize),
+        backgroundColor: kSurfaceColor,
+        foregroundColor: kInkColor,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: fontSize),
       ),
       child: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
     );
@@ -157,8 +226,122 @@ class AppErrorText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.chewy(color: Colors.red.shade700, fontSize: 15),
+      style: GoogleFonts.inter(color: Colors.red.shade700, fontSize: 14, fontWeight: FontWeight.w500),
       textAlign: TextAlign.center,
+    );
+  }
+}
+
+/// A human-readable message for a failed request. Network-level failures
+/// (offline, DNS, refused connection, timeout) get a friendly explanation
+/// instead of a raw exception string; anything else falls back to the raw
+/// error so real bugs stay diagnosable.
+String appErrorMessage(Object error) {
+  final text = error.toString();
+  if (text.contains('SocketException') ||
+      text.contains('Failed host lookup') ||
+      text.contains('Connection refused') ||
+      text.contains('Connection failed') ||
+      text.contains('ClientException') ||
+      text.contains('Network is unreachable')) {
+    return 'No internet connection — check your network and try again.';
+  }
+  if (text.contains('TimeoutException') || text.contains('timed out')) {
+    return 'The server took too long to respond — try again in a moment.';
+  }
+  return text;
+}
+
+/// The app-wide terminal error state for a failed async load: friendly
+/// message (via [appErrorMessage]) plus an optional Retry action, so no
+/// screen dead-ends on a raw error string or an endless spinner. Use
+/// [onDark] on black-background screens (feed, voting feed).
+class AppErrorState extends StatelessWidget {
+  const AppErrorState({super.key, required this.error, this.onRetry, this.onDark = false});
+
+  final Object error;
+  final VoidCallback? onRetry;
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.space24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon(AppIcons.globe, size: 36, color: onDark ? Colors.white38 : kMutedColor, strokeWidth: 1.4),
+            const SizedBox(height: 10),
+            Text(
+              appErrorMessage(error),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: onDark ? Colors.white : Colors.red.shade700,
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 14),
+              TextButton(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  backgroundColor: onDark ? Colors.white24 : kSurfaceColor,
+                  foregroundColor: onDark ? Colors.white : kInkColor,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
+                  textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Small muted label over an ink value, used by the post detail screen and
+/// the feed's details sheet. Deliberately icon-free — the redesign leans on
+/// type hierarchy here rather than a cobalt glyph per stat.
+class AppDetailStat extends StatelessWidget {
+  const AppDetailStat({super.key, required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: GoogleFonts.inter(fontSize: 11, color: kMutedColor)),
+        const SizedBox(height: 1),
+        Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: kInkColor)),
+      ],
+    );
+  }
+}
+
+/// Big-number-over-label column used by the profile screens' Posts /
+/// Followers / Following (or League rank) strip.
+class AppStatColumn extends StatelessWidget {
+  const AppStatColumn({super.key, required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value, style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        Text(label, style: appBodyStyle(fontSize: 10, color: kMutedColor)),
+      ],
     );
   }
 }
