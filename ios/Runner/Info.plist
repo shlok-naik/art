@@ -30,6 +30,8 @@
 		<array>
 			<string>remote-notification</string>
 		</array>
+		<key>GADApplicationIdentifier</key>
+		<string>ca-app-pub-3940256099942544~1458002511</string>
 		<key>NSCameraUsageDescription</key>
 		<string>This app uses the camera to capture a photo when you finish a session.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

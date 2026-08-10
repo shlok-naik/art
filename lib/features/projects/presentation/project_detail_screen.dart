@@ -12,6 +12,7 @@ import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
+import '../../../shared/session_banner_ad.dart';
 import '../../../shared/session_music_player.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
@@ -214,7 +215,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final isPaused = _stage == _SessionStage.paused;
     return Column(
       children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.space8),
+          child: SessionBannerAd(),
+        ),
         Expanded(child: Center(child: _buildTimerContent(isPaused))),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.space8),
+          child: SessionBannerAd(),
+        ),
         const Padding(
           padding: EdgeInsets.fromLTRB(
             AppSpacing.space16,

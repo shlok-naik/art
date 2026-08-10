@@ -36,6 +36,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Google's published test AdMob app ID — always serves test ads,
+             safe to ship until the app has its own AdMob account (see
+             lib/shared/ads_service.dart). Swap before release. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
         <!-- Mirrors whatever music app the user already has playing into the
              session timer's mini player, once the user grants notification
              access (see MainActivity/MediaBridge). -->

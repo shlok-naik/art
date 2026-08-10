@@ -17,10 +17,7 @@ const _jokes = [
 ];
 
 /// Shows a free, on-device notification with a random joke and the mascot
-/// as the small corner icon — no OneSignal send involved, so it never
-/// touches the paid quota.
-/// Uses the same OS notification permission OneSignal's verification dialog
-/// requests, so it deliberately does not request permission itself.
+/// as the small corner icon — entirely local, no push service involved.
 class JokeNotificationService {
   static final JokeNotificationService _instance = JokeNotificationService._internal();
   factory JokeNotificationService() => _instance;
@@ -44,6 +41,19 @@ class JokeNotificationService {
       settings: const InitializationSettings(android: androidInit, iOS: iosInit),
     );
     _isInitialized = true;
+  }
+
+  /// Requests the OS notification permission (Android 13+, iOS) needed for
+  /// [showRandomJoke] to actually display anything. Safe to call more than
+  /// once — the OS only prompts the user the first time.
+  Future<void> requestPermission() async {
+    await _ensureInitialized();
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   Future<void> showRandomJoke() async {

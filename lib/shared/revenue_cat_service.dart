@@ -2,8 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-/// RevenueCat's test API key for this app (not a secret — safe to hardcode,
-/// same as the OneSignal App ID).
+/// RevenueCat's test API key for this app (not a secret — safe to hardcode).
 const revenueCatApiKey = 'test_pWxUNOtXZeAheSzzyvPhCeNJeON';
 
 /// Entitlement identifier configured in the RevenueCat dashboard, unlocked
