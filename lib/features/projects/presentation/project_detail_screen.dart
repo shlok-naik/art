@@ -12,6 +12,7 @@ import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
+import '../../../shared/session_music_player.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/domain/feed_post.dart';
@@ -211,52 +212,67 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   Widget _buildTimerBody() {
     final isPaused = _stage == _SessionStage.paused;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
-            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16, color: kAccentColor),
+    return Column(
+      children: [
+        Expanded(child: Center(child: _buildTimerContent(isPaused))),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.space16,
+            0,
+            AppSpacing.space16,
+            AppSpacing.space16,
           ),
-          const SizedBox(height: AppSpacing.space8),
-          Text(
-            formatDurationHms(_elapsed),
-            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 64, color: kInkColor),
-          ),
-          const SizedBox(height: AppSpacing.space32),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              OutlinedButton.icon(
-                onPressed: _togglePause,
-                style: OutlinedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  side: const BorderSide(color: kHairlineColor, width: 1),
-                  foregroundColor: kInkColor,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
-                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                icon: AppIcon(isPaused ? AppIcons.play : AppIcons.pause, size: 20, color: Colors.white),
-                label: Text(isPaused ? 'Resume' : 'Pause'),
+          child: SessionMusicPlayer(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimerContent(bool isPaused) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16, color: kAccentColor),
+        ),
+        const SizedBox(height: AppSpacing.space8),
+        Text(
+          formatDurationHms(_elapsed),
+          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 64, color: kInkColor),
+        ),
+        const SizedBox(height: AppSpacing.space32),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _togglePause,
+              style: OutlinedButton.styleFrom(
+                shape: const StadiumBorder(),
+                side: const BorderSide(color: kHairlineColor, width: 1),
+                foregroundColor: kInkColor,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
+                textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
-              const SizedBox(width: AppSpacing.space16),
-              ElevatedButton.icon(
-                onPressed: _endSession,
-                style: ElevatedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  backgroundColor: kAccentColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
-                  textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                icon: const AppIcon(AppIcons.stop, size: 18, color: Colors.white),
-                label: const Text('End'),
+              icon: AppIcon(isPaused ? AppIcons.play : AppIcons.pause, size: 20, color: kInkColor),
+              label: Text(isPaused ? 'Resume' : 'Pause'),
+            ),
+            const SizedBox(width: AppSpacing.space16),
+            ElevatedButton.icon(
+              onPressed: _endSession,
+              style: ElevatedButton.styleFrom(
+                shape: const StadiumBorder(),
+                backgroundColor: kAccentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
+                textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
-            ],
-          ),
-        ],
-      ),
+              icon: const AppIcon(AppIcons.stop, size: 18, color: Colors.white),
+              label: const Text('End'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -373,11 +389,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  formatDurationHms(Duration(seconds: durationSeconds)),
+                                  (session['name']?.toString().isNotEmpty ?? false)
+                                      ? session['name'].toString()
+                                      : 'Untitled Session',
                                   style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 Text(
-                                  'Logged: ${formatDateValue(session['created_at'])}',
+                                  'Logged: ${formatDateValue(session['created_at'])} · ${formatDurationHms(Duration(seconds: durationSeconds))}',
                                   style: appBodyStyle(fontSize: 13, color: kMutedColor),
                                 ),
                               ],

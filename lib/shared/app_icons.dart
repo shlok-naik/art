@@ -85,6 +85,12 @@ abstract final class AppIcons {
   static const pause =
       '<rect x="6" y="4" width="4" height="16" rx="1" stroke="{{c}}" stroke-width="{{w}}"/><rect x="14" y="4" width="4" height="16" rx="1" stroke="{{c}}" stroke-width="{{w}}"/>';
   static const stop = '<rect x="5" y="5" width="14" height="14" rx="2" fill="{{c}}"/>';
+  static const skipNext =
+      '<path d="M5 5v14l11-7-11-7z" fill="{{c}}"/><rect x="17" y="5" width="2.5" height="14" fill="{{c}}"/>';
+  static const skipPrevious =
+      '<path d="M19 5v14L8 12l11-7z" fill="{{c}}"/><rect x="4.5" y="5" width="2.5" height="14" fill="{{c}}"/>';
+  static const musicNote =
+      '<circle cx="7" cy="18" r="3" stroke="{{c}}" stroke-width="{{w}}"/><circle cx="17" cy="16" r="3" stroke="{{c}}" stroke-width="{{w}}"/><path d="M10 18V5l10-2v13" stroke="{{c}}" stroke-width="{{w}}" stroke-linejoin="round"/>';
   static const replay =
       '<path d="M4 12a8 8 0 108-8" stroke="{{c}}" stroke-width="{{w}}" stroke-linecap="round"/><path d="M12 1l-3.5 3L12 7" stroke="{{c}}" stroke-width="{{w}}" stroke-linecap="round" stroke-linejoin="round"/>';
   static const check =

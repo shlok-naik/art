@@ -36,6 +36,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Mirrors whatever music app the user already has playing into the
+             session timer's mini player, once the user grants notification
+             access (see MainActivity/MediaBridge). -->
+        <service
+            android:name=".MediaNotificationListenerService"
+            android:exported="true"
+            android:label="Session music controls"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -47,5 +59,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Lets url_launcher detect/open these apps for the session music
+             quick-launch buttons. -->
+        <package android:name="com.spotify.music"/>
+        <package android:name="com.google.android.apps.youtube.music"/>
     </queries>
 </manifest>
