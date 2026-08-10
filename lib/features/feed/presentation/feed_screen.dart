@@ -226,7 +226,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     ),
                     child: Row(
                       children: [
-                        AppInitialsAvatar(name: post.artist, size: 38),
+                        AppInitialsAvatar(name: post.artist, size: 38, imageUrl: post.artistAvatarUrl),
                         const SizedBox(width: AppSpacing.space12),
                         Expanded(
                           child: Column(

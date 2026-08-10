@@ -80,7 +80,12 @@ class ProfileViewScreen extends ConsumerWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            AppInitialsAvatar(name: profile.displayName, size: 72, color: kNavyColor),
+                            AppInitialsAvatar(
+                              name: profile.displayName,
+                              size: 72,
+                              color: kNavyColor,
+                              imageUrl: profile.avatarUrl,
+                            ),
                             const SizedBox(width: AppSpacing.space16),
                             Expanded(
                               child: Column(

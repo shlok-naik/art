@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'profile_model.dart';
@@ -21,6 +23,8 @@ class ProfileRepository {
   ProfileRepository(this._client);
 
   final SupabaseClient _client;
+
+  static const _avatarBucket = 'avatars';
 
   Future<Profile?> fetchProfile(String userId) async {
     final data = await _client
@@ -67,6 +71,36 @@ class ProfileRepository {
       }).eq('id', userId);
       throw const MissingColumnException(
         'Your name and username were saved, but bio support needs a pending database update.',
+      );
+    }
+  }
+
+  /// Uploads a profile picture to a path keyed by [userId] (so re-uploading
+  /// overwrites rather than accumulating old pictures) and returns its public
+  /// URL. Does not touch the `profiles` row — pair with [updateAvatarUrl].
+  Future<String> uploadAvatar(Uint8List bytes, String userId) async {
+    final path = '$userId/avatar.jpg';
+    await _client.storage.from(_avatarBucket).uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+        );
+    // Bust the CDN/browser cache for the overwritten file, since the URL
+    // itself doesn't change between uploads.
+    final publicUrl = _client.storage.from(_avatarBucket).getPublicUrl(path);
+    return '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  Future<void> updateAvatarUrl({
+    required String userId,
+    required String avatarUrl,
+  }) async {
+    try {
+      await _client.from('profiles').update({'avatar_url': avatarUrl}).eq('id', userId);
+    } catch (e) {
+      if (!_isUndefinedColumn(e)) rethrow;
+      throw const MissingColumnException(
+        'Your profile picture was uploaded, but saving it needs a pending database update.',
       );
     }
   }

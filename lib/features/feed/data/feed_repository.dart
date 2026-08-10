@@ -42,14 +42,20 @@ class FeedRepository {
           (session['projects'] as Map)['user_id'].toString(),
     };
     var usernames = const <String, String>{};
+    var avatarUrls = const <String, String>{};
     if (userIds.isNotEmpty) {
       final profileRows = await _client
           .from('profiles')
-          .select('id, username')
+          .select('id, username, avatar_url')
           .inFilter('id', userIds.toList());
+      final profiles = List<Map<String, dynamic>>.from(profileRows);
       usernames = {
-        for (final profile in List<Map<String, dynamic>>.from(profileRows))
-          profile['id'].toString(): profile['username'].toString(),
+        for (final profile in profiles) profile['id'].toString(): profile['username'].toString(),
+      };
+      avatarUrls = {
+        for (final profile in profiles)
+          if (profile['avatar_url']?.toString() case final url? when url.isNotEmpty)
+            profile['id'].toString(): url,
       };
     }
 
@@ -60,6 +66,7 @@ class FeedRepository {
           project: (session['projects'] as Map?)?.cast<String, dynamic>() ?? const {},
           artist: usernames[(session['projects'] as Map?)?['user_id']?.toString()] ?? 'unknown',
           views: int.tryParse(session['view_count']?.toString() ?? '') ?? 0,
+          artistAvatarUrl: avatarUrls[(session['projects'] as Map?)?['user_id']?.toString()],
         ),
     ];
   }

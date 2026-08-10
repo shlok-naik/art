@@ -54,6 +54,7 @@ class FollowedScreen extends ConsumerWidget {
                               userId: profile['id'].toString(),
                               handle: profile['username']?.toString() ?? '',
                               subtitle: profile['display_name']?.toString() ?? '',
+                              avatarUrl: profile['avatar_url']?.toString(),
                               isFollowing: true,
                             ),
                         ],
@@ -81,6 +82,7 @@ class FollowedScreen extends ConsumerWidget {
                               userId: profile['id'].toString(),
                               handle: profile['username']?.toString() ?? '',
                               subtitle: profile['display_name']?.toString() ?? '',
+                              avatarUrl: profile['avatar_url']?.toString(),
                               isFollowing: false,
                             ),
                         ],
@@ -106,12 +108,14 @@ class _ArtistTile extends ConsumerStatefulWidget {
     required this.handle,
     required this.subtitle,
     required this.isFollowing,
+    this.avatarUrl,
   });
 
   final String userId;
   final String handle;
   final String subtitle;
   final bool isFollowing;
+  final String? avatarUrl;
 
   @override
   ConsumerState<_ArtistTile> createState() => _ArtistTileState();
@@ -203,6 +207,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
           children: [
             AppInitialsAvatar(
               name: widget.subtitle.isNotEmpty ? widget.subtitle : widget.handle,
+              imageUrl: widget.avatarUrl,
             ),
             const SizedBox(width: AppSpacing.space12),
             Expanded(

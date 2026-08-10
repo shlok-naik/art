@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/app_icons.dart';
@@ -28,8 +29,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _bioController;
   final _passwordController = TextEditingController();
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
   String? _errorText;
   late String? _region;
+  late String? _avatarUrl;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _usernameController = TextEditingController(text: widget.profile.username);
     _bioController = TextEditingController(text: widget.profile.bio ?? '');
     _region = widget.profile.region;
+    _avatarUrl = widget.profile.avatarUrl;
   }
 
   @override
@@ -47,6 +51,46 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _bioController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final userId = ref.read(authRepositoryProvider).currentUser?.id;
+    if (userId == null) {
+      setState(() => _errorText = 'Your session has expired. Please log in again.');
+      return;
+    }
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 90);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _isUploadingAvatar = true;
+        _errorText = null;
+      });
+      final repo = ref.read(profileRepositoryProvider);
+      final avatarUrl = await repo.uploadAvatar(bytes, userId);
+      await repo.updateAvatarUrl(userId: userId, avatarUrl: avatarUrl);
+      if (!mounted) return;
+      setState(() {
+        _avatarUrl = avatarUrl;
+        _isUploadingAvatar = false;
+      });
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(profileByIdProvider(userId));
+    } on MissingColumnException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingAvatar = false;
+        _errorText = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingAvatar = false;
+        _errorText = 'Failed to update profile picture: $e';
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -125,6 +169,49 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: InkWell(
+                  onTap: _isUploadingAvatar ? null : _pickAvatar,
+                  borderRadius: BorderRadius.circular(48),
+                  child: Stack(
+                    children: [
+                      AppInitialsAvatar(
+                        name: widget.profile.displayName,
+                        size: 88,
+                        color: kNavyColor,
+                        imageUrl: _avatarUrl,
+                      ),
+                      if (_isUploadingAvatar)
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black45),
+                          alignment: Alignment.center,
+                          child: const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                          ),
+                        )
+                      else
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(AppSpacing.space8),
+                            decoration: const BoxDecoration(
+                              color: kAccentColor,
+                              shape: BoxShape.circle,
+                              border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2)),
+                            ),
+                            child: const AppIcon(AppIcons.camera, size: 14, color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space20),
               Text('Your details', style: appBodyStyle(fontSize: 20, color: kInkColor)),
               const SizedBox(height: AppSpacing.space16),
               TextField(

@@ -28,6 +28,7 @@ class FeedPost {
     this.photoUrl,
     this.stage,
     this.difficulty,
+    this.artistAvatarUrl,
   });
 
   /// Builds a post from a raw `sessions` row and its parent `projects` row
@@ -40,6 +41,7 @@ class FeedPost {
     required Map<String, dynamic> project,
     required String artist,
     int views = 0,
+    String? artistAvatarUrl,
   }) {
     final projectId = project['id']?.toString() ?? session['project_id'].toString();
     final projectTitle = project['title']?.toString() ?? projectId;
@@ -67,6 +69,7 @@ class FeedPost {
       photoUrl: session['photo_url']?.toString(),
       stage: stage,
       difficulty: int.tryParse(session['difficulty']?.toString() ?? ''),
+      artistAvatarUrl: artistAvatarUrl,
     );
   }
 
@@ -91,6 +94,7 @@ class FeedPost {
   final String? photoUrl;
   final String? stage;
   final int? difficulty;
+  final String? artistAvatarUrl;
 
   /// What the UI should show as this post's title: the session's own name
   /// if it has one, otherwise the project it belongs to.

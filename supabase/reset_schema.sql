@@ -25,6 +25,7 @@ create table public.profiles (
   username text not null check (char_length(username) between 3 and 30),
   display_name text not null check (char_length(display_name) between 1 and 80),
   bio text,
+  avatar_url text,
   visible_stats text[] not null default '{}',
   pinned_post_id uuid,
   region text check (region in (
@@ -433,6 +434,26 @@ create policy "update own session photos" on storage.objects for update to authe
 );
 create policy "delete own session photos" on storage.objects for delete to authenticated using (
   bucket_id = 'session-photos' and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- The app uploads and reads profile pictures from this public bucket.
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "public read avatars" on storage.objects;
+drop policy if exists "upload own avatar" on storage.objects;
+drop policy if exists "update own avatar" on storage.objects;
+drop policy if exists "delete own avatar" on storage.objects;
+create policy "public read avatars" on storage.objects for select using (bucket_id = 'avatars');
+create policy "upload own avatar" on storage.objects for insert to authenticated with check (
+  bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+);
+create policy "update own avatar" on storage.objects for update to authenticated using (
+  bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+);
+create policy "delete own avatar" on storage.objects for delete to authenticated using (
+  bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
 );
 
 commit;

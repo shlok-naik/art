@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -158,6 +159,7 @@ class AppInitialsAvatar extends StatelessWidget {
     required this.name,
     this.size = 42,
     this.color,
+    this.imageUrl,
   });
 
   final String name;
@@ -166,6 +168,10 @@ class AppInitialsAvatar extends StatelessWidget {
   /// Overrides the hash-picked background (e.g. the profile screen's avatar
   /// is always navy).
   final Color? color;
+
+  /// When set, shows this profile picture instead of the initials — the
+  /// initials remain the fallback while it loads or if it fails to load.
+  final String? imageUrl;
 
   static const _palette = [kNavyColor, kAccentColor, kMutedColor];
 
@@ -182,7 +188,7 @@ class AppInitialsAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = color ?? _palette[name.hashCode.abs() % _palette.length];
-    return Container(
+    final fallback = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(shape: BoxShape.circle, color: background),
@@ -194,6 +200,19 @@ class AppInitialsAvatar extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
+      ),
+    );
+
+    final url = imageUrl;
+    if (url == null || url.isEmpty) return fallback;
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => fallback,
+        errorWidget: (context, url, error) => fallback,
       ),
     );
   }

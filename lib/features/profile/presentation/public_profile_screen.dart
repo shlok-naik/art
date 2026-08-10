@@ -22,8 +22,8 @@ import 'stats_screen.dart';
 import 'stats_visibility_screen.dart';
 
 /// Read-only view of another artist's profile — reached by tapping a
-/// username/avatar in the feed or the Followed list. Avatar upload and
-/// deeper customisation (analytics, custom project layout) are future work.
+/// username/avatar in the feed or the Followed list. Deeper customisation
+/// (analytics, custom project layout) is future work.
 class PublicProfileScreen extends ConsumerWidget {
   const PublicProfileScreen({super.key, required this.userId});
 
@@ -110,16 +110,10 @@ class PublicProfileScreen extends ConsumerWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: kHairlineColor,
-                                border: Border.all(color: kHairlineColor, width: 1),
-                              ),
-                              alignment: Alignment.center,
-                              child: const AppIcon(AppIcons.profile, size: 34, color: kMutedColor),
+                            AppInitialsAvatar(
+                              name: profile.displayName,
+                              size: 72,
+                              imageUrl: profile.avatarUrl,
                             ),
                             const SizedBox(width: AppSpacing.space16),
                             Expanded(

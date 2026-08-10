@@ -7,12 +7,16 @@ class Profile {
     this.bio,
     this.pinnedPostId,
     this.region,
+    this.avatarUrl,
   });
 
   final String id;
   final String username;
   final String displayName;
   final String? bio;
+
+  /// Public URL of the user's profile picture, if they've uploaded one.
+  final String? avatarUrl;
 
   /// The session id, if any, the user has pinned to the top of their public
   /// profile's post grid.
@@ -31,6 +35,7 @@ class Profile {
     final rawVisibleStats = map['visible_stats'];
     final rawBio = map['bio']?.toString();
     final rawRegion = map['region']?.toString();
+    final rawAvatarUrl = map['avatar_url']?.toString();
     return Profile(
       id: map['id'] as String,
       username: map['username'] as String,
@@ -38,6 +43,7 @@ class Profile {
       bio: (rawBio == null || rawBio.isEmpty) ? null : rawBio,
       pinnedPostId: map['pinned_post_id']?.toString(),
       region: (rawRegion == null || rawRegion.isEmpty) ? null : rawRegion,
+      avatarUrl: (rawAvatarUrl == null || rawAvatarUrl.isEmpty) ? null : rawAvatarUrl,
       visibleStats: rawVisibleStats is List
           ? rawVisibleStats.map((e) => e.toString()).toList()
           : const <String>[],

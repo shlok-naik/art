@@ -59,7 +59,7 @@ class FollowsRepository {
     if (ids.isEmpty) return const [];
     final profiles = await _client
         .from('profiles')
-        .select('id, username, display_name')
+        .select('id, username, display_name, avatar_url')
         .inFilter('id', ids);
     final byId = {
       for (final profile in List<Map<String, dynamic>>.from(profiles))
@@ -78,7 +78,7 @@ class FollowsRepository {
 
     final rows = await _client
         .from('profiles')
-        .select('id, username, display_name')
+        .select('id, username, display_name, avatar_url')
         .order('created_at', ascending: false)
         .limit(limit + excluded.length);
     return List<Map<String, dynamic>>.from(rows)
@@ -118,7 +118,7 @@ class FollowsRepository {
 
     final profileRows = await _client
         .from('profiles')
-        .select('id, username, display_name')
+        .select('id, username, display_name, avatar_url')
         .inFilter('id', mutualIds.take(limit).toList());
     return (profiles: List<Map<String, dynamic>>.from(profileRows), totalCount: mutualIds.length);
   }
