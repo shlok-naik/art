@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/formatters.dart';
 import '../../auth/providers.dart';
+import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 import '../../projects/providers.dart';
-import '../../shell/main_shell.dart';
 import '../domain/feed_post.dart';
 import '../domain/reactions.dart';
 import '../providers.dart';
 import 'comments_sheet.dart';
 
-/// Full-screen scrollable feed of posted slideshows and sessions, styled
-/// like YT Shorts / Instagram Reels: vertical swipe between posts, and
-/// (for slideshows) horizontal swipe through a post's slide photos. The
-/// vertical feed loops — swiping past the last post wraps back to the first.
+/// Scrollable card feed: one bordered comic-panel card per post
+/// (avatar/handle/follow, square photo, heart + comment row, caption).
+/// Only a single heart reaction is exposed here — no thumbs-down, no emoji
+/// picker; the full reaction breakdown still lives on [PostDetailScreen].
 class FeedScreen extends ConsumerWidget {
   const FeedScreen({super.key});
 
@@ -27,7 +27,8 @@ class FeedScreen extends ConsumerWidget {
     final postsAsync = ref.watch(feedPostsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
+      appBar: appThemedAppBar(context, 'Feed'),
       body: postsAsync.when(
         data: (posts) {
           if (posts.isEmpty) {
@@ -35,22 +36,22 @@ class FeedScreen extends ConsumerWidget {
               child: Text(
                 'No posts yet — finish a session to see it here.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
+                style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
               ),
             );
           }
-          // No itemCount: the builder is unbounded, so the feed never
-          // dead-ends — indexes wrap back onto the post list.
-          return PageView.builder(
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) =>
-                _FeedPostCard(post: posts[index % posts.length]),
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+            itemCount: posts.length,
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _FeedPostCard(post: posts[index]),
+            ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppErrorState(
           error: error,
-          onDark: true,
           onRetry: () => ref.invalidate(feedPostsProvider),
         ),
       ),
@@ -68,26 +69,22 @@ class _FeedPostCard extends ConsumerStatefulWidget {
 }
 
 class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
-  int _slideIndex = 0;
-
   String get _sessionId => widget.post.id;
 
   @override
   void initState() {
     super.initState();
-    // Fire-and-forget: the card entering the tree is the view event. The
-    // (session_id, viewer_id) upsert on the server means repeat views by
-    // the same viewer are a silent no-op, not double-counted.
+    // Fire-and-forget: the card entering the tree records one aggregate view.
     ref.read(sessionsRepositoryProvider).recordView(_sessionId);
   }
 
-  /// Fires the optimistic reaction and returns immediately — the provider
+  /// Fires the optimistic like and returns immediately — the provider
   /// updates state synchronously, so the UI reflects the tap before the
   /// network write completes. Failures revert the state and surface here.
-  void _react(String reactionType) {
+  void _toggleLike() {
     ref
         .read(sessionReactionsProvider(_sessionId).notifier)
-        .react(reactionType)
+        .react('up')
         .catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,122 +97,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     showCommentsSheet(context, sessionId: _sessionId, postOwnerUserId: widget.post.userId);
   }
 
-  void _showDetails() {
-    final post = widget.post;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DefaultTextStyle(
-        style: GoogleFonts.chewy(color: Colors.black),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.black26,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                Text(
-                  'Title',
-                  style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
-                ),
-                Text(
-                  post.displayTitle,
-                  style: GoogleFonts.chewy(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppDetailStat(
-                        icon: Icons.visibility_outlined,
-                        label: 'Views',
-                        value: formatCount(post.views),
-                      ),
-                    ),
-                    Expanded(
-                      child: AppDetailStat(
-                        icon: Icons.event_outlined,
-                        label: 'Date posted',
-                        value: formatMonthDayYear(post.datePosted),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  'Details',
-                  style: GoogleFonts.chewy(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(post.description, style: GoogleFonts.chewy(fontSize: 15)),
-                const SizedBox(height: 12),
-                Text(
-                  'Tools used',
-                  style: GoogleFonts.chewy(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final tool in post.toolsUsed)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: kBorderColor,
-                            width: kBorderWidth,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          tool,
-                          style: GoogleFonts.chewy(fontSize: 14),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Time taken',
-                  style: GoogleFonts.chewy(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(post.timeTaken, style: GoogleFonts.chewy(fontSize: 15)),
-              ],
-            ),
-          ),
-        ),
-      ),
+  void _openDetail() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PostDetailScreen(post: widget.post)),
     );
   }
 
@@ -224,177 +108,178 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
     final post = widget.post;
     final reactions =
         ref.watch(sessionReactionsProvider(_sessionId)).value ?? SessionReactions.empty;
-    final counts = reactions.counts;
+    final likeCount = reactions.counts['up'] ?? 0;
+    final isLiked = reactions.myVote?['reaction_type']?.toString() == 'up';
     final commentCount = ref.watch(sessionCommentsProvider(_sessionId)).value?.length ?? 0;
-    final myVoteType = reactions.myVote?['reaction_type']?.toString();
-    final myEmojiType = reactions.myEmoji?['reaction_type']?.toString();
-    EmojiReaction? selectedEmoji;
-    for (final reaction in EmojiReaction.values) {
-      if (reaction.name == myEmojiType) {
-        selectedEmoji = reaction;
-        break;
-      }
-    }
+    final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
+    final isMine = post.userId == myUserId;
+    final isFollowing = ref.watch(isFollowingProvider(post.userId)).value ?? false;
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        PageView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: post.slideCount,
-          onPageChanged: (index) => setState(() => _slideIndex = index),
-          itemBuilder: (context, index) {
-            final photoUrl = post.photoUrl;
-            if (photoUrl == null || photoUrl.isEmpty) {
-              return Container(
-                color: Colors.grey.shade200,
-                alignment: Alignment.center,
-                child: Text(
-                  'Image',
-                  style: GoogleFonts.chewy(
-                    fontSize: 54,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black38,
+    return Container(
+      decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: post.userId)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: kBorderColor, width: kBorderWidth),
+                          ),
+                          child: AppInitialsAvatar(
+                            name: post.artist,
+                            size: 36,
+                            imageUrl: post.artistAvatarUrl,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '@${post.artist}',
+                                style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                post.type == FeedPostType.slideshow ? 'slideshow' : 'session',
+                                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              );
-            }
-            return CachedNetworkImage(
-              imageUrl: photoUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.grey.shade900),
-              errorWidget: (context, url, error) => Container(
-                color: Colors.grey.shade200,
-                alignment: Alignment.center,
-                child: const Icon(Icons.image_not_supported, size: 54, color: Colors.black38),
-              ),
-            );
-          },
-        ),
-        // Bottom gradient scrim so the caption/actions stay legible over any
-        // photo, instead of relying on plain text-shadows alone.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 280,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black.withValues(alpha: 0), Colors.black.withValues(alpha: 0.78)],
-                ),
-              ),
+                if (!isMine) ...[
+                  const SizedBox(width: 8),
+                  _FollowPill(userId: post.userId, isFollowing: isFollowing),
+                ],
+              ],
             ),
           ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Stack(
+          GestureDetector(
+            onTap: _openDetail,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: _PostImage(post: post),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            child: Row(
               children: [
-                if (post.slideCount > 1)
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: _SlideIndicator(
-                      count: post.slideCount,
-                      current: _slideIndex,
-                    ),
-                  ),
-                Positioned(
-                  top: post.slideCount > 1 ? 14 : 0,
-                  left: 0,
-                  child: GestureDetector(
-                    onTap: () => goToMainTab(context, ref, 0),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: kAccentColor,
-                        border: Border.all(
-                          color: kBorderColor,
-                          width: kBorderWidth,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
+                InkWell(
+                  onTap: _toggleLike,
+                  child: Icon(
+                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    size: 26,
+                    color: isLiked ? kAccentColor : Colors.black,
                   ),
                 ),
-                Positioned(
-                  left: 4,
-                  right: 76,
-                  bottom: 78,
-                  child: _PostCaption(post: post),
+                const SizedBox(width: 6),
+                Text(
+                  '$likeCount',
+                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
                 ),
-                Positioned(
-                  right: 4,
-                  bottom: 78,
-                  child: _RightActionColumn(
-                    upCount: counts['up'] ?? 0,
-                    downCount: counts['down'] ?? 0,
-                    commentCount: commentCount,
-                    isUpSelected: myVoteType == 'up',
-                    isDownSelected: myVoteType == 'down',
-                    onThumbUp: () => _react('up'),
-                    onThumbDown: () => _react('down'),
-                    onComment: _showComments,
-                    onMore: _showDetails,
-                  ),
+                const SizedBox(width: 18),
+                InkWell(
+                  onTap: _showComments,
+                  child: const Icon(Icons.mode_comment_outlined, size: 24, color: Colors.black),
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _EmojiReactionRow(
-                    counts: {
-                      for (final reaction in EmojiReaction.values)
-                        reaction: counts[reaction.name] ?? 0,
-                    },
-                    selected: selectedEmoji,
-                    onSelect: (reaction) => _react(reaction.name),
-                  ),
+                const SizedBox(width: 6),
+                Text(
+                  '$commentCount',
+                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Text(
+              '${post.artist} — ${post.displayTitle}',
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _PostCaption extends ConsumerStatefulWidget {
-  const _PostCaption({required this.post});
+class _PostImage extends StatelessWidget {
+  const _PostImage({required this.post});
 
   final FeedPost post;
 
   @override
-  ConsumerState<_PostCaption> createState() => _PostCaptionState();
+  Widget build(BuildContext context) {
+    final photoUrl = post.photoUrl;
+    if (photoUrl == null || photoUrl.isEmpty) {
+      return Container(
+        color: Colors.grey.shade200,
+        alignment: Alignment.center,
+        child: Text(
+          'Image',
+          style: GoogleFonts.chewy(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.black38),
+        ),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: photoUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(color: Colors.grey.shade100),
+      errorWidget: (context, url, error) => Container(
+        color: Colors.grey.shade200,
+        alignment: Alignment.center,
+        child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
+      ),
+    );
+  }
 }
 
-class _PostCaptionState extends ConsumerState<_PostCaption> {
+/// Cobalt "Follow" / flat "Following" pill with the same optimistic-feeling
+/// flow as the Followed screen: writes through FollowsRepository, then
+/// invalidates the follow providers so every screen agrees.
+class _FollowPill extends ConsumerStatefulWidget {
+  const _FollowPill({required this.userId, required this.isFollowing});
+
+  final String userId;
+  final bool isFollowing;
+
+  @override
+  ConsumerState<_FollowPill> createState() => _FollowPillState();
+}
+
+class _FollowPillState extends ConsumerState<_FollowPill> {
   bool _isBusy = false;
 
-  Future<void> _toggleFollow(bool isFollowing) async {
+  Future<void> _toggle() async {
     setState(() => _isBusy = true);
     try {
       final repo = ref.read(followsRepositoryProvider);
-      if (isFollowing) {
-        await repo.unfollow(widget.post.userId);
+      if (widget.isFollowing) {
+        await repo.unfollow(widget.userId);
       } else {
-        await repo.follow(widget.post.userId);
+        await repo.follow(widget.userId);
       }
-      ref.invalidate(isFollowingProvider(widget.post.userId));
+      ref.invalidate(isFollowingProvider(widget.userId));
       ref.invalidate(followingListProvider);
     } catch (e) {
       if (!mounted) return;
@@ -406,347 +291,24 @@ class _PostCaptionState extends ConsumerState<_PostCaption> {
 
   @override
   Widget build(BuildContext context) {
-    final post = widget.post;
-    final isFollowing = ref.watch(isFollowingProvider(post.userId)).value ?? false;
-    final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
-    final isMine = post.userId == myUserId;
-
-    return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.white),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
-            decoration: BoxDecoration(
-              color: kAccentColor,
-              border: Border.all(color: kBorderColor, width: kBorderWidth),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              post.type == FeedPostType.slideshow ? 'SLIDESHOW' : 'SESSION',
-              style: GoogleFonts.chewy(fontSize: 12, color: Colors.white),
-            ),
-          ),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: post.userId)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '@${post.artist}',
-                  style: GoogleFonts.chewy(fontSize: 19, shadows: _shadow),
-                ),
-                if (!isMine) ...[
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _isBusy ? null : () => _toggleFollow(isFollowing),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isFollowing ? Colors.white24 : kAccentColor,
-                        border: Border.all(color: Colors.white, width: 1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        isFollowing ? 'Following' : 'Follow',
-                        style: GoogleFonts.chewy(fontSize: 11, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            post.displayTitle,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
-                .copyWith(shadows: _shadow),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-const _shadow = [Shadow(color: Colors.black54, blurRadius: 6)];
-
-class _SlideIndicator extends StatelessWidget {
-  const _SlideIndicator({required this.count, required this.current});
-
-  final int count;
-  final int current;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var i = 0; i < count; i++)
-          Expanded(
-            child: Container(
-              height: 3,
-              margin: EdgeInsets.only(right: i == count - 1 ? 0 : 4),
-              decoration: BoxDecoration(
-                color: i <= current
-                    ? kAccentColor
-                    : Colors.white.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _RightActionColumn extends StatelessWidget {
-  const _RightActionColumn({
-    required this.upCount,
-    required this.downCount,
-    required this.commentCount,
-    required this.isUpSelected,
-    required this.isDownSelected,
-    required this.onThumbUp,
-    required this.onThumbDown,
-    required this.onComment,
-    required this.onMore,
-  });
-
-  final int upCount;
-  final int downCount;
-  final int commentCount;
-  final bool isUpSelected;
-  final bool isDownSelected;
-  final VoidCallback onThumbUp;
-  final VoidCallback onThumbDown;
-  final VoidCallback onComment;
-  final VoidCallback onMore;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ThumbButton(
-          outlineIcon: Icons.thumb_up_outlined,
-          filledIcon: Icons.thumb_up,
-          selected: isUpSelected,
-          onTap: onThumbUp,
-          baseSize: 64,
-        ),
-        Text(
-          formatCount(upCount),
-          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
-              .copyWith(shadows: _shadow),
-        ),
-        const SizedBox(height: 18),
-        _ThumbButton(
-          outlineIcon: Icons.thumb_down_outlined,
-          filledIcon: Icons.thumb_down,
-          selected: isDownSelected,
-          onTap: onThumbDown,
-          baseSize: 64,
-        ),
-        Text(
-          formatCount(downCount),
-          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
-              .copyWith(shadows: _shadow),
-        ),
-        const SizedBox(height: 18),
-        GestureDetector(
-          onTap: onComment,
-          child: const Icon(
-            Icons.mode_comment_outlined,
-            color: Colors.white,
-            size: 34,
-            shadows: _shadow,
-          ),
-        ),
-        Text(
-          formatCount(commentCount),
-          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)
-              .copyWith(shadows: _shadow),
-        ),
-        const SizedBox(height: 16),
-        _CircleIconButton(icon: Icons.more_vert, onTap: onMore),
-      ],
-    );
-  }
-}
-
-class _EmojiReactionRow extends StatelessWidget {
-  const _EmojiReactionRow({
-    required this.counts,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final Map<EmojiReaction, int> counts;
-  final EmojiReaction? selected;
-  final ValueChanged<EmojiReaction> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        for (final reaction in EmojiReaction.values)
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _BouncyTap(
-                onTap: () => onSelect(reaction),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: reaction == selected
-                      ? BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white24,
-                          border: Border.all(color: Colors.white, width: 2),
-                        )
-                      : null,
-                  child: Text(
-                    emojiGlyphs[reaction]!,
-                    style: const TextStyle(
-                      fontSize: 48 * 0.62,
-                      shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                formatCount(counts[reaction]!),
-                style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)
-                    .copyWith(shadows: _shadow),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-/// A YouTube-style like/dislike button: an outlined icon that swaps to its
-/// filled variant (accent-colored) when selected, with the same bounce as
-/// [_BouncyTap].
-class _ThumbButton extends StatelessWidget {
-  const _ThumbButton({
-    required this.outlineIcon,
-    required this.filledIcon,
-    required this.selected,
-    required this.onTap,
-    this.baseSize = 40,
-  });
-
-  final IconData outlineIcon;
-  final IconData filledIcon;
-  final bool selected;
-  final VoidCallback onTap;
-  final double baseSize;
-
-  @override
-  Widget build(BuildContext context) {
-    return _BouncyTap(
-      onTap: onTap,
-      child: SizedBox(
-        width: baseSize,
-        height: baseSize,
-        child: Center(
-          child: Icon(
-            selected ? filledIcon : outlineIcon,
-            size: baseSize * 0.62,
-            color: selected ? kAccentColor : Colors.white,
-            shadows: _shadow,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Wraps [child] in a tappable target that plays a springy
-/// overshoot-and-settle bounce on tap — shared by the emoji reactions and
-/// the like/dislike buttons.
-class _BouncyTap extends StatefulWidget {
-  const _BouncyTap({required this.onTap, required this.child});
-
-  final VoidCallback onTap;
-  final Widget child;
-
-  @override
-  State<_BouncyTap> createState() => _BouncyTapState();
-}
-
-class _BouncyTapState extends State<_BouncyTap> with SingleTickerProviderStateMixin {
-  late final _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 450),
-  );
-  late final _bounce = TweenSequence<double>([
-    TweenSequenceItem(weight: 30, tween: Tween(begin: 1.0, end: 1.5).chain(CurveTween(curve: Curves.easeOut))),
-    TweenSequenceItem(weight: 20, tween: Tween(begin: 1.5, end: 0.85).chain(CurveTween(curve: Curves.easeInOut))),
-    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.85, end: 1.0).chain(CurveTween(curve: Curves.elasticOut))),
-  ]).animate(_controller);
-  late final _wiggle = TweenSequence<double>([
-    TweenSequenceItem(weight: 50, tween: Tween(begin: 0.0, end: -0.12)),
-    TweenSequenceItem(weight: 50, tween: Tween(begin: -0.12, end: 0.0)),
-  ]).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5, curve: Curves.easeOut)));
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleTap() {
-    widget.onTap();
-    _controller.forward(from: 0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleTap,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) => Transform.rotate(
-          angle: _wiggle.value,
-          child: Transform.scale(scale: _bounce.value, child: child),
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    final isFollowing = widget.isFollowing;
+    return InkWell(
+      onTap: _isBusy ? null : _toggle,
+      borderRadius: BorderRadius.circular(999),
       child: Container(
-        width: 40,
-        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.5),
+          color: isFollowing ? kAccentTintColor : kAccentColor,
+          border: Border.all(color: kBorderColor, width: kBorderWidth),
+          borderRadius: BorderRadius.circular(999),
         ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: Colors.white, size: 22),
+        child: Text(
+          isFollowing ? 'Following' : 'Follow',
+          style: GoogleFonts.chewy(
+            fontSize: 12,
+            color: isFollowing ? Colors.black : Colors.white,
+          ),
+        ),
       ),
     );
   }
