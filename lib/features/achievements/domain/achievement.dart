@@ -1,5 +1,3 @@
-import '../../../shared/app_icons.dart';
-
 /// Real, per-user stats an [Achievement]'s unlock condition can check —
 /// gathered from the same repositories that already back the Stats/Profile
 /// screens, not achievement-specific queries.
@@ -62,7 +60,7 @@ class AchievementStats {
 class Achievement {
   const Achievement({
     required this.key,
-    required this.icon,
+    required this.emoji,
     required this.title,
     required this.description,
     required this.isUnlocked,
@@ -71,11 +69,7 @@ class Achievement {
   /// Stable id stored in `user_achievements.achievement_key` — never rename
   /// an existing key, only add new ones, or past unlocks orphan.
   final String key;
-
-  /// An [AppIcons] entry — the redesign renders every achievement as an
-  /// outline line icon, not a color emoji.
-  final String icon;
-
+  final String emoji;
   final String title;
   final String description;
   final bool Function(AchievementStats stats) isUnlocked;
@@ -85,28 +79,28 @@ final achievementCatalog = <Achievement>[
   // Sessions
   Achievement(
     key: 'first_steps',
-    icon: AppIcons.play,
+    emoji: '🎬',
     title: 'First Steps',
     description: 'Log your first session',
     isUnlocked: (s) => s.sessionCount >= 1,
   ),
   Achievement(
     key: 'getting_started',
-    icon: AppIcons.globe,
+    emoji: '🧭',
     title: 'Getting Started',
     description: 'Log 10 sessions',
     isUnlocked: (s) => s.sessionCount >= 10,
   ),
   Achievement(
     key: 'dedicated',
-    icon: AppIcons.clock,
+    emoji: '📅',
     title: 'Dedicated',
     description: 'Log 50 sessions',
     isUnlocked: (s) => s.sessionCount >= 50,
   ),
   Achievement(
     key: 'centurion',
-    icon: AppIcons.checkCircle,
+    emoji: '💯',
     title: 'Centurion',
     description: 'Log 100 sessions',
     isUnlocked: (s) => s.sessionCount >= 100,
@@ -115,21 +109,21 @@ final achievementCatalog = <Achievement>[
   // Streaks
   Achievement(
     key: 'streak_3',
-    icon: AppIcons.flame,
+    emoji: '🔥',
     title: 'On a Roll',
     description: 'Reach a 3-day streak',
     isUnlocked: (s) => s.currentStreakDays >= 3,
   ),
   Achievement(
     key: 'streak_7',
-    icon: AppIcons.flame,
+    emoji: '⚡',
     title: 'Week Warrior',
     description: 'Reach a 7-day streak',
     isUnlocked: (s) => s.currentStreakDays >= 7,
   ),
   Achievement(
     key: 'streak_30',
-    icon: AppIcons.star,
+    emoji: '🌟',
     title: 'Unstoppable',
     description: 'Reach a 30-day streak',
     isUnlocked: (s) => s.currentStreakDays >= 30,
@@ -138,28 +132,28 @@ final achievementCatalog = <Achievement>[
   // Time
   Achievement(
     key: 'hour_club',
-    icon: AppIcons.clock,
+    emoji: '⏱️',
     title: 'Hour Club',
     description: 'Log 10 hours of total session time',
     isUnlocked: (s) => s.totalMinutes >= 600,
   ),
   Achievement(
     key: 'deep_focus',
-    icon: AppIcons.clock,
+    emoji: '⏳',
     title: 'Deep Focus',
     description: 'Log 50 hours of total session time',
     isUnlocked: (s) => s.totalMinutes >= 3000,
   ),
   Achievement(
     key: 'marathoner',
-    icon: AppIcons.clock,
+    emoji: '🏃',
     title: 'Marathoner',
     description: 'Log 100 hours of total session time',
     isUnlocked: (s) => s.totalMinutes >= 6000,
   ),
   Achievement(
     key: 'long_haul',
-    icon: AppIcons.clock,
+    emoji: '🕰️',
     title: 'Long Haul',
     description: 'Complete a single session of 2+ hours',
     isUnlocked: (s) => s.longestMinutes >= 120,
@@ -168,21 +162,21 @@ final achievementCatalog = <Achievement>[
   // Projects
   Achievement(
     key: 'finisher',
-    icon: AppIcons.checkCircle,
+    emoji: '🏁',
     title: 'Finisher',
     description: 'Finish your first project',
     isUnlocked: (s) => s.finishedProjectCount >= 1,
   ),
   Achievement(
     key: 'prolific',
-    icon: AppIcons.pencil,
+    emoji: '🎨',
     title: 'Prolific',
     description: 'Finish 5 projects',
     isUnlocked: (s) => s.finishedProjectCount >= 5,
   ),
   Achievement(
     key: 'completionist',
-    icon: AppIcons.trophy,
+    emoji: '🏆',
     title: 'Completionist',
     description: 'Finish 10 projects',
     isUnlocked: (s) => s.finishedProjectCount >= 10,
@@ -191,21 +185,21 @@ final achievementCatalog = <Achievement>[
   // Posting
   Achievement(
     key: 'debut',
-    icon: AppIcons.image,
+    emoji: '📸',
     title: 'Debut',
     description: 'Share your first post',
     isUnlocked: (s) => s.postCount >= 1,
   ),
   Achievement(
     key: 'gallery',
-    icon: AppIcons.image,
+    emoji: '🖼️',
     title: 'Gallery',
     description: 'Share 10 posts',
     isUnlocked: (s) => s.postCount >= 10,
   ),
   Achievement(
     key: 'influencer',
-    icon: AppIcons.share,
+    emoji: '📢',
     title: 'Influencer',
     description: 'Share 50 posts',
     isUnlocked: (s) => s.postCount >= 50,
@@ -214,21 +208,21 @@ final achievementCatalog = <Achievement>[
   // Followers
   Achievement(
     key: 'first_fan',
-    icon: AppIcons.heart,
+    emoji: '🌱',
     title: 'First Fan',
     description: 'Get your first follower',
     isUnlocked: (s) => s.followerCount >= 1,
   ),
   Achievement(
     key: 'rising_star',
-    icon: AppIcons.star,
+    emoji: '⭐',
     title: 'Rising Star',
     description: 'Reach 10 followers',
     isUnlocked: (s) => s.followerCount >= 10,
   ),
   Achievement(
     key: 'crowd_favorite',
-    icon: AppIcons.star,
+    emoji: '🎉',
     title: 'Crowd Favorite',
     description: 'Reach 50 followers',
     isUnlocked: (s) => s.followerCount >= 50,
@@ -237,21 +231,21 @@ final achievementCatalog = <Achievement>[
   // Engagement
   Achievement(
     key: 'viral',
-    icon: AppIcons.eye,
+    emoji: '👀',
     title: 'Getting Noticed',
     description: 'Reach 100 total views across your posts',
     isUnlocked: (s) => s.totalViews >= 100,
   ),
   Achievement(
     key: 'sensation',
-    icon: AppIcons.barChart,
+    emoji: '🚀',
     title: 'Sensation',
     description: 'Reach 1,000 total views across your posts',
     isUnlocked: (s) => s.totalViews >= 1000,
   ),
   Achievement(
     key: 'crowd_pleaser',
-    icon: AppIcons.heartFilled,
+    emoji: '💖',
     title: 'Crowd Pleaser',
     description: 'Receive 50 reactions across your posts',
     isUnlocked: (s) => s.reactionsReceived >= 50,
@@ -260,42 +254,42 @@ final achievementCatalog = <Achievement>[
   // Personality / difficulty
   Achievement(
     key: 'challenge_seeker',
-    icon: AppIcons.flame,
+    emoji: '😤',
     title: 'Challenge Seeker',
     description: 'Average difficulty of 8+ across your sessions',
     isUnlocked: (s) => (s.averageDifficulty ?? 0) >= 8,
   ),
   Achievement(
     key: 'night_owl',
-    icon: AppIcons.clock,
+    emoji: '🦉',
     title: 'Night Owl',
     description: 'Log most of your sessions late at night',
-    isUnlocked: (s) => s.workStyle == 'Night Owl',
+    isUnlocked: (s) => s.workStyle == 'Night Owl 🦉',
   ),
   Achievement(
     key: 'early_bird',
-    icon: AppIcons.clock,
+    emoji: '🐦',
     title: 'Early Bird',
     description: 'Log most of your sessions early in the morning',
-    isUnlocked: (s) => s.workStyle == 'Early Bird',
+    isUnlocked: (s) => s.workStyle == 'Early Bird 🐦',
   ),
   Achievement(
     key: 'daytime_dabbler',
-    icon: AppIcons.clock,
+    emoji: '☀️',
     title: 'Daytime Dabbler',
     description: 'Log most of your sessions during the day',
-    isUnlocked: (s) => s.workStyle == 'Daytime Dabbler',
+    isUnlocked: (s) => s.workStyle == 'Daytime Dabbler ☀️',
   ),
   Achievement(
     key: 'evening_artist',
-    icon: AppIcons.clock,
+    emoji: '🌆',
     title: 'Evening Artist',
     description: 'Log most of your sessions in the evening',
-    isUnlocked: (s) => s.workStyle == 'Evening Artist',
+    isUnlocked: (s) => s.workStyle == 'Evening Artist 🎨',
   ),
   Achievement(
     key: 'zen_artist',
-    icon: AppIcons.clock,
+    emoji: '🧘',
     title: 'Zen Artist',
     description: 'Average difficulty of 3 or under across your sessions',
     isUnlocked: (s) => s.averageDifficulty != null && s.averageDifficulty! <= 3,
@@ -304,42 +298,42 @@ final achievementCatalog = <Achievement>[
   // More session/streak/time tiers
   Achievement(
     key: 'quarter_century',
-    icon: AppIcons.checkCircle,
+    emoji: '🎯',
     title: 'Quarter Century',
     description: 'Log 25 sessions',
     isUnlocked: (s) => s.sessionCount >= 25,
   ),
   Achievement(
     key: 'unrelenting',
-    icon: AppIcons.trophy,
+    emoji: '🗿',
     title: 'Unrelenting',
     description: 'Log 200 sessions',
     isUnlocked: (s) => s.sessionCount >= 200,
   ),
   Achievement(
     key: 'streak_14',
-    icon: AppIcons.flame,
+    emoji: '🌤️',
     title: 'Two Weeks Strong',
     description: 'Reach a 14-day streak',
     isUnlocked: (s) => s.currentStreakDays >= 14,
   ),
   Achievement(
     key: 'warming_up',
-    icon: AppIcons.barChart,
+    emoji: '🌡️',
     title: 'Warming Up',
     description: 'Log 5 hours of total session time',
     isUnlocked: (s) => s.totalMinutes >= 300,
   ),
   Achievement(
     key: 'legend',
-    icon: AppIcons.crown,
+    emoji: '🐉',
     title: 'Legend',
     description: 'Log 250 hours of total session time',
     isUnlocked: (s) => s.totalMinutes >= 15000,
   ),
   Achievement(
     key: 'iron_will',
-    icon: AppIcons.flame,
+    emoji: '🦾',
     title: 'Iron Will',
     description: 'Complete a single session of 4+ hours',
     isUnlocked: (s) => s.longestMinutes >= 240,
@@ -348,28 +342,28 @@ final achievementCatalog = <Achievement>[
   // Projects
   Achievement(
     key: 'new_canvas',
-    icon: AppIcons.pencil,
+    emoji: '🖌️',
     title: 'New Canvas',
     description: 'Start your first project',
     isUnlocked: (s) => s.totalProjectCount >= 1,
   ),
   Achievement(
     key: 'idea_factory',
-    icon: AppIcons.plus,
+    emoji: '💡',
     title: 'Idea Factory',
     description: 'Start 10 projects',
     isUnlocked: (s) => s.totalProjectCount >= 10,
   ),
   Achievement(
     key: 'overflowing_sketchbook',
-    icon: AppIcons.folder,
+    emoji: '📚',
     title: 'Overflowing Sketchbook',
     description: 'Start 25 projects',
     isUnlocked: (s) => s.totalProjectCount >= 25,
   ),
   Achievement(
     key: 'master_craftsman',
-    icon: AppIcons.folder,
+    emoji: '🛠️',
     title: 'Master Craftsman',
     description: 'Finish 20 projects',
     isUnlocked: (s) => s.finishedProjectCount >= 20,
@@ -378,42 +372,42 @@ final achievementCatalog = <Achievement>[
   // Posting / views / reactions — fills below and above the existing tiers
   Achievement(
     key: 'media_mogul',
-    icon: AppIcons.feed,
+    emoji: '📰',
     title: 'Media Mogul',
     description: 'Share 100 posts',
     isUnlocked: (s) => s.postCount >= 100,
   ),
   Achievement(
     key: 'first_impressions',
-    icon: AppIcons.followed,
+    emoji: '👋',
     title: 'First Impressions',
     description: 'Reach 10 total views across your posts',
     isUnlocked: (s) => s.totalViews >= 10,
   ),
   Achievement(
     key: 'viral_sensation',
-    icon: AppIcons.globe,
+    emoji: '🌐',
     title: 'Viral Sensation',
     description: 'Reach 10,000 total views across your posts',
     isUnlocked: (s) => s.totalViews >= 10000,
   ),
   Achievement(
     key: 'well_liked',
-    icon: AppIcons.smile,
+    emoji: '🙂',
     title: 'Well Liked',
     description: 'Receive 10 reactions across your posts',
     isUnlocked: (s) => s.reactionsReceived >= 10,
   ),
   Achievement(
     key: 'beloved',
-    icon: AppIcons.heartFilled,
+    emoji: '💝',
     title: 'Beloved',
     description: 'Receive 200 reactions across your posts',
     isUnlocked: (s) => s.reactionsReceived >= 200,
   ),
   Achievement(
     key: 'local_celebrity',
-    icon: AppIcons.grid,
+    emoji: '🏙️',
     title: 'Local Celebrity',
     description: 'Reach 100 followers',
     isUnlocked: (s) => s.followerCount >= 100,
@@ -422,14 +416,14 @@ final achievementCatalog = <Achievement>[
   // Following / community
   Achievement(
     key: 'community_builder',
-    icon: AppIcons.followed,
+    emoji: '🤝',
     title: 'Community Builder',
     description: 'Follow 10 other artists',
     isUnlocked: (s) => s.followingCount >= 10,
   ),
   Achievement(
     key: 'networker',
-    icon: AppIcons.globe,
+    emoji: '🌍',
     title: 'Networker',
     description: 'Follow 50 other artists',
     isUnlocked: (s) => s.followingCount >= 50,
@@ -438,14 +432,14 @@ final achievementCatalog = <Achievement>[
   // Comments
   Achievement(
     key: 'conversationalist',
-    icon: AppIcons.comment,
+    emoji: '💬',
     title: 'Conversationalist',
     description: 'Post your first comment',
     isUnlocked: (s) => s.commentsPosted >= 1,
   ),
   Achievement(
     key: 'chatterbox',
-    icon: AppIcons.comment,
+    emoji: '🗣️',
     title: 'Chatterbox',
     description: 'Post 25 comments',
     isUnlocked: (s) => s.commentsPosted >= 25,

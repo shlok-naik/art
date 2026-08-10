@@ -1,10 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../domain/league.dart';
 import '../providers.dart';
@@ -30,17 +29,17 @@ class TrophyCabinetScreen extends ConsumerWidget {
           if (trophies.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.space24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   "No trophies yet — top the weekly league's leaderboard to win one.",
                   textAlign: TextAlign.center,
-                  style: appBodyStyle(fontSize: 14, color: kMutedColor),
+                  style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
                 ),
               ),
             );
           }
           return GridView.builder(
-            padding: const EdgeInsets.all(AppSpacing.space16),
+            padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -51,7 +50,7 @@ class TrophyCabinetScreen extends ConsumerWidget {
             itemBuilder: (context, index) => _TrophyTile(trophy: trophies[index]),
           );
         },
-        loading: () => const AppSkeletonScreen(),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => AppErrorState(
           error: error,
           onRetry: () => ref.invalidate(myLeagueTrophiesProvider(userId)),
@@ -71,76 +70,70 @@ class _TrophyTile extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => showLeagueTrophyDetail(context, trophy: trophy),
-      // The whole tile is the navy mat: gold-hairlined photo above the
-      // trophy's title, date and star pill.
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.space8),
-        decoration: BoxDecoration(
-          color: kNavyColor,
-          borderRadius: BorderRadius.circular(14),
-        ),
+        padding: const EdgeInsets.all(10),
+        decoration: appHardCardDecoration(radius: 14, shadowOffset: 3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: kGoldColor, width: 1.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                clipBehavior: Clip.antiAlias,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
                 child: trophy.photoUrl.isEmpty
-                    ? const _MissingTrophyPhoto()
+                    ? Container(
+                        width: double.infinity,
+                        color: Colors.grey.shade200,
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.emoji_events, size: 24, color: Colors.black26),
+                      )
                     : CachedNetworkImage(
                         imageUrl: trophy.photoUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(color: kSurfaceColor),
-                        errorWidget: (context, url, error) => const _MissingTrophyPhoto(),
+                        width: double.infinity,
+                        placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade200,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.emoji_events, size: 24, color: Colors.black26),
+                        ),
                       ),
               ),
             ),
-            const SizedBox(height: AppSpacing.space8),
+            const SizedBox(height: 8),
             Text(
               trophy.themeTitle,
-              style: appHeadlineStyle(fontSize: 15, color: Colors.white, italic: true),
+              style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 2),
             Text(
               formatMonthDayYear(trophy.startsAt),
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kGoldColor),
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
             ),
-            const SizedBox(height: AppSpacing.space8),
+            const SizedBox(height: 6),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
-                color: kGoldColor,
+                border: Border.all(color: kBorderColor, width: kBorderWidth),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                '★ ${trophy.stars}',
-                textAlign: TextAlign.center,
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kNavyColor),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('⭐', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${trophy.stars}',
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _MissingTrophyPhoto extends StatelessWidget {
-  const _MissingTrophyPhoto();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: kSurfaceColor,
-      alignment: Alignment.center,
-      child: const AppIcon(AppIcons.trophy, size: 24, color: kMutedColor),
     );
   }
 }

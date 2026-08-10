@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../profile/presentation/public_profile_screen.dart';
 import '../../profile/providers.dart';
 
@@ -23,32 +23,32 @@ class FollowedScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Followed', style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-              const SizedBox(height: AppSpacing.space20),
+              Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
+              const SizedBox(height: 20),
               followingAsync.when(
                 data: (following) => following.isEmpty
                     ? Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space28, horizontal: AppSpacing.space20),
-                        decoration: appFlatCardDecoration(radius: 18),
+                        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                        decoration: appHardCardDecoration(radius: 18),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const AppIcon(AppIcons.followed, size: 40, color: kMutedColor, strokeWidth: 1.4),
-                            const SizedBox(height: AppSpacing.space12),
-                            Text('Nobody here yet', style: appBodyStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: AppSpacing.space4),
+                            Image.asset('assets/branding/mascot.png', height: 80),
+                            const SizedBox(height: 10),
+                            Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                            const SizedBox(height: 4),
                             Text(
                               'Follow other artists to see their posts here.',
                               textAlign: TextAlign.center,
-                              style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
                             ),
                           ],
                         ),
                       )
                     : Column(
                         children: [
-                          for (final profile in following)
+                          for (final profile in following) ...[
                             _ArtistTile(
                               key: ValueKey('following-${profile['id']}'),
                               userId: profile['id'].toString(),
@@ -57,26 +57,31 @@ class FollowedScreen extends ConsumerWidget {
                               avatarUrl: profile['avatar_url']?.toString(),
                               isFollowing: true,
                             ),
+                            const SizedBox(height: 10),
+                          ],
                         ],
                       ),
-                loading: () => const AppSkeletonScreen(rows: 3, padding: EdgeInsets.zero),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 28),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(followingListProvider),
                 ),
               ),
-              const SizedBox(height: AppSpacing.space24),
-              Text('Suggested artists', style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-              const SizedBox(height: AppSpacing.space8),
+              const SizedBox(height: 20),
+              Text('Suggested artists', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+              const SizedBox(height: 10),
               suggestedAsync.when(
                 data: (suggested) => suggested.isEmpty
                     ? Text(
                         'No suggestions right now.',
-                        style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
                       )
                     : Column(
                         children: [
-                          for (final profile in suggested)
+                          for (final profile in suggested) ...[
                             _ArtistTile(
                               key: ValueKey('suggested-${profile['id']}'),
                               userId: profile['id'].toString(),
@@ -85,9 +90,14 @@ class FollowedScreen extends ConsumerWidget {
                               avatarUrl: profile['avatar_url']?.toString(),
                               isFollowing: false,
                             ),
+                            const SizedBox(height: 10),
+                          ],
                         ],
                       ),
-                loading: () => const AppSkeletonScreen(rows: 2, padding: EdgeInsets.zero),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(suggestedArtistsProvider),
@@ -135,26 +145,28 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
         title: Text(
           _isFollowing ? 'Unfollow @${widget.handle}?' : 'Follow @${widget.handle}?',
-          style: appBodyStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
         ),
         content: Text(
           'Are you sure you want to ${_isFollowing ? 'unfollow' : 'follow'} @${widget.handle}?',
-          style: appBodyStyle(fontSize: 13, color: kMutedColor),
+          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: appBodyStyle(fontWeight: FontWeight.w600, color: kMutedColor)),
+            child: Text('Cancel', style: appBodyStyle(fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               _isFollowing ? 'Unfollow' : 'Follow',
-              style: appBodyStyle(fontWeight: FontWeight.w600, color: kAccentColor),
+              style: appBodyStyle(fontWeight: FontWeight.w800, color: kAccentColor),
             ),
           ),
         ],
@@ -193,35 +205,37 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
 
   @override
   Widget build(BuildContext context) {
-    // The whole row navigates to the profile — the Follow/Unfollow button
+    // The whole card navigates to the profile — the Follow/Unfollow button
     // is a nested InkWell, so Flutter's gesture arena routes taps on it to
     // the button alone rather than also bubbling up to this outer tap.
     return InkWell(
       onTap: _openProfile,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space12),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
         child: Row(
           children: [
-            AppInitialsAvatar(
-              name: widget.subtitle.isNotEmpty ? widget.subtitle : widget.handle,
-              imageUrl: widget.avatarUrl,
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: kBorderColor, width: kBorderWidth),
+              ),
+              child: AppInitialsAvatar(
+                name: widget.subtitle.isNotEmpty ? widget.subtitle : widget.handle,
+                size: 44,
+                imageUrl: widget.avatarUrl,
+              ),
             ),
-            const SizedBox(width: AppSpacing.space12),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '@${widget.handle}',
-                    style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: Colors.black), overflow: TextOverflow.ellipsis),
                   if (widget.subtitle.isNotEmpty)
-                    Text(widget.subtitle, style: appBodyStyle(fontSize: 12, color: kMutedColor)),
+                    Text(widget.subtitle, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
                 ],
               ),
             ),
@@ -229,21 +243,15 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
               onTap: _isSubmitting ? null : _confirmToggleFollow,
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space8),
-                decoration: _isFollowing
-                    ? BoxDecoration(
-                        color: kSurfaceColor,
-                        borderRadius: BorderRadius.circular(20),
-                      )
-                    : BoxDecoration(
-                        border: Border.all(color: kHairlineColor, width: 1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _isFollowing ? kAccentTintColor : null,
+                  border: Border.all(color: kBorderColor, width: kBorderWidth),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Text(
                   _isFollowing ? 'Unfollow' : 'Follow',
-                  style: _isFollowing
-                      ? appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500)
-                      : appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kAccentColor),
+                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
                 ),
               ),
             ),

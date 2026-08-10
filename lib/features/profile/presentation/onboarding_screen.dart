@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -16,11 +16,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _page = 0;
 
-  /// The first page carries the wordmark hero in place of the old mascot
-  /// illustration; the rest are plain title + body.
   static const _pages = [
     (
-      title: 'Welcome',
+      title: "Hey, I'm Bud 👋",
       body: "Let's set up your profile in under a minute.",
     ),
     (
@@ -56,17 +54,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.space24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: widget.onComplete,
-                  child: Text(
-                    'Skip',
-                    style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kNavyColor),
-                  ),
+                  child: Text('Skip', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
                 ),
               ),
               Expanded(
@@ -79,20 +74,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (index == 0) ...[
-                          const AppWordmark(fontSize: 40),
-                          const SizedBox(height: AppSpacing.space28),
-                        ],
+                        Transform.flip(
+                          flipX: true,
+                          child: Image.asset('assets/branding/mascot.png', height: 150),
+                        ),
+                        const SizedBox(height: 24),
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
-                          style: appBodyStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.chewy(fontSize: 27, color: Colors.black),
                         ),
-                        const SizedBox(height: AppSpacing.space8),
+                        const SizedBox(height: 8),
                         Text(
                           page.body,
                           textAlign: TextAlign.center,
-                          style: appBodyStyle(fontSize: 15, color: kMutedColor).copyWith(height: 1.5),
+                          style: appBodyStyle(fontSize: 16, color: const Color(0xFF666666)),
                         ),
                       ],
                     );
@@ -106,15 +102,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       width: 8,
                       height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
-                        color: index == _page ? kAccentColor : kHairlineColor,
+                        color: index == _page ? kAccentColor : const Color(0xFFE5DED4),
                         shape: BoxShape.circle,
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.space20),
+              const SizedBox(height: 20),
               AppPrimaryButton(
                 label: _page == _pages.length - 1 ? 'Set up my profile' : 'Next',
                 onPressed: _next,

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/app_icons.dart';
-import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/achievement.dart';
 import 'all_achievements_screen.dart';
@@ -16,27 +14,25 @@ class AchievementChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
       onTap: () => showAchievementDetail(context, achievement: achievement, isUnlocked: true),
       child: Tooltip(
         message: achievement.description,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8, horizontal: AppSpacing.space12),
-          decoration: BoxDecoration(
-            color: kNavyColor,
-            border: Border.all(color: kGoldColor, width: 1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
+          width: 78,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppIcon(achievement.icon, size: 14, color: kGoldColor),
-              const SizedBox(width: AppSpacing.space8),
+              Text(achievement.emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 3),
               Text(
                 achievement.title,
+                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kGoldColor),
+                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
               ),
             ],
           ),

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -55,20 +54,23 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Finish project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('Finish project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
         content: Text(
           '"$title" will be marked 100% complete and locked — no new sessions can be added afterward.',
-          style: appBodyStyle(fontSize: 14, color: kMutedColor),
+          style: GoogleFonts.chewy(fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Finish', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kAccentColor)),
+            child: Text('Finish', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
           ),
         ],
       ),
@@ -94,17 +96,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete project?', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        content: Text('This will permanently delete "$title".', style: appBodyStyle(fontSize: 14, color: kMutedColor)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('Delete project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
+        content: Text('This will permanently delete "$title".', style: GoogleFonts.chewy(fontSize: 15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red.shade700)),
+            child: Text('Delete', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
           ),
         ],
       ),
@@ -129,9 +134,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      appBar: appThemedAppBar(context, 'Projects'),
+      body: SafeArea(
+        child: Column(
           children: [
-            const AppScreenHeader(title: 'Projects'),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -140,20 +146,36 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                   Expanded(
                     child: TextField(
                       controller: _nameController,
-                      decoration: appInputDecoration('New project name'),
-                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      decoration: appInputDecoration('New project name').copyWith(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth),
+                        ),
+                        labelStyle: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black45),
+                      ),
+                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.space12),
+                  const SizedBox(width: 8),
                   InkWell(
                     onTap: _isCreating ? null : _createProject,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(23),
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: kAccentColor,
+                        border: Border.all(color: kBorderColor, width: kBorderWidth),
+                        boxShadow: hardShadow(offset: 3),
                       ),
                       alignment: Alignment.center,
                       child: _isCreating
@@ -162,7 +184,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : const AppIcon(AppIcons.plus, color: Colors.white, strokeWidth: 2),
+                          : const Icon(Icons.add, color: Colors.white, size: 24),
                     ),
                   ),
                 ],
@@ -170,7 +192,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
             if (_errorText != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: AppErrorText(_errorText!),
               ),
             Expanded(
@@ -180,7 +202,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     return Center(
                       child: Text(
                         'No projects yet.',
-                        style: appBodyStyle(fontSize: 14, color: kMutedColor),
+                        style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
                       ),
                     );
                   }
@@ -207,11 +229,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           onDelete: () => _deleteProject(project),
                         );
                       },
-                      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.space12),
+                      separatorBuilder: (context, index) => const SizedBox(height: 12),
                     ),
                   );
                 },
-                loading: () => const AppSkeletonScreen(),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(projectsListProvider),
@@ -220,6 +242,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
           ],
         ),
+      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: -1,
         onTap: (i) => goToMainTab(context, ref, i),
@@ -254,8 +277,8 @@ class _ProjectCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onOpen,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
-        decoration: appFlatCardDecoration(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -264,17 +287,17 @@ class _ProjectCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: appHeadlineStyle(fontSize: 19)),
-                  const SizedBox(height: AppSpacing.space4),
+                  Text(title, style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                  const SizedBox(height: 3),
                   Text(
                     sessionCount == null
                         ? 'Created $createdAt'
                         : 'Created $createdAt · $sessionCount session${sessionCount == 1 ? '' : 's'}',
-                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMutedColor),
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF666666)),
                   ),
-                  const SizedBox(height: AppSpacing.space8),
+                  const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
                       color: isFinished ? kSuccessBgColor : kAccentTintColor,
                       borderRadius: BorderRadius.circular(12),
@@ -283,7 +306,7 @@ class _ProjectCard extends ConsumerWidget {
                       isFinished ? 'Finished' : 'In progress',
                       style: appBodyStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w800,
                         color: isFinished ? kSuccessTextColor : kAccentColor,
                       ),
                     ),
@@ -299,16 +322,16 @@ class _ProjectCard extends ConsumerWidget {
                     onTap: onFinish,
                     borderRadius: BorderRadius.circular(20),
                     child: const Padding(
-                      padding: EdgeInsets.all(AppSpacing.space8),
-                      child: AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.check_circle_outline, color: kSuccessTextColor, size: 20),
                     ),
                   ),
                 InkWell(
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(20),
                   child: const Padding(
-                    padding: EdgeInsets.all(AppSpacing.space8),
-                    child: AppIcon(AppIcons.x, size: 20),
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.close, color: Colors.black, size: 20),
                   ),
                 ),
               ],

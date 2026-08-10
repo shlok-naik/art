@@ -5,12 +5,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/app_bottom_nav.dart';
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../../shared/formatters.dart';
 import '../../../shared/session_banner_ad.dart';
 import '../../../shared/session_music_player.dart';
@@ -216,21 +215,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     return Column(
       children: [
         const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.space8),
+          padding: EdgeInsets.symmetric(vertical: 8),
           child: SessionBannerAd(),
         ),
         Expanded(child: Center(child: _buildTimerContent(isPaused))),
         const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.space8),
+          padding: EdgeInsets.symmetric(vertical: 8),
           child: SessionBannerAd(),
         ),
         const Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.space16,
-            0,
-            AppSpacing.space16,
-            AppSpacing.space16,
-          ),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: SessionMusicPlayer(),
         ),
       ],
@@ -243,14 +237,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       children: [
         Text(
           isPaused ? 'PAUSED' : 'SESSION IN PROGRESS',
-          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16, color: kAccentColor),
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16, color: kAccentColor),
         ),
-        const SizedBox(height: AppSpacing.space8),
+        const SizedBox(height: 8),
         Text(
           formatDurationHms(_elapsed),
-          style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 64, color: kInkColor),
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: Colors.black),
         ),
-        const SizedBox(height: AppSpacing.space32),
+        const SizedBox(height: 32),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -258,25 +252,25 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               onPressed: _togglePause,
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
-                side: const BorderSide(color: kHairlineColor, width: 1),
-                foregroundColor: kInkColor,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
-                textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              icon: AppIcon(isPaused ? AppIcons.play : AppIcons.pause, size: 20, color: kInkColor),
+              icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
               label: Text(isPaused ? 'Resume' : 'Pause'),
             ),
-            const SizedBox(width: AppSpacing.space16),
+            const SizedBox(width: 16),
             ElevatedButton.icon(
               onPressed: _endSession,
               style: ElevatedButton.styleFrom(
                 shape: const StadiumBorder(),
                 backgroundColor: kAccentColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space20, vertical: AppSpacing.space12),
-                textStyle: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              icon: const AppIcon(AppIcons.stop, size: 18, color: Colors.white),
+              icon: const Icon(Icons.stop),
               label: const Text('End'),
             ),
           ],
@@ -290,25 +284,25 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     return Column(
       children: [
         if (!_isOwner)
-          const SizedBox(height: AppSpacing.space8)
+          const SizedBox(height: 8)
         else if (_isFinished)
           Container(
             width: double.infinity,
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: kSuccessBgColor,
-              border: Border.all(color: kHairlineColor, width: 1),
+              border: Border.all(color: kBorderColor, width: kBorderWidth),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               children: [
-                const AppIcon(AppIcons.checkCircle, size: 20, color: kSuccessTextColor),
-                const SizedBox(width: AppSpacing.space12),
+                const Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'This project is finished — 100% complete and locked. No new sessions can be added.',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kSuccessTextColor),
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kSuccessTextColor),
                   ),
                 ),
               ],
@@ -321,18 +315,18 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
         if (_errorText != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: AppErrorText(_errorText!),
           ),
-        const SizedBox(height: AppSpacing.space12),
+        const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('Past Sessions', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20)),
+            child: Text('Past Sessions', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
           ),
         ),
-        const SizedBox(height: AppSpacing.space8),
+        const SizedBox(height: 8),
         Expanded(
           child: sessionsAsync.when(
             data: (sessions) {
@@ -340,14 +334,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 return Center(
                   child: Text(
                     'No sessions logged yet.',
-                    style: appBodyStyle(fontSize: 15, color: kMutedColor),
+                    style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
                   ),
                 );
               }
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 itemCount: sessions.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space12),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final session = sessions[index];
                   final photoUrl = session['photo_url']?.toString();
@@ -372,8 +366,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.space12),
-                      decoration: appFlatCardDecoration(),
+                      padding: const EdgeInsets.all(10),
+                      decoration: appCardDecoration(),
                       child: Row(
                         children: [
                           ClipRRect(
@@ -382,8 +376,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                 ? Container(
                                     width: 52,
                                     height: 52,
-                                    color: kHairlineColor,
-                                    child: const AppIcon(AppIcons.image, size: 24, color: kMutedColor),
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.image_not_supported, color: Colors.black38),
                                   )
                                 : CachedNetworkImage(
                                     imageUrl: photoUrl,
@@ -392,7 +386,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                     fit: BoxFit.cover,
                                   ),
                           ),
-                          const SizedBox(width: AppSpacing.space12),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,17 +394,17 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                 Text(
                                   (session['name']?.toString().isNotEmpty ?? false)
                                       ? session['name'].toString()
-                                      : 'Untitled Session',
-                                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                      : formatDurationHms(Duration(seconds: durationSeconds)),
+                                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 Text(
                                   'Logged: ${formatDateValue(session['created_at'])} · ${formatDurationHms(Duration(seconds: durationSeconds))}',
-                                  style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                                  style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
                                 ),
                               ],
                             ),
                           ),
-                          const AppIcon(AppIcons.chevronRight, size: 18, color: kMutedColor),
+                          const Icon(Icons.chevron_right, color: Colors.black38),
                         ],
                       ),
                     ),
@@ -418,7 +412,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 },
               );
             },
-            loading: () => const AppSkeletonScreen(),
+            loading: () => const Center(child: CircularProgressIndicator(color: kAccentColor)),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(sessionsListProvider(_projectId)),
@@ -482,7 +476,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     }
 
     return DefaultTextStyle(
-      style: appBodyStyle(color: kInkColor),
+      style: GoogleFonts.chewy(color: Colors.black),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, title),

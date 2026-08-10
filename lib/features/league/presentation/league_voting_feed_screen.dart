@@ -1,10 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
 import '../../projects/providers.dart';
 import '../domain/league.dart';
@@ -37,7 +36,7 @@ class LeagueVotingFeedScreen extends ConsumerWidget {
             }
             return _VotingFeedBody(league: league, submissions: others);
           },
-          loading: () => const AppSkeletonBlock(onDark: true, height: double.infinity),
+          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
           error: (error, stack) => AppErrorState(
             error: error,
             onDark: true,
@@ -61,7 +60,7 @@ class _EmptyFeed extends StatelessWidget {
         Center(
           child: Text(
             'No other submissions to rate yet.',
-            style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+            style: GoogleFonts.chewy(color: Colors.white, fontSize: 17),
             textAlign: TextAlign.center,
           ),
         ),
@@ -127,9 +126,9 @@ class _CloseButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.space8),
-          decoration: const BoxDecoration(color: kMutedColor, shape: BoxShape.circle),
-          child: const AppIcon(AppIcons.x, size: 20, color: Colors.white, strokeWidth: 2),
+          padding: const EdgeInsets.all(6),
+          decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+          child: const Icon(Icons.close, color: Colors.white, size: 22),
         ),
       ),
     );
@@ -212,7 +211,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
               itemBuilder: (context, i) => CachedNetworkImage(imageUrl: photos[i], fit: BoxFit.cover),
             );
           },
-          loading: () => const AppSkeletonBlock(onDark: true, height: double.infinity),
+          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
           // The submission's cover still lets the entry be rated even if its
           // session list failed to load; with no cover either, say so rather
           // than showing a silent blank page.
@@ -246,7 +245,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                 return Row(
                   children: [
                     for (var i = 0; i < count; i++) ...[
-                      if (i > 0) const SizedBox(width: AppSpacing.space4),
+                      if (i > 0) const SizedBox(width: 4),
                       Expanded(
                         child: Container(
                           height: 3,
@@ -270,7 +269,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
           right: 56,
           child: Text(
             '@${submission.artistUsername} · ${submission.projectTitle}',
-            style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+            style: GoogleFonts.chewy(color: Colors.white, fontSize: 16),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -300,7 +299,7 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.space12),
+                  const SizedBox(height: 10),
                 ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -309,23 +308,19 @@ class _FeedProjectPageState extends ConsumerState<_FeedProjectPage> {
                       GestureDetector(
                         onTap: widget.league.isVotingOpen ? () => _rate(star) : null,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-                          child: Text(
-                            '★',
-                            style: TextStyle(
-                              fontSize: 30,
-                              color: star <= _myRating ? const Color(0xFFF5B301) : const Color(0xFF5A5A5A),
-                            ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            star <= _myRating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                            size: 34,
                           ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.space4),
+                const SizedBox(height: 4),
                 Text(
-                  _myRating > 0
-                      ? 'Your rating: $_myRating/5 · ★ ${submission.stars} total'
-                      : '★ ${submission.stars} total',
+                  _myRating > 0 ? 'Your rating: $_myRating/5 · ⭐ ${submission.stars} total' : '⭐ ${submission.stars} total',
                   style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white70),
                 ),
               ],

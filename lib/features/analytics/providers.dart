@@ -437,7 +437,7 @@ class TimeAnalytics {
   /// Consecutive days (ending today or yesterday) with at least one session.
   final int currentStreakDays;
 
-  /// A short "Night Owl" / "Early Bird" style label derived from your
+  /// A short "Night Owl 🦉" / "Early Bird 🐦" style label derived from your
   /// most common session hour — a lightweight teaser of the Pro hourly chart.
   final String? personalityBadge;
 }
@@ -455,10 +455,10 @@ String? _personalityBadge(List<SessionRecord> sessions) {
     if (counts[h] > counts[peakHour]) peakHour = h;
   }
 
-  if (peakHour >= 5 && peakHour < 11) return 'Early Bird';
-  if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler';
-  if (peakHour >= 17 && peakHour < 22) return 'Evening Artist';
-  return 'Night Owl';
+  if (peakHour >= 5 && peakHour < 11) return 'Early Bird 🐦';
+  if (peakHour >= 11 && peakHour < 17) return 'Daytime Dabbler ☀️';
+  if (peakHour >= 17 && peakHour < 22) return 'Evening Artist 🎨';
+  return 'Night Owl 🦉';
 }
 
 int _currentStreakDays(List<SessionRecord> sessions) {

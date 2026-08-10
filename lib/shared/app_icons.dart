@@ -271,41 +271,6 @@ class AppScreenHeader extends StatelessWidget {
   }
 }
 
-/// The museum treatment applied to every user photo in the app: a navy mat
-/// with a gold hairline sitting just inside it, both sharing one corner
-/// radius family (inner [radius], outer `radius + 5`).
-class MuseumFrame extends StatelessWidget {
-  const MuseumFrame({super.key, required this.child, this.radius = 6, this.matWidth = 5});
-
-  final Widget child;
-
-  /// Corner radius of the photo itself. The navy mat is drawn at
-  /// `radius + matWidth` so the two curves stay concentric.
-  final double radius;
-
-  /// Thickness of the navy mat around the gold hairline.
-  final double matWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(matWidth),
-      decoration: BoxDecoration(
-        color: kNavyColor,
-        borderRadius: BorderRadius.circular(radius + matWidth),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: kGoldColor, width: 1.5),
-          borderRadius: BorderRadius.circular(radius),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: child,
-      ),
-    );
-  }
-}
-
 /// Numbered rank badge for league standings — a gold (1st) / silver (2nd) /
 /// surface (everything else) circle with the position in navy, replacing the
 /// medal emoji.

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_bottom_nav.dart';
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../providers.dart';
@@ -37,7 +36,7 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
     final overviewAsync = ref.watch(projectsOverviewProvider);
 
     return DefaultTextStyle(
-      style: appBodyStyle(color: kInkColor),
+      style: GoogleFonts.chewy(color: Colors.black),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Projects'),
@@ -49,7 +48,7 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                   child: Text(
                     'No projects yet — start one to see analytics here.',
                     textAlign: TextAlign.center,
-                    style: appBodyStyle(fontSize: 16),
+                    style: GoogleFonts.chewy(fontSize: 16),
                   ),
                 );
               }
@@ -60,52 +59,52 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Status',
-                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
-                    const SizedBox(height: AppSpacing.space12),
+                    const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
-                      decoration: appFlatCardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: appCardDecoration(),
                       child: Column(
                         children: [
                           for (final status in overview.statusBreakdown) ...[
                             _StatusRow(status: status, total: overview.perProject.length),
-                            const SizedBox(height: AppSpacing.space12),
+                            const SizedBox(height: 12),
                           ],
                         ],
                       ),
                     ),
                     if (overview.fastestFinish != null) ...[
-                      const SizedBox(height: AppSpacing.space12),
+                      const SizedBox(height: 12),
                       _FastestFinishCard(fastestFinish: overview.fastestFinish!),
                     ],
-                    const SizedBox(height: AppSpacing.space20),
+                    const SizedBox(height: 20),
                     Text(
                       'Completion',
-                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
-                    const SizedBox(height: AppSpacing.space12),
+                    const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
-                      decoration: appFlatCardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: appCardDecoration(),
                       child: Column(
                         children: [
                           for (final project in [...overview.perProject]
                             ..sort((a, b) => b.completionPercent.compareTo(a.completionPercent))) ...[
                             _CompletionRow(stats: project),
-                            const SizedBox(height: AppSpacing.space12),
+                            const SizedBox(height: 12),
                           ],
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.space20),
+                    const SizedBox(height: 20),
                     Text(
                       'Time invested per project',
-                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
-                    const SizedBox(height: AppSpacing.space12),
+                    const SizedBox(height: 10),
                     for (final project in overview.perProject) ...[
                       _ProjectStatsRow(
                         stats: project,
@@ -115,13 +114,13 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.space12),
+                      const SizedBox(height: 10),
                     ],
                   ],
                 ),
               );
             },
-            loading: () => const AppSkeletonScreen(),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => AppErrorState(
               error: error,
               onRetry: () => ref.invalidate(projectsOverviewProvider),
@@ -152,7 +151,7 @@ class _StatusRow extends StatelessWidget {
           width: 90,
           child: Text(
             status.status,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -165,7 +164,7 @@ class _StatusRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: kHairlineColor,
+                      color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -182,13 +181,13 @@ class _StatusRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: AppSpacing.space12),
+        const SizedBox(width: 10),
         SizedBox(
           width: 30,
           child: Text(
             '${status.count}',
             textAlign: TextAlign.right,
-            style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kAccentColor),
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 14, color: kAccentColor),
           ),
         ),
       ],
@@ -205,16 +204,16 @@ class _FastestFinishCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: kAccentTintColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kHairlineColor, width: 1),
+        border: Border.all(color: kBorderColor, width: kBorderWidth),
       ),
       child: Row(
         children: [
-          const AppIcon(AppIcons.clock, size: 20, color: kAccentColor),
-          const SizedBox(width: AppSpacing.space12),
+          const Text('🏎️', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,11 +221,11 @@ class _FastestFinishCard extends StatelessWidget {
               children: [
                 Text(
                   'Fastest finish',
-                  style: appBodyStyle(fontSize: 12, color: kMutedColor),
+                  style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
                 ),
                 Text(
                   '${fastestFinish.title} · ${fastestFinish.days} day${fastestFinish.days == 1 ? '' : 's'}',
-                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -252,7 +251,7 @@ class _CompletionRow extends StatelessWidget {
           width: 90,
           child: Text(
             stats.title,
-            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: GoogleFonts.chewy(fontSize: 14, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -265,7 +264,7 @@ class _CompletionRow extends StatelessWidget {
                     height: 14,
                     width: constraints.maxWidth,
                     decoration: BoxDecoration(
-                      color: kHairlineColor,
+                      color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
@@ -282,19 +281,18 @@ class _CompletionRow extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(width: AppSpacing.space12),
+        const SizedBox(width: 10),
         SizedBox(
           width: 44,
-          child: isFinished
-              ? const Align(
-                  alignment: Alignment.centerRight,
-                  child: AppIcon(AppIcons.checkCircle, size: 16, color: kSuccessTextColor),
-                )
-              : Text(
-                  '${stats.completionPercent}%',
-                  textAlign: TextAlign.right,
-                  style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kAccentColor),
-                ),
+          child: Text(
+            isFinished ? '🏁' : '${stats.completionPercent}%',
+            textAlign: TextAlign.right,
+            style: GoogleFonts.chewy(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isFinished ? kSuccessTextColor : kAccentColor,
+            ),
+          ),
         ),
       ],
     );
@@ -314,8 +312,8 @@ class _ProjectStatsRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
-        decoration: appFlatCardDecoration(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: appCardDecoration(),
         child: Row(
           children: [
             Expanded(
@@ -325,7 +323,7 @@ class _ProjectStatsRow extends StatelessWidget {
                 children: [
                   Text(
                     stats.title,
-                    style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 17),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
@@ -333,15 +331,15 @@ class _ProjectStatsRow extends StatelessWidget {
                         ? 'No sessions yet'
                         : '${stats.sessionCount} session${stats.sessionCount == 1 ? '' : 's'} · '
                             'last active ${_formatDate(stats.lastActiveAt)}',
-                    style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                    style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.space12),
+            const SizedBox(width: 12),
             Text(
               _formatMinutes(stats.totalMinutes),
-              style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kAccentColor),
+              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18, color: kAccentColor),
             ),
           ],
         ),

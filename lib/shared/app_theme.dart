@@ -6,17 +6,16 @@ import 'app_styles.dart';
 
 export 'app_spacing.dart';
 
-/// Root [ThemeData] for the app: Inter type scale, the navy/cobalt
-/// 60-30-10 color scheme (white surface, [kSurfaceColor] cards, [kAccentColor]
-/// reserved for CTAs/active states), and component defaults so a bare
-/// [Text]/[TextField]/[AppBar]/button/etc. already matches the hand-styled
-/// helpers in `app_styles.dart` instead of falling back to Material
-/// defaults. Screen-level code should keep preferring the helpers below for
-/// anything bespoke (museum plaques, chat bubbles, ...) — this is the floor
-/// everything else inherits from.
+/// Root [ThemeData] for the app: comic-panel color scheme (white surface,
+/// black hard borders, [kAccentColor] deep-orange reserved for CTAs/active
+/// states) and component defaults so a bare [Text]/[TextField]/[AppBar]/
+/// button/etc. already matches the hand-styled helpers in `app_styles.dart`
+/// instead of falling back to Material defaults. Screen-level code should
+/// keep preferring the helpers below for anything bespoke — this is the
+/// floor everything else inherits from.
 ThemeData buildAppTheme() {
   final base = ThemeData.light(useMaterial3: true);
-  final textTheme = GoogleFonts.interTextTheme(base.textTheme).apply(
+  final textTheme = GoogleFonts.nunitoTextTheme(base.textTheme).apply(
     bodyColor: kInkColor,
     displayColor: kInkColor,
   );
@@ -44,17 +43,17 @@ ThemeData buildAppTheme() {
     splashFactory: InkRipple.splashFactory,
     visualDensity: VisualDensity.standard,
     textTheme: textTheme.copyWith(
-      headlineLarge: textTheme.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w600),
-      headlineMedium: textTheme.headlineMedium?.copyWith(fontSize: 22, fontWeight: FontWeight.w600),
-      titleLarge: textTheme.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
-      titleMedium: textTheme.titleMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.w600),
-      titleSmall: textTheme.titleSmall?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
-      bodyLarge: textTheme.bodyLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w400),
-      bodyMedium: textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w400),
-      bodySmall: textTheme.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w400, color: kMutedColor),
-      labelLarge: textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
-      labelMedium: textTheme.labelMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
-      labelSmall: textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w500, color: kMutedColor),
+      headlineLarge: textTheme.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
+      headlineMedium: textTheme.headlineMedium?.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
+      titleLarge: textTheme.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w800),
+      titleMedium: textTheme.titleMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
+      titleSmall: textTheme.titleSmall?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+      bodyLarge: textTheme.bodyLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+      bodyMedium: textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      bodySmall: textTheme.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
+      labelLarge: textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+      labelMedium: textTheme.labelMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w700),
+      labelSmall: textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
     ),
     iconTheme: const IconThemeData(color: kInkColor),
     dividerTheme: const DividerThemeData(color: kHairlineColor, thickness: 1, space: 1),
@@ -62,17 +61,18 @@ ThemeData buildAppTheme() {
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
       elevation: 0,
-      scrolledUnderElevation: 0,
       foregroundColor: kInkColor,
       iconTheme: const IconThemeData(color: kInkColor),
-      titleTextStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: kInkColor),
-      shape: const Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
+      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24, color: kInkColor),
     ),
     cardTheme: CardThemeData(
-      color: kSurfaceColor,
+      color: Colors.white,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kCardRadius)),
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        borderRadius: BorderRadius.circular(kCardRadius),
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -83,7 +83,7 @@ ThemeData buildAppTheme() {
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.space16, horizontal: AppSpacing.space24),
         shape: const StadiumBorder(),
-        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -92,16 +92,16 @@ ThemeData buildAppTheme() {
         foregroundColor: Colors.white,
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
         shape: const StadiumBorder(),
-        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: kInkColor,
-        side: const BorderSide(color: kCardBorderColor),
+        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
         shape: const StadiumBorder(),
-        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -109,7 +109,7 @@ ThemeData buildAppTheme() {
         foregroundColor: kAccentColor,
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
         shape: const StadiumBorder(),
-        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
@@ -119,22 +119,30 @@ ThemeData buildAppTheme() {
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      labelStyle: GoogleFonts.inter(color: kMutedColor, fontSize: 14, fontWeight: FontWeight.w500),
-      filled: true,
-      fillColor: kSurfaceColor,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(kCardRadius), borderSide: BorderSide.none),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(kCardRadius), borderSide: BorderSide.none),
+      labelStyle: GoogleFonts.chewy(color: Colors.black54, fontSize: 16),
+      filled: false,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(kCardRadius),
+        borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(kCardRadius),
+        borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+      ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(kCardRadius),
-        borderSide: const BorderSide(color: kAccentColor, width: 1.5),
+        borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.space16)),
-      titleTextStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: kInkColor),
-      contentTextStyle: GoogleFonts.inter(fontWeight: FontWeight.w400, fontSize: 14, color: kInkColor),
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        borderRadius: BorderRadius.circular(AppSpacing.space16),
+      ),
+      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20, color: kInkColor),
+      contentTextStyle: GoogleFonts.nunito(fontWeight: FontWeight.w600, fontSize: 14, color: kInkColor),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: Colors.white,
@@ -144,7 +152,7 @@ ThemeData buildAppTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: kInkColor,
-      contentTextStyle: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+      contentTextStyle: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.space8)),
     ),

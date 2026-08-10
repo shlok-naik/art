@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/app_icons.dart';
-import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 
 const kSessionStages = [
@@ -110,33 +109,33 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: appBodyStyle(color: kInkColor),
+      style: GoogleFonts.chewy(color: Colors.black),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.space16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.title,
-              style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 24),
+              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24),
             ),
-            const SizedBox(height: AppSpacing.space20),
-            Text('Session Name', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: AppSpacing.space8),
+            const SizedBox(height: 20),
+            Text('Session Name', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
             TextField(
               controller: _nameController,
               enabled: !widget.isSubmitting,
               decoration: appInputDecoration('e.g. Sunset Mountains — Session 3').copyWith(
                 errorText: _nameError,
               ),
-              style: appBodyStyle(fontSize: 16, color: kInkColor),
+              style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
               onChanged: (_) {
                 if (_nameError != null) setState(() => _nameError = null);
               },
             ),
-            const SizedBox(height: AppSpacing.space20),
-            Text('Stage', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: AppSpacing.space8),
+            const SizedBox(height: 20),
+            Text('Stage', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _stage,
               decoration: appInputDecoration('Stage'),
@@ -147,22 +146,22 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                   ? null
                   : (value) => setState(() => _stage = value ?? _stage),
             ),
-            const SizedBox(height: AppSpacing.space20),
-            Text('Tools Used', style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            const SizedBox(height: AppSpacing.space8),
+            const SizedBox(height: 20),
+            Text('Tools Used', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
             if (_tools.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.space8),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     for (final tool in _tools)
                       Chip(
-                        label: Text(tool, style: appBodyStyle(fontSize: 14)),
+                        label: Text(tool, style: GoogleFonts.chewy(fontSize: 14)),
                         onDeleted: widget.isSubmitting ? null : () => _removeTool(tool),
-                        backgroundColor: kSurfaceColor,
-                        side: const BorderSide(color: kHairlineColor, width: 1),
+                        backgroundColor: Colors.grey.shade100,
+                        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
                       ),
                   ],
                 ),
@@ -174,21 +173,21 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                     controller: _toolController,
                     enabled: !widget.isSubmitting,
                     decoration: appInputDecoration('Add a tool (e.g. Procreate)'),
-                    style: appBodyStyle(fontSize: 16, color: kInkColor),
+                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
                     onSubmitted: (_) => _addTool(),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.space8),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const AppIcon(AppIcons.plus, size: 26, color: kAccentColor),
+                  icon: const Icon(Icons.add_circle, color: kAccentColor, size: 32),
                   onPressed: widget.isSubmitting ? null : _addTool,
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.space20),
+            const SizedBox(height: 20),
             Text(
               'Difficulty (1-10)',
-              style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Row(
               children: [
@@ -210,21 +209,21 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                   child: Text(
                     '$_difficulty',
                     textAlign: TextAlign.center,
-                    style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                    style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
               ],
             ),
             if (widget.showProjectCompletion) ...[
-              const SizedBox(height: AppSpacing.space16),
+              const SizedBox(height: 16),
               Text(
                 'Project Completion',
-                style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              const SizedBox(height: AppSpacing.space4),
+              const SizedBox(height: 4),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: kAccentTintColor,
                   borderRadius: BorderRadius.circular(12),
@@ -234,14 +233,14 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                     Expanded(
                       child: Text(
                         'Recommended for $_stage: $_recommendedCompletion%',
-                        style: appBodyStyle(fontSize: 13, color: kAccentColor),
+                        style: GoogleFonts.chewy(fontSize: 13, color: kAccentColor),
                       ),
                     ),
                     TextButton(
                       onPressed: widget.isSubmitting
                           ? null
                           : () => setState(() => _projectCompletion = _recommendedCompletion),
-                      child: Text('Use this', style: appBodyStyle(color: kAccentColor)),
+                      child: Text('Use this', style: GoogleFonts.chewy(color: kAccentColor)),
                     ),
                   ],
                 ),
@@ -266,22 +265,22 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                     child: Text(
                       '$_projectCompletion%',
                       textAlign: TextAlign.center,
-                      style: appBodyStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                   ),
                 ],
               ),
             ],
-            const SizedBox(height: AppSpacing.space24),
+            const SizedBox(height: 24),
             AppPrimaryButton(
               label: widget.submitLabel,
               isLoading: widget.isSubmitting,
               onPressed: widget.isSubmitting ? null : _handleSubmit,
             ),
-            const SizedBox(height: AppSpacing.space12),
+            const SizedBox(height: 12),
             TextButton(
               onPressed: widget.isSubmitting ? null : widget.onBack,
-              child: Text('Back', style: appBodyStyle(color: kInkColor, fontSize: 15)),
+              child: Text('Back', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
             ),
           ],
         ),

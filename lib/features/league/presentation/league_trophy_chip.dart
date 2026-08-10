@@ -3,9 +3,8 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../shared/app_icons.dart';
-import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../domain/league.dart';
 
@@ -19,23 +18,25 @@ class LeagueTrophyChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
       onTap: () => showLeagueTrophyDetail(context, trophy: trophy),
       child: Tooltip(
         message: trophy.themeTitle,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space8, horizontal: AppSpacing.space12),
-          decoration: appFlatCardDecoration(radius: 20),
-          child: Row(
+          width: 78,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: appHardCardDecoration(radius: 14, shadowOffset: 2),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AppIcon(AppIcons.trophy, size: 14, color: kGoldColor),
-              const SizedBox(width: AppSpacing.space8),
+              const Text('🏆', style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 3),
               Text(
                 trophy.themeTitle,
+                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
               ),
             ],
           ),
@@ -86,7 +87,7 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
@@ -100,49 +101,51 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
                 Text(
                   trophy.themeTitle,
                   textAlign: TextAlign.center,
-                  style: appHeadlineStyle(fontSize: 22, color: kNavyColor, italic: true),
+                  style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
                 ),
-                const SizedBox(height: AppSpacing.space8),
+                const SizedBox(height: 8),
                 Text(
                   trophy.themeDescription,
                   textAlign: TextAlign.center,
-                  style: appBodyStyle(fontSize: 14, color: kMutedColor),
+                  style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
                 ),
-                const SizedBox(height: AppSpacing.space12),
+                const SizedBox(height: 12),
                 if (trophy.photoUrl.isNotEmpty)
-                  MuseumFrame(
-                    radius: 8,
-                    child: SizedBox(
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: trophy.photoUrl,
                       height: 140,
                       width: double.infinity,
-                      child: CachedNetworkImage(imageUrl: trophy.photoUrl, fit: BoxFit.cover),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                const SizedBox(height: AppSpacing.space12),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space12, vertical: AppSpacing.space8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: kGoldColor,
+                    color: kSuccessBgColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'Won with ★ ${trophy.stars}',
-                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kNavyColor),
+                    'Won with ⭐ ${trophy.stars}',
+                    style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kSuccessTextColor),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.space20),
+                const SizedBox(height: 20),
                 InkWell(
                   onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space28, vertical: AppSpacing.space12),
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                     decoration: BoxDecoration(
                       color: kAccentColor,
+                      border: Border.all(color: kBorderColor, width: kBorderWidth),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
                       'Close',
-                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
                     ),
                   ),
                 ),
@@ -156,11 +159,11 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: kNavyColor,
-                border: Border.all(color: kGoldColor, width: 1.5),
+                color: Colors.white,
+                border: Border.all(color: kBorderColor, width: kBorderWidth),
               ),
               alignment: Alignment.center,
-              child: const AppIcon(AppIcons.trophy, size: 34, color: kGoldColor, strokeWidth: 1.5),
+              child: const Text('🏆', style: TextStyle(fontSize: 34)),
             ),
           ),
           ConfettiWidget(
@@ -172,7 +175,7 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
             minBlastForce: 6,
             gravity: 0.3,
             shouldLoop: false,
-            colors: const [Colors.white, kAccentColor, kGoldColor, kNavyColor, Colors.lightBlueAccent],
+            colors: const [Colors.white, kAccentColor, Colors.amber, Colors.pinkAccent, Colors.lightBlueAccent],
           ),
         ],
       ),

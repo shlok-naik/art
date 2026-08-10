@@ -1,34 +1,31 @@
-import '../../../shared/app_icons.dart';
+import 'package:flutter/material.dart';
 
 /// Every stat a user can choose to show on their public Stats page. The
 /// [storageKey] is what's persisted in `profiles.visible_stats` — keep it
 /// stable even if [label] changes.
 enum StatKey {
-  posts('posts', 'Posts', AppIcons.grid),
-  followers('followers', 'Followers', AppIcons.followed),
-  following('following', 'Following', AppIcons.personAdd),
-  totalViews('totalViews', 'Total views', AppIcons.eye),
-  timeSpent('timeSpent', 'Time spent drawing', AppIcons.clock),
-  sessionCount('sessionCount', 'Sessions logged', AppIcons.brush),
-  streak('streak', 'Current streak', AppIcons.flame),
-  leagueRank('leagueRank', 'League rank', AppIcons.trophy),
-  averageDifficulty('averageDifficulty', 'Average difficulty', AppIcons.gauge),
-  finishedProjects('finishedProjects', 'Finished projects', AppIcons.checkCircle),
-  longestSession('longestSession', 'Longest session', AppIcons.clock),
-  averageSessionLength('averageSessionLength', 'Avg. session length', AppIcons.hourglass),
-  workStyle('workStyle', 'Work style', AppIcons.brain),
-  stageBreakdown('stageBreakdown', 'Time per stage (chart)', AppIcons.barChart, isChart: true),
-  difficultySpread('difficultySpread', 'Difficulty spread (chart)', AppIcons.barChart, isChart: true),
-  projectStatus('projectStatus', 'Project status (chart)', AppIcons.pieChart, isChart: true);
+  posts('posts', 'Posts', Icons.grid_on),
+  followers('followers', 'Followers', Icons.people_outline),
+  following('following', 'Following', Icons.person_add_alt_outlined),
+  totalViews('totalViews', 'Total views', Icons.visibility_outlined),
+  timeSpent('timeSpent', 'Time spent drawing', Icons.schedule_outlined),
+  sessionCount('sessionCount', 'Sessions logged', Icons.brush_outlined),
+  streak('streak', 'Current streak', Icons.local_fire_department_outlined),
+  leagueRank('leagueRank', 'League rank', Icons.emoji_events_outlined),
+  averageDifficulty('averageDifficulty', 'Average difficulty', Icons.speed_outlined),
+  finishedProjects('finishedProjects', 'Finished projects', Icons.check_circle_outline),
+  longestSession('longestSession', 'Longest session', Icons.timer_outlined),
+  averageSessionLength('averageSessionLength', 'Avg. session length', Icons.hourglass_bottom_outlined),
+  workStyle('workStyle', 'Work style', Icons.psychology_outlined),
+  stageBreakdown('stageBreakdown', 'Time per stage (chart)', Icons.bar_chart, isChart: true),
+  difficultySpread('difficultySpread', 'Difficulty spread (chart)', Icons.equalizer, isChart: true),
+  projectStatus('projectStatus', 'Project status (chart)', Icons.pie_chart_outline, isChart: true);
 
   const StatKey(this.storageKey, this.label, this.icon, {this.isChart = false});
 
   final String storageKey;
   final String label;
-
-  /// An [AppIcons] entry rather than an [IconData] — the redesign renders
-  /// every glyph from the shared outline set.
-  final String icon;
+  final IconData icon;
 
   /// Whether this stat renders as a full-width chart card on the Stats page
   /// rather than a grid tile.

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/app_icons.dart';
-import '../../../shared/app_spacing.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
 import '../../league/domain/league_region.dart';
@@ -165,7 +165,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: appThemedAppBar(context, 'Edit Profile'),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.space20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -175,11 +175,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   borderRadius: BorderRadius.circular(48),
                   child: Stack(
                     children: [
-                      AppInitialsAvatar(
-                        name: widget.profile.displayName,
-                        size: 88,
-                        color: kNavyColor,
-                        imageUrl: _avatarUrl,
+                      Container(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
+                        ),
+                        child: AppInitialsAvatar(
+                          name: widget.profile.displayName,
+                          size: 88,
+                          imageUrl: _avatarUrl,
+                        ),
                       ),
                       if (_isUploadingAvatar)
                         Container(
@@ -198,36 +203,36 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.space8),
+                            padding: const EdgeInsets.all(6),
                             decoration: const BoxDecoration(
                               color: kAccentColor,
                               shape: BoxShape.circle,
                               border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2)),
                             ),
-                            child: const AppIcon(AppIcons.camera, size: 14, color: Colors.white),
+                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
                           ),
                         ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.space20),
-              Text('Your details', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: AppSpacing.space16),
+              const SizedBox(height: 20),
+              Text('Your details', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              const SizedBox(height: 16),
               TextField(
                 controller: _displayNameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Display name'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: AppSpacing.space16),
+              const SizedBox(height: 14),
               TextField(
                 controller: _usernameController,
                 enabled: !_isSaving,
                 decoration: appInputDecoration('Username'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: AppSpacing.space16),
+              const SizedBox(height: 14),
               TextField(
                 controller: _bioController,
                 enabled: !_isSaving,
@@ -236,14 +241,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('Bio (optional)'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: AppSpacing.space16),
-              Text('League region', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: AppSpacing.space4),
+              const SizedBox(height: 12),
+              Text('League region', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              const SizedBox(height: 4),
               Text(
                 "Which region's weekly league you compete in.",
-                style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
               ),
-              const SizedBox(height: AppSpacing.space12),
+              const SizedBox(height: 12),
               InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: _isSaving
@@ -254,9 +259,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: kHairlineColor, width: 1),
+                    border: Border.all(color: kBorderColor, width: kBorderWidth),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -264,22 +269,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       Expanded(
                         child: Text(
                           _region == null ? 'Not set' : leagueRegionLabel(_region!),
-                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInkColor),
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black),
                         ),
                       ),
-                      const AppIcon(AppIcons.chevronRight, size: 18, color: kMutedColor),
+                      const Icon(Icons.chevron_right, size: 18, color: Colors.black54),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.space12),
-              Text('Change password', style: appBodyStyle(fontSize: 20, color: kInkColor)),
-              const SizedBox(height: AppSpacing.space4),
+              const SizedBox(height: 12),
+              Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              const SizedBox(height: 4),
               Text(
                 'Leave this blank to keep your current password.',
-                style: appBodyStyle(fontSize: 13, color: kMutedColor),
+                style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
               ),
-              const SizedBox(height: AppSpacing.space12),
+              const SizedBox(height: 12),
               TextField(
                 controller: _passwordController,
                 enabled: !_isSaving,
@@ -287,10 +292,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: appInputDecoration('New password'),
                 style: appBodyStyle(fontSize: 16),
               ),
-              const SizedBox(height: AppSpacing.space20),
+              const SizedBox(height: 20),
               if (_errorText != null) ...[
                 AppErrorText(_errorText!),
-                const SizedBox(height: AppSpacing.space12),
+                const SizedBox(height: 12),
               ],
               AppPrimaryButton(label: 'Save changes', isLoading: _isSaving, onPressed: _save),
             ],

@@ -2,9 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
-import '../../../shared/app_theme.dart';
 import '../../auth/providers.dart';
 import '../providers.dart';
 
@@ -65,16 +63,16 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
         data: (projectsWithCover) {
           if (projectsWithCover.isEmpty) {
             return Padding(
-              padding: const EdgeInsets.all(AppSpacing.space24),
+              padding: const EdgeInsets.all(24),
               child: Text(
                 "You don't have any projects with a logged session yet — log a session first.",
                 textAlign: TextAlign.center,
-                style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kMutedColor),
+                style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
               ),
             );
           }
           return GridView.builder(
-            padding: const EdgeInsets.all(AppSpacing.space16),
+            padding: const EdgeInsets.all(16),
             itemCount: projectsWithCover.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -99,8 +97,8 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                         right: 0,
                         bottom: 0,
                         child: Container(
-                          color: kMutedColor,
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space8, vertical: AppSpacing.space4),
+                          color: Colors.black54,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                           child: Text(
                             project['title']?.toString() ?? '',
                             maxLines: 1,
@@ -111,7 +109,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                       ),
                       if (isSubmitting)
                         Container(
-                          color: kMutedColor,
+                          color: Colors.black45,
                           alignment: Alignment.center,
                           child: const CircularProgressIndicator(color: Colors.white),
                         ),
@@ -120,9 +118,9 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
                           top: 4,
                           right: 4,
                           child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.space4),
+                            padding: const EdgeInsets.all(3),
                             decoration: const BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
-                            child: const AppIcon(AppIcons.checkCircle, size: 12, color: Colors.white, strokeWidth: 2.4),
+                            child: const Icon(Icons.check, size: 14, color: Colors.white),
                           ),
                         ),
                     ],
@@ -132,7 +130,7 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
             },
           );
         },
-        loading: () => const AppSkeletonScreen(),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => AppErrorState(
           error: error,
           onRetry: () => ref.invalidate(myProjectsWithCoverProvider),
