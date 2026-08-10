@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/providers.dart';
 import '../projects/providers.dart';
 import 'data/league_repository.dart';
+import 'data/league_seen_store.dart';
 import 'domain/league.dart';
 
 final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
   return LeagueRepository(ref.watch(supabaseClientProvider));
 });
+
+final leagueSeenStoreProvider = Provider<LeagueSeenStore>((ref) => LeagueSeenStore());
 
 /// The current 2-week league — materialized lazily server-side the first
 /// time anyone asks (see get_or_create_current_league() in
@@ -32,6 +35,26 @@ final myLeagueVoteProvider = FutureProvider.autoDispose.family<String?, String>(
 /// The winning entry from the most recently ended league, if any.
 final latestLeagueChampionProvider = FutureProvider.autoDispose<LeagueChampion?>((ref) {
   return ref.watch(leagueRepositoryProvider).fetchLatestChampion();
+});
+
+/// Whether the current league is one the signed-in user hasn't acknowledged
+/// on this device yet — true right after a league restarts, until they open
+/// the League page (which marks it seen). Drives the home screen's "NEW"
+/// badge and the League page's one-time "create a project?" prompt.
+final isCurrentLeagueUnseenProvider = FutureProvider.autoDispose<bool>((ref) async {
+  final league = await ref.watch(currentLeagueProvider.future);
+  final lastSeenId = await ref.watch(leagueSeenStoreProvider).getLastSeenLeagueId();
+  return lastSeenId != league.id;
+});
+
+/// The signed-in current league's live rank for [userId] — the position
+/// (1-indexed) of their best-performing submission among all submissions —
+/// or null if they have no submission in the current league.
+final leagueRankForUserProvider = FutureProvider.autoDispose.family<int?, String>((ref, userId) async {
+  final league = await ref.watch(currentLeagueProvider.future);
+  final submissions = await ref.watch(leagueSubmissionsProvider(league.id).future);
+  final rank = submissions.indexWhere((s) => s.userId == userId);
+  return rank == -1 ? null : rank + 1;
 });
 
 /// The signed-in user's projects that have at least one session photo,

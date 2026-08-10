@@ -41,10 +41,11 @@ BoxDecoration appHardCardDecoration({
   double radius = 18,
   double shadowOffset = 4,
   Color color = Colors.white,
+  Color borderColor = kBorderColor,
 }) {
   return BoxDecoration(
     color: color,
-    border: Border.all(color: kBorderColor, width: kBorderWidth),
+    border: Border.all(color: borderColor, width: kBorderWidth),
     borderRadius: BorderRadius.circular(radius),
     boxShadow: hardShadow(offset: shadowOffset),
   );

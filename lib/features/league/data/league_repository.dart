@@ -86,6 +86,14 @@ class LeagueRepository {
     );
   }
 
+  /// Retracts the signed-in user's vote in [leagueId], if they've cast one.
+  /// RLS rejects this once the league has ended (see "users retract their
+  /// own vote while the league is open" in add_league_tables.sql).
+  Future<void> unvote(String leagueId) async {
+    final userId = _client.auth.currentUser!.id;
+    await _client.from('league_votes').delete().eq('league_id', leagueId).eq('voter_id', userId);
+  }
+
   /// The winning submission of the most recently *ended* league, if there
   /// is one yet — used for the "Last Season's Champion" card.
   Future<LeagueChampion?> fetchLatestChampion() async {

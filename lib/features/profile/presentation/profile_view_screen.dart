@@ -9,13 +9,10 @@ import '../../achievements/presentation/all_achievements_screen.dart';
 import '../../achievements/providers.dart';
 import '../../auth/providers.dart';
 import '../../feed/providers.dart';
+import '../../league/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
-
-// League standing has no backing data yet — it needs the future league
-// feature. Posts, Followers, streak, and achievements below are all real.
-const _leagueRank = '#3';
 
 String _formatCount(int count) {
   if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
@@ -45,6 +42,8 @@ class ProfileViewScreen extends ConsumerWidget {
             final followersCount = ref.watch(followCountsProvider(profile.id)).value?.followers;
             final streakDays = ref.watch(sessionStatsProvider(profile.id)).value?.currentStreakDays ?? 0;
             final unlockedAchievements = ref.watch(unlockedAchievementsProvider(profile.id)).value;
+            final leagueRank = ref.watch(leagueRankForUserProvider(profile.id)).value;
+            final leagueRankText = leagueRank == null ? 'Unranked' : '#$leagueRank';
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               child: Column(
@@ -147,7 +146,7 @@ class ProfileViewScreen extends ConsumerWidget {
                               ),
                             ),
                             Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
-                            Expanded(child: _StatColumn(value: _leagueRank, label: 'League rank')),
+                            Expanded(child: _StatColumn(value: leagueRankText, label: 'League rank')),
                           ],
                         ),
                       ],

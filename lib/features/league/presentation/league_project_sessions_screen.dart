@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../feed/domain/feed_post.dart';
-import '../../posts/presentation/post_detail_screen.dart';
+import '../../profile/presentation/session_photo_viewer_screen.dart';
 import '../../projects/providers.dart';
 import '../domain/league.dart';
 
@@ -74,7 +74,7 @@ class LeagueProjectSessionsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => PostDetailScreen(
+                      builder: (_) => SessionPhotoViewerScreen(
                         post: FeedPost.fromRow(
                           session: session,
                           project: project,

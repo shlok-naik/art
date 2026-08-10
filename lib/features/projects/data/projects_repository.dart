@@ -35,8 +35,9 @@ class ProjectsRepository {
     return List<Map<String, dynamic>>.from(rows);
   }
 
-  Future<void> createProject(Map<String, dynamic> values) async {
-    await _client.from('projects').insert(values);
+  Future<Map<String, dynamic>> createProject(Map<String, dynamic> values) async {
+    final row = await _client.from('projects').insert(values).select().single();
+    return Map<String, dynamic>.from(row);
   }
 
   Future<void> updateCompletion(String id, int completionPercent) async {

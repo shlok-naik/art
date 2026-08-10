@@ -8,17 +8,85 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/app_bottom_nav.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
+import '../../projects/presentation/project_detail_screen.dart';
+import '../../projects/providers.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
 import '../providers.dart';
 import 'league_project_sessions_screen.dart';
 import 'submit_to_league_screen.dart';
 
-class LeagueScreen extends ConsumerWidget {
+class LeagueScreen extends ConsumerStatefulWidget {
   const LeagueScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeagueScreen> createState() => _LeagueScreenState();
+}
+
+class _LeagueScreenState extends ConsumerState<LeagueScreen> {
+  // Guards against re-running the check on every rebuild of this widget
+  // instance — the actual "already seen" state lives in LeagueSeenStore
+  // (SharedPreferences), so it stays correct across screen instances too.
+  bool _checkedForNewLeague = false;
+
+  Future<void> _maybePromptNewLeague(League league) async {
+    if (_checkedForNewLeague) return;
+    _checkedForNewLeague = true;
+
+    final seenStore = ref.read(leagueSeenStoreProvider);
+    final lastSeenId = await seenStore.getLastSeenLeagueId();
+    // null means this is the very first league this device has ever seen
+    // (fresh install) — that's not a "restart", so just record it silently.
+    final isRestart = lastSeenId != null && lastSeenId != league.id;
+
+    await seenStore.markSeen(league.id);
+    ref.invalidate(isCurrentLeagueUnseenProvider);
+    if (!isRestart || !mounted) return;
+
+    final wantsNewProject = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        ),
+        title: Text('New league: ${league.themeTitle}', style: GoogleFonts.chewy(fontSize: 20)),
+        content: Text(
+          'Do you want to create a new project for this league?',
+          style: GoogleFonts.chewy(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('No', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Yes', style: GoogleFonts.chewy(color: kAccentColor, fontSize: 15)),
+          ),
+        ],
+      ),
+    );
+    if (wantsNewProject != true || !mounted) return;
+
+    try {
+      final project = await ref.read(projectsRepositoryProvider).createProject({'title': league.themeTitle});
+      ref.invalidate(projectsListProvider);
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create project: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final leagueAsync = ref.watch(currentLeagueProvider);
 
     return Scaffold(
@@ -26,7 +94,10 @@ class LeagueScreen extends ConsumerWidget {
       appBar: appThemedAppBar(context, 'League'),
       body: SafeArea(
         child: leagueAsync.when(
-          data: (league) => _LeagueBody(league: league),
+          data: (league) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _maybePromptNewLeague(league));
+            return _LeagueBody(league: league);
+          },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
             child: Padding(
@@ -81,7 +152,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _CountdownTimer(endsAt: league.endsAt),
+            _CountdownTimer(league: league),
             const SizedBox(height: 12),
             _ThemeBanner(league: league),
             const SizedBox(height: 16),
@@ -97,7 +168,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
               children: [
                 Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
                 const Spacer(),
-                if (league.isOpen)
+                if (league.isSubmissionOpen)
                   InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => SubmitToLeagueScreen(leagueId: league.id)),
@@ -162,7 +233,8 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
                       isMine: submission.userId == myUserId,
                       hasVoted: myVoteId != null,
                       isMyVote: submission.id == myVoteId,
-                      isVotingOpen: league.isOpen,
+                      isVotingOpen: league.isVotingOpen,
+                      isSubmissionOpen: league.isSubmissionOpen,
                     );
                   },
                 );
@@ -209,27 +281,26 @@ class _ThemeBanner extends StatelessWidget {
   }
 }
 
-/// Live countdown to [endsAt], ticking every second so days/hours/minutes/
-/// seconds stay accurate without needing a pull-to-refresh.
+/// Live countdown to whichever boundary is next for [league]'s current
+/// phase — submissions closing (Friday), voting closing (Sunday), or the
+/// next league starting (Monday) — ticking every second so it stays
+/// accurate without needing a pull-to-refresh.
 class _CountdownTimer extends StatefulWidget {
-  const _CountdownTimer({required this.endsAt});
+  const _CountdownTimer({required this.league});
 
-  final DateTime endsAt;
+  final League league;
 
   @override
   State<_CountdownTimer> createState() => _CountdownTimerState();
 }
 
 class _CountdownTimerState extends State<_CountdownTimer> {
-  late Duration _remaining = widget.endsAt.difference(DateTime.now().toUtc());
   Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _remaining = widget.endsAt.difference(DateTime.now().toUtc()));
-    });
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   }
 
   @override
@@ -240,41 +311,49 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_remaining.isNegative) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: appHardCardDecoration(radius: 18),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.timer_off_outlined, color: Colors.black54, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              'Voting closed',
-              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black54),
-            ),
-          ],
-        ),
-      );
+    final league = widget.league;
+    final (label, icon, target) = switch (league.phase) {
+      LeaguePhase.submissions => ('Submissions close in', Icons.upload_outlined, league.submissionsCloseAt),
+      LeaguePhase.votingOnly => ('Voting closes in', Icons.how_to_vote_outlined, league.votingClosesAt),
+      LeaguePhase.ended => ('New league starts in', Icons.refresh, league.endsAt),
+    };
+    final remaining = target.difference(DateTime.now().toUtc());
+    if (remaining.isNegative) {
+      // Between ticks right at a phase boundary — next second's rebuild
+      // will pick up the new phase.
+      return const SizedBox(height: 76);
     }
 
-    final days = _remaining.inDays;
-    final hours = _remaining.inHours.remainder(24);
-    final minutes = _remaining.inMinutes.remainder(60);
-    final seconds = _remaining.inSeconds.remainder(60);
+    final days = remaining.inDays;
+    final hours = remaining.inHours.remainder(24);
+    final minutes = remaining.inMinutes.remainder(60);
+    final seconds = remaining.inSeconds.remainder(60);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: appHardCardDecoration(radius: 18),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _CountdownUnit(value: days, label: 'DAYS'),
-          _CountdownUnit(value: hours, label: 'HRS'),
-          _CountdownUnit(value: minutes, label: 'MIN'),
-          _CountdownUnit(value: seconds, label: 'SEC'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: kAccentColor, size: 16),
+              const SizedBox(width: 6),
+              Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAccentColor)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _CountdownUnit(value: days, label: 'DAYS'),
+              _CountdownUnit(value: hours, label: 'HRS'),
+              _CountdownUnit(value: minutes, label: 'MIN'),
+              _CountdownUnit(value: seconds, label: 'SEC'),
+            ],
+          ),
         ],
       ),
     );
@@ -524,6 +603,7 @@ class _SubmissionCard extends ConsumerStatefulWidget {
     required this.hasVoted,
     required this.isMyVote,
     required this.isVotingOpen,
+    required this.isSubmissionOpen,
   });
 
   final LeagueSubmission submission;
@@ -531,6 +611,11 @@ class _SubmissionCard extends ConsumerStatefulWidget {
   final bool hasVoted;
   final bool isMyVote;
   final bool isVotingOpen;
+
+  /// Whether submissions can still be added/withdrawn (Mon–Fri) — separate
+  /// from [isVotingOpen], which stays true through the weekend after
+  /// submissions have already locked.
+  final bool isSubmissionOpen;
 
   @override
   ConsumerState<_SubmissionCard> createState() => _SubmissionCardState();
@@ -552,6 +637,23 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to vote: $e')));
+    } finally {
+      if (mounted) setState(() => _isVoting = false);
+    }
+  }
+
+  /// Tapping the heart on a submission you've already voted for retracts
+  /// the vote instead of re-casting it (which would be a harmless no-op
+  /// anyway, since it's the same submission).
+  Future<void> _unvote() async {
+    setState(() => _isVoting = true);
+    try {
+      await ref.read(leagueRepositoryProvider).unvote(widget.submission.leagueId);
+      ref.invalidate(myLeagueVoteProvider(widget.submission.leagueId));
+      ref.invalidate(leagueSubmissionsProvider(widget.submission.leagueId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to unvote: $e')));
     } finally {
       if (mounted) setState(() => _isVoting = false);
     }
@@ -601,7 +703,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
   Widget build(BuildContext context) {
     final submission = widget.submission;
     final canVote = widget.isVotingOpen && !widget.isMine && !_isVoting;
-    final canUnsubmit = widget.isMine && widget.isVotingOpen;
+    final canUnsubmit = widget.isMine && widget.isSubmissionOpen;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -674,7 +776,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
           ),
           const SizedBox(height: 6),
           InkWell(
-            onTap: canVote ? _vote : null,
+            onTap: canVote ? (widget.isMyVote ? _unvote : _vote) : null,
             borderRadius: BorderRadius.circular(20),
             child: Container(
               width: double.infinity,

@@ -4,14 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../shared/app_styles.dart';
 import '../../feed/providers.dart';
+import '../../league/providers.dart';
 import '../data/stats_repository.dart';
 import '../domain/stat_key.dart';
 import '../providers.dart';
-
-// League standing has no backing data yet — it needs the future league
-// feature — so it stays a fixed placeholder like it does on the owner's
-// main Profile tab.
-const _leagueRank = '#3';
 
 String _formatCount(num count) {
   if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
@@ -29,7 +25,7 @@ String _formatMinutes(double minutes) {
 /// Public-facing Stats page for one user — reachable from their profile.
 /// Only shows the stats the profile owner has opted into via
 /// [StatsVisibilityScreen], resolved against real data (posts, followers,
-/// views, time spent, streak); league rank remains a hardcoded placeholder.
+/// views, time spent, streak, league rank).
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key, required this.userId});
 
@@ -129,6 +125,7 @@ class _StatTile extends ConsumerWidget {
     final followCounts = ref.watch(followCountsProvider(userId)).value;
     final sessionStats = ref.watch(sessionStatsProvider(userId)).value;
     final projectStats = ref.watch(projectStatsProvider(userId)).value;
+    final leagueRank = ref.watch(leagueRankForUserProvider(userId)).value;
 
     final displayValue = switch (statKey) {
       StatKey.posts => posts == null ? '—' : _formatCount(posts.length),
@@ -139,7 +136,7 @@ class _StatTile extends ConsumerWidget {
       StatKey.timeSpent => sessionStats == null ? '—' : _formatMinutes(sessionStats.totalMinutes),
       StatKey.sessionCount => sessionStats == null ? '—' : _formatCount(sessionStats.sessionCount),
       StatKey.streak => sessionStats == null ? '—' : _formatCount(sessionStats.currentStreakDays),
-      StatKey.leagueRank => _leagueRank,
+      StatKey.leagueRank => leagueRank == null ? 'Unranked' : '#$leagueRank',
       StatKey.averageDifficulty => sessionStats?.averageDifficulty == null
           ? '—'
           : '${sessionStats!.averageDifficulty!.toStringAsFixed(1)}/10',

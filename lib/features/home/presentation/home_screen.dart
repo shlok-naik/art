@@ -8,6 +8,7 @@ import '../../analytics/presentation/analytics_screen.dart';
 import '../../feed/domain/feed_post.dart';
 import '../../feed/providers.dart';
 import '../../league/presentation/league_screen.dart';
+import '../../league/providers.dart';
 import '../../posts/presentation/my_posts_screen.dart';
 import '../../posts/presentation/post_detail_screen.dart';
 import '../../profile/providers.dart';
@@ -89,6 +90,7 @@ class HomeScreen extends ConsumerWidget {
                             child: _QuickActionChip(
                               emoji: '🏆',
                               label: 'League',
+                              isNew: ref.watch(isCurrentLeagueUnseenProvider).value ?? false,
                               onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const LeagueScreen()),
                               ),
@@ -402,33 +404,65 @@ class _BuyProPill extends StatelessWidget {
 }
 
 class _QuickActionChip extends StatelessWidget {
-  const _QuickActionChip({required this.emoji, required this.label, required this.onPressed});
+  const _QuickActionChip({
+    required this.emoji,
+    required this.label,
+    required this.onPressed,
+    this.isNew = false,
+  });
 
   final String emoji;
   final String label;
   final VoidCallback onPressed;
+
+  /// Draws an accent-orange outline and a small "NEW" bubble in the corner —
+  /// used to flag a freshly-restarted league until the user opens it.
+  final bool isNew;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        decoration: appHardCardDecoration(radius: 16, shadowOffset: 3),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.chewy(fontSize: 12, color: Colors.black),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            decoration: appHardCardDecoration(
+              radius: 16,
+              shadowOffset: 3,
+              borderColor: isNew ? kAccentColor : kBorderColor,
             ),
-          ],
-        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.chewy(fontSize: 12, color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+          if (isNew)
+            Positioned(
+              top: -6,
+              right: -6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: kAccentColor,
+                  border: Border.all(color: kBorderColor, width: kBorderWidth),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text('NEW', style: GoogleFonts.chewy(fontSize: 9, color: Colors.white)),
+              ),
+            ),
+        ],
       ),
     );
   }
