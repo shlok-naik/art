@@ -1,4 +1,4 @@
-# art
+# Unfinished
 
 A Flutter app for tracking creative projects, sharing progress, and connecting
 with other artists.
