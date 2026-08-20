@@ -54,7 +54,6 @@ class HomeScreen extends ConsumerWidget {
         : ref.watch(sessionReactionsProvider(mostRecentPost.id)).value?.total ?? 0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Center(
@@ -160,7 +159,7 @@ class HomeScreen extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               '@$username',
-                              style: GoogleFonts.rubikMonoOne(fontSize: 30, color: Colors.black),
+                              style: GoogleFonts.rubikMonoOne(fontSize: 30, color: kInkColor),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -256,7 +255,7 @@ class HomeScreen extends ConsumerWidget {
                                       children: [
                                         Text(
                                           'Continue Last Project',
-                                          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+                                          style: GoogleFonts.chewy(fontSize: 18, color: kInkColor),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
@@ -309,7 +308,7 @@ class HomeScreen extends ConsumerWidget {
                               'Most Recent Post',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+                              style: GoogleFonts.chewy(fontSize: 18, color: kInkColor),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -357,15 +356,15 @@ class HomeScreen extends ConsumerWidget {
                                                 mostRecentPost == null ? 'No posts yet' : 'Image',
                                                 style: GoogleFonts.chewy(
                                                   fontSize: mostRecentPost == null ? 18 : 44,
-                                                  color: Colors.black45,
+                                                  color: kMutedColor,
                                                 ),
                                               ),
                                             )
                                           : CachedNetworkImage(
                                               imageUrl: mostRecentPost.photoUrl!,
                                               fit: BoxFit.cover,
-                                              errorWidget: (context, url, error) => const Center(
-                                                child: Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
+                                              errorWidget: (context, url, error) => Center(
+                                                child: Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
                                               ),
                                             ),
                                     ),
@@ -398,7 +397,7 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 10),
                               Text(
                                 mostRecentPost?.displayTitle ?? 'No recent posts',
-                                style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                                style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -480,7 +479,7 @@ class _QuickActionChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.chewy(fontSize: 12, color: Colors.black),
+              style: GoogleFonts.chewy(fontSize: 12, color: kInkColor),
             ),
           ],
         ),

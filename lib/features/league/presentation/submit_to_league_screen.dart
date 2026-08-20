@@ -57,7 +57,6 @@ class _SubmitToLeagueScreenState extends ConsumerState<SubmitToLeagueScreen> {
     };
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Submit to League'),
       body: projectsAsync.when(
         data: (projectsWithCover) {

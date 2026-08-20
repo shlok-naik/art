@@ -161,7 +161,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Edit Profile'),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -176,7 +175,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   child: Stack(
                     children: [
                       Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
                         ),
@@ -217,7 +216,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Your details', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('Your details', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 16),
               TextField(
                 controller: _displayNameController,
@@ -242,7 +241,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 style: appBodyStyle(fontSize: 16),
               ),
               const SizedBox(height: 12),
-              Text('League region', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('League region', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 4),
               Text(
                 "Which region's weekly league you compete in.",
@@ -269,16 +268,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       Expanded(
                         child: Text(
                           _region == null ? 'Not set' : leagueRegionLabel(_region!),
-                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black),
+                          style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kInkColor),
                         ),
                       ),
-                      const Icon(Icons.chevron_right, size: 18, color: Colors.black54),
+                      Icon(Icons.chevron_right, size: 18, color: kMutedColor),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+              Text('Change password', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 4),
               Text(
                 'Leave this blank to keep your current password.',

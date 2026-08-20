@@ -27,9 +27,8 @@ class ArtWrappedScreen extends ConsumerWidget {
     final statsAsync = ref.watch(artWrappedProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: kAccentColor,
         appBar: AppBar(
           backgroundColor: kAccentColor,
           elevation: 0,
@@ -50,7 +49,7 @@ class ArtWrappedScreen extends ConsumerWidget {
                     child: Text(
                       'Log a few sessions to unlock your recap.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 16, color: Colors.white),
+                      style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                     ),
                   ),
                 );
@@ -62,15 +61,15 @@ class ArtWrappedScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'You put in',
-                      style: GoogleFonts.chewy(fontSize: 18, color: Colors.white70),
+                      style: GoogleFonts.chewy(fontSize: 18, color: kMutedColor),
                     ),
                     Text(
                       _formatMinutes(stats.totalMinutes),
-                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 56, color: Colors.white),
+                      style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 56, color: kAccentColor),
                     ),
                     Text(
                       'across ${stats.sessionCount} session${stats.sessionCount == 1 ? '' : 's'}',
-                      style: GoogleFonts.chewy(fontSize: 18, color: Colors.white70),
+                      style: GoogleFonts.chewy(fontSize: 18, color: kMutedColor),
                     ),
                     const SizedBox(height: 28),
                     Row(
@@ -127,16 +126,15 @@ class ArtWrappedScreen extends ConsumerWidget {
                     Text(
                       'Screenshot this to share your year in art.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 14, color: Colors.white70),
+                      style: GoogleFonts.chewy(fontSize: 14, color: kMutedColor),
                     ),
                   ],
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+            loading: () => const Center(child: CircularProgressIndicator(color: kAccentColor)),
             error: (error, _) => AppErrorState(
               error: error,
-              onDark: true,
               onRetry: () => ref.invalidate(artWrappedProvider),
             ),
           ),
@@ -173,7 +171,7 @@ class _WrappedStatCard extends StatelessWidget {
       width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kSurfaceColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: kBorderColor, width: kBorderWidth),
       ),
@@ -183,14 +181,14 @@ class _WrappedStatCard extends StatelessWidget {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54)),
+          Text(label, style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor)),
           Text(
             value,
-            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
+            style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
           if (sublabel != null)
-            Text(sublabel!, style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45)),
+            Text(sublabel!, style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor)),
         ],
       ),
     );

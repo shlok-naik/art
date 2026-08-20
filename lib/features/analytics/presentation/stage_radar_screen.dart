@@ -26,9 +26,8 @@ class StageRadarScreen extends ConsumerWidget {
     final overviewAsync = ref.watch(projectsOverviewProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, '👑 Pro-exclusive  Analytics'),
         body: SafeArea(
           child: analyticsAsync.when(
@@ -51,7 +50,7 @@ class StageRadarScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       'See which stages are consistently hardest across all your projects.',
-                      style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                      style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -59,7 +58,7 @@ class StageRadarScreen extends ConsumerWidget {
                       style: GoogleFonts.chewy(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: Colors.black45,
+                        color: kMutedColor,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -135,7 +134,7 @@ class _DifficultyProInsights extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Older sessions (grey) vs. your more recent half (orange).',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
@@ -163,7 +162,7 @@ class _DifficultyProInsights extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Average difficulty tackled per month.',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
@@ -199,7 +198,7 @@ class _DifficultyProInsights extends StatelessWidget {
                           style: GoogleFonts.chewy(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: insights.growthPercent! >= 0 ? Colors.white : Colors.black54,
+                            color: insights.growthPercent! >= 0 ? Colors.white : kMutedColor,
                           ),
                         ),
                       ),
@@ -211,12 +210,12 @@ class _DifficultyProInsights extends StatelessWidget {
                   children: [
                     Text(
                       monthly.first.label,
-                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                      style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor),
                     ),
                     const Spacer(),
                     Text(
                       monthly.last.label,
-                      style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                      style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor),
                     ),
                   ],
                 ),
@@ -253,7 +252,7 @@ class _ProInsights extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'What you reach for most across every session.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
@@ -263,7 +262,7 @@ class _ProInsights extends StatelessWidget {
           child: insights.topTools.isEmpty
               ? Text(
                   'Log a tool during a session to see this.',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54),
+                  style: GoogleFonts.chewy(fontSize: 14, color: kMutedColor),
                 )
               : Column(
                   children: [
@@ -282,7 +281,7 @@ class _ProInsights extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Sessions logged over the last 12 weeks.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
@@ -299,7 +298,7 @@ class _ProInsights extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Sessions started, by time of day.',
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
@@ -320,7 +319,7 @@ class _ProInsights extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Are your sessions getting longer or shorter?',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
@@ -339,7 +338,7 @@ class _ProInsights extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'When each project was active — see what overlapped.',
-            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+            style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
           ),
           const SizedBox(height: 12),
           Container(
@@ -357,7 +356,7 @@ class _ProInsights extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           "Unfinished projects you haven't touched in a while.",
-          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
         ),
         const SizedBox(height: 12),
         Container(
@@ -445,7 +444,7 @@ class _ActivityHeatmap extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           '$activeDays active day${activeDays == 1 ? '' : 's'} in the last 12 weeks',
-          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
         ),
       ],
     );
@@ -504,7 +503,7 @@ class _SessionLengthTrend extends StatelessWidget {
               style: GoogleFonts.chewy(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: isShorter ? Colors.white : Colors.black54,
+                color: isShorter ? Colors.white : kMutedColor,
               ),
             ),
           ),
@@ -589,9 +588,9 @@ class _ProjectTimeline extends StatelessWidget {
         ],
         Row(
           children: [
-            Text(_shortDate(rangeStart), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+            Text(_shortDate(rangeStart), style: GoogleFonts.chewy(fontSize: 11, color: kMutedColor)),
             const Spacer(),
-            Text(_shortDate(now), style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45)),
+            Text(_shortDate(now), style: GoogleFonts.chewy(fontSize: 11, color: kMutedColor)),
           ],
         ),
       ],
@@ -626,7 +625,7 @@ class _NeedsAttentionRow extends StatelessWidget {
         ),
         Text(
           '${project.daysSinceActive}d idle',
-          style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+          style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
         ),
       ],
     );

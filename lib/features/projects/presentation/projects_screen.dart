@@ -53,10 +53,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: kSurfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+          side: BorderSide(color: kBorderColor, width: kBorderWidth),
         ),
         title: Text('Finish project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
         content: Text(
@@ -66,7 +66,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: kInkColor, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -95,17 +95,17 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: kSurfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+          side: BorderSide(color: kBorderColor, width: kBorderWidth),
         ),
         title: Text('Delete project?', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20)),
         content: Text('This will permanently delete "$title".', style: GoogleFonts.chewy(fontSize: 15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Cancel', style: GoogleFonts.chewy(color: kInkColor, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -133,7 +133,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final projectsAsync = ref.watch(projectsListProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Projects'),
       body: SafeArea(
         child: Column(
@@ -149,19 +148,19 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       decoration: appInputDecoration('New project name').copyWith(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                          borderSide: BorderSide(color: kBorderColor, width: kBorderWidth),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                          borderSide: BorderSide(color: kBorderColor, width: kBorderWidth),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: const BorderSide(color: kAccentColor, width: kBorderWidth),
                         ),
-                        labelStyle: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black45),
+                        labelStyle: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kMutedColor),
                       ),
-                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
+                      style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInkColor),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -202,7 +201,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                     return Center(
                       child: Text(
                         'No projects yet.',
-                        style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                        style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                       ),
                     );
                   }
@@ -287,7 +286,7 @@ class _ProjectCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                  Text(title, style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
                   const SizedBox(height: 3),
                   Text(
                     sessionCount == null
@@ -321,17 +320,17 @@ class _ProjectCard extends ConsumerWidget {
                   InkWell(
                     onTap: onFinish,
                     borderRadius: BorderRadius.circular(20),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
                       child: Icon(Icons.check_circle_outline, color: kSuccessTextColor, size: 20),
                     ),
                   ),
                 InkWell(
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(20),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close, color: Colors.black, size: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.close, color: kInkColor, size: 20),
                   ),
                 ),
               ],

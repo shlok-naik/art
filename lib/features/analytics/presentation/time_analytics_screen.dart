@@ -25,9 +25,8 @@ class TimeAnalyticsScreen extends ConsumerWidget {
     final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Time Spent'),
         body: SafeArea(
           child: timeAsync.when(
@@ -192,7 +191,7 @@ class _StatTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+            style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
@@ -263,7 +262,7 @@ class _StageTimeRow extends StatelessWidget {
             style: GoogleFonts.chewy(
               fontWeight: FontWeight.bold,
               fontSize: 13,
-              color: minutes == null ? Colors.black38 : kAccentColor,
+              color: minutes == null ? kMutedColor : kAccentColor,
             ),
           ),
         ),

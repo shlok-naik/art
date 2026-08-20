@@ -27,7 +27,6 @@ class FeedScreen extends ConsumerWidget {
     final postsAsync = ref.watch(feedPostsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Feed'),
       body: postsAsync.when(
         data: (posts) {
@@ -36,7 +35,7 @@ class FeedScreen extends ConsumerWidget {
               child: Text(
                 'No posts yet — finish a session to see it here.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
               ),
             );
           }
@@ -150,12 +149,12 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                             children: [
                               Text(
                                 '@${post.artist}',
-                                style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                                style: GoogleFonts.chewy(fontSize: 15, color: kInkColor),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 post.type == FeedPostType.slideshow ? 'slideshow' : 'session',
-                                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54),
+                                style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
                               ),
                             ],
                           ),
@@ -187,23 +186,23 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   child: Icon(
                     isLiked ? Icons.favorite : Icons.favorite_border,
                     size: 26,
-                    color: isLiked ? kAccentColor : Colors.black,
+                    color: isLiked ? kAccentColor : kInkColor,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '$likeCount',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                  style: GoogleFonts.chewy(fontSize: 14, color: kInkColor),
                 ),
                 const SizedBox(width: 18),
                 InkWell(
                   onTap: _showComments,
-                  child: const Icon(Icons.mode_comment_outlined, size: 24, color: Colors.black),
+                  child: Icon(Icons.mode_comment_outlined, size: 24, color: kInkColor),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '$commentCount',
-                  style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                  style: GoogleFonts.chewy(fontSize: 14, color: kInkColor),
                 ),
               ],
             ),
@@ -212,7 +211,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Text(
               '${post.artist} — ${post.displayTitle}',
-              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black),
+              style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kInkColor),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -306,7 +305,7 @@ class _FollowPillState extends ConsumerState<_FollowPill> {
           isFollowing ? 'Following' : 'Follow',
           style: GoogleFonts.chewy(
             fontSize: 12,
-            color: isFollowing ? Colors.black : Colors.white,
+            color: isFollowing ? kInkColor : Colors.white,
           ),
         ),
       ),

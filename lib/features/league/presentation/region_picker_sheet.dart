@@ -11,7 +11,7 @@ import '../domain/league_region.dart';
 Future<String?> pickLeagueRegion(BuildContext context, {String? current}) {
   return showModalBottomSheet<String>(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: kSurfaceColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -49,7 +49,7 @@ class _RegionPickerSheet extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: AppSpacing.space8),
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space16, vertical: AppSpacing.space12),
                   decoration: BoxDecoration(
-                    color: entry.key == current ? kAccentTintColor : Colors.white,
+                    color: entry.key == current ? kAccentTintColor : kSurfaceColor,
                     border: Border.all(color: kHairlineColor, width: 1),
                     borderRadius: BorderRadius.circular(14),
                   ),

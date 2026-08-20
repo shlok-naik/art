@@ -51,7 +51,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -61,7 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: widget.onComplete,
-                  child: Text('Skip', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+                  child: Text('Skip', style: GoogleFonts.chewy(color: kInkColor, fontSize: 15)),
                 ),
               ),
               Expanded(
@@ -82,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.chewy(fontSize: 27, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 27, color: kInkColor),
                         ),
                         const SizedBox(height: 8),
                         Text(

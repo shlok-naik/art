@@ -125,7 +125,7 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
       children: [
         Text(
           widget.label,
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15, color: kInkColor),
         ),
         const SizedBox(height: 6),
         AspectRatio(
@@ -133,7 +133,7 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white,
+              color: kSurfaceColor,
               border: Border.all(color: kBorderColor, width: 3),
             ),
             child: LayoutBuilder(
@@ -195,7 +195,7 @@ class _SingleClockRoseState extends State<_SingleClockRose> {
         style: GoogleFonts.chewy(
           fontSize: isHovered ? 18 : 16,
           fontWeight: FontWeight.bold,
-          color: isHovered ? kAccentColor : Colors.black,
+          color: isHovered ? kAccentColor : kInkColor,
         ),
       ),
     );
@@ -258,7 +258,7 @@ class _ClockRosePainter extends CustomPainter {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
     final minorTickPaint = Paint()
-      ..color = Colors.black38
+      ..color = kMutedColor
       ..strokeWidth = 1;
 
     for (var tick = 0; tick < 60; tick++) {
@@ -272,7 +272,7 @@ class _ClockRosePainter extends CustomPainter {
 
     // Concentric guide rings for the data.
     final gridPaint = Paint()
-      ..color = Colors.black12
+      ..color = kHairlineColor
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
     for (var ring = 1; ring <= _rings; ring++) {
@@ -305,7 +305,7 @@ class _ClockRosePainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = Colors.white
+          ..color = kSurfaceColor
           ..strokeWidth = isHovered ? 2 : 1
           ..style = PaintingStyle.stroke,
       );

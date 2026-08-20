@@ -22,7 +22,6 @@ class TrophyCabinetScreen extends ConsumerWidget {
     final trophiesAsync = ref.watch(myLeagueTrophiesProvider(userId));
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Trophy Cabinet'),
       body: trophiesAsync.when(
         data: (trophies) {
@@ -102,7 +101,7 @@ class _TrophyTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               trophy.themeTitle,
-              style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+              style: GoogleFonts.chewy(fontSize: 14, color: kInkColor),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -126,7 +125,7 @@ class _TrophyTile extends StatelessWidget {
                   const SizedBox(width: 5),
                   Text(
                     '${trophy.stars}',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kInkColor),
                   ),
                 ],
               ),

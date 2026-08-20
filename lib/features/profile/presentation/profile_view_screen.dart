@@ -17,6 +17,7 @@ import '../../league/providers.dart';
 import '../providers.dart';
 import 'edit_profile_screen.dart';
 import 'public_profile_screen.dart';
+import '../../../shared/theme_providers.dart';
 
 class ProfileViewScreen extends ConsumerWidget {
   const ProfileViewScreen({super.key});
@@ -24,16 +25,16 @@ class ProfileViewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final isDarkMode = ref.watch(darkModeProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {
             if (profile == null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('No profile found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                child: Text('No profile found.', style: GoogleFonts.chewy(fontSize: 16, color: kInkColor)),
               );
             }
             final postsCount = ref.watch(myPostsProvider).value?.length;
@@ -50,7 +51,7 @@ class ProfileViewScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Profile', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
+                      Text('Profile', style: GoogleFonts.chewy(fontSize: 24, color: kInkColor)),
                       InkWell(
                         onTap: () => ref.read(authRepositoryProvider).signOut(),
                         borderRadius: BorderRadius.circular(20),
@@ -62,13 +63,40 @@ class ProfileViewScreen extends ConsumerWidget {
                           ),
                           child: Text(
                             'Log out',
-                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+                            style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kInkColor),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: appHardCardDecoration(radius: 16, shadowOffset: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                          size: 20,
+                          color: kAccentColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Dark mode',
+                            style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kInkColor),
+                          ),
+                        ),
+                        Switch(
+                          value: isDarkMode,
+                          onChanged: (value) => ref.read(darkModeProvider.notifier).setDarkMode(value),
+                          activeTrackColor: kAccentColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -99,7 +127,7 @@ class ProfileViewScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     profile.displayName,
-                                    style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                                    style: GoogleFonts.chewy(fontSize: 22, color: kInkColor),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
@@ -122,7 +150,7 @@ class ProfileViewScreen extends ConsumerWidget {
                                   border: Border.all(color: kBorderColor, width: kBorderWidth),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                                child: Icon(Icons.edit, size: 18, color: kInkColor),
                               ),
                             ),
                           ],
@@ -136,14 +164,14 @@ class ProfileViewScreen extends ConsumerWidget {
                                 label: 'Posts',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 2, height: 32, color: kHairlineColor),
                             Expanded(
                               child: AppStatColumn(
                                 value: followersCount == null ? '—' : formatCount(followersCount),
                                 label: 'Followers',
                               ),
                             ),
-                            Container(width: 2, height: 32, color: const Color(0xFFEEEEEE)),
+                            Container(width: 2, height: 32, color: kHairlineColor),
                             Expanded(
                               child: AppStatColumn(
                                 value: leagueRank == null ? '—' : '#$leagueRank',
@@ -172,11 +200,11 @@ class ProfileViewScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.remove_red_eye, size: 18, color: Colors.black),
+                          Icon(Icons.remove_red_eye, size: 18, color: kInkColor),
                           const SizedBox(width: 6),
                           Text(
                             'Preview public profile',
-                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kInkColor),
                           ),
                         ],
                       ),
@@ -185,23 +213,23 @@ class ProfileViewScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     streakDays > 0 ? '$streakDays-day streak! 🔥' : 'No active streak',
-                    style: GoogleFonts.chewy(fontSize: 17, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 17, color: kInkColor),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     streakDays > 0
                         ? "You're on fire — keep posting to grow your rank."
                         : 'Log a session today to start a streak.',
-                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
+                    style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                      Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
                       const SizedBox(width: 8),
                       Text(
                         '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kMutedColor),
                       ),
                       const Spacer(),
                       InkWell(
@@ -223,7 +251,7 @@ class ProfileViewScreen extends ConsumerWidget {
                   if (unlockedAchievements == null || unlockedAchievements.isEmpty)
                     Text(
                       'No achievements yet — keep creating to earn your first one.',
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                     )
                   else
                     Wrap(
@@ -238,11 +266,11 @@ class ProfileViewScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Text('Trophy Cabinet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                      Text('Trophy Cabinet', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
                       const SizedBox(width: 8),
                       Text(
                         '${leagueTrophies?.length ?? 0}',
-                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
+                        style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kMutedColor),
                       ),
                       const Spacer(),
                       InkWell(
@@ -264,7 +292,7 @@ class ProfileViewScreen extends ConsumerWidget {
                   if (leagueTrophies == null || leagueTrophies.isEmpty)
                     Text(
                       "No trophies yet — top the weekly league's leaderboard to win one.",
-                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF888888)),
+                      style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
                     )
                   else
                     Wrap(
