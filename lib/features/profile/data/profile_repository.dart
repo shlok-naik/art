@@ -126,17 +126,17 @@ class ProfileRepository {
     }
   }
 
-  /// Sets which [leagueRegions] key (see league_region.dart) this user
-  /// competes in — required before they can enter a weekly league.
-  Future<void> updateRegion({
+  /// Sets the free-text city (see league_city.dart) this user competes in —
+  /// required before they can enter a weekly league.
+  Future<void> updateCity({
     required String userId,
-    required String region,
+    required String city,
   }) async {
     try {
-      await _client.from('profiles').update({'region': region}).eq('id', userId);
+      await _client.from('profiles').update({'city': city}).eq('id', userId);
     } catch (e) {
       if (!_isUndefinedColumn(e)) rethrow;
-      throw const MissingColumnException('Regional leagues need a pending database update.');
+      throw const MissingColumnException('Leagues need a pending database update.');
     }
   }
 }

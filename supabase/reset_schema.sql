@@ -350,6 +350,33 @@ as $$
   limit 1;
 $$;
 
+-- Atomically marks celebrated every trophy the signed-in user has won but
+-- hasn't seen the celebration screen for yet, and returns just the ones
+-- newly claimed by this call. A single insert-and-return round trip
+-- (instead of a client-side fetch-then-mark loop) so a Riverpod rebuild
+-- racing an earlier call, or two devices checking at once, can't
+-- double-celebrate the same trophy — the insert's own on-conflict-do-nothing
+-- is the only thing that decides "new", not client-side timing.
+create or replace function public.claim_newly_won_trophies()
+returns setof public.league_trophies
+language sql
+security definer
+set search_path = public
+as $$
+  with claimed as (
+    insert into public.league_trophy_celebrations (user_id, league_id)
+    select auth.uid(), t.league_id
+    from public.league_trophies t
+    where t.user_id = auth.uid()
+    on conflict (user_id, league_id) do nothing
+    returning league_id
+  )
+  select t.*
+  from public.league_trophies t
+  join claimed c on c.league_id = t.league_id
+  where t.user_id = auth.uid();
+$$;
+
 -- An aggregate counter is deliberately used instead of a per-viewer event
 -- table. The security-definer function can only add one view per call; app
 -- clients cannot directly set a session's count.
@@ -482,8 +509,8 @@ grant insert, update, delete on public.profiles, public.projects, public.session
   public.league_ratings to authenticated;
 grant insert on public.league_trophy_celebrations to authenticated;
 grant select on all tables in schema public to authenticated;
-grant execute on function public.get_or_create_current_league(text), public.latest_league_champion(text),
-  public.record_session_view(uuid) to authenticated;
+grant execute on function public.get_or_create_current_league(text), public.latest_league_champion(),
+  public.claim_newly_won_trophies(), public.record_session_view(uuid) to authenticated;
 
 -- The app uploads and reads session photos from this public bucket. Storage
 -- files cannot be deleted from SQL; preserve them if the bucket still exists.

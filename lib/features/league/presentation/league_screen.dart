@@ -12,11 +12,11 @@ import '../../profile/providers.dart';
 import '../../projects/presentation/project_detail_screen.dart';
 import '../../shell/main_shell.dart';
 import '../domain/league.dart';
-import '../domain/league_region.dart';
+import '../domain/league_city.dart';
 import '../providers.dart';
+import 'city_picker_sheet.dart';
 import 'league_chat_screen.dart';
 import 'league_voting_feed_screen.dart';
-import 'region_picker_sheet.dart';
 import 'submit_to_league_screen.dart';
 
 class LeagueScreen extends ConsumerWidget {
@@ -46,8 +46,8 @@ class LeagueScreen extends ConsumerWidget {
         child: leagueAsync.when(
           data: (league) => _LeagueBody(league: league),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => error is NoRegionSelectedException
-              ? const _RegionPickerPrompt()
+          error: (error, stack) => error is NoCitySelectedException
+              ? const _CityPickerPrompt()
               : AppErrorState(
                   error: error,
                   onRetry: () => ref.invalidate(currentLeagueProvider),
@@ -65,27 +65,27 @@ class LeagueScreen extends ConsumerWidget {
 }
 
 /// Shown in place of the league body when the signed-in user hasn't picked
-/// a region yet — regional leagues need one to know which week's league row
-/// to materialize/join.
-class _RegionPickerPrompt extends ConsumerStatefulWidget {
-  const _RegionPickerPrompt();
+/// a city yet — leagues need one to know which week's league row to
+/// materialize/join.
+class _CityPickerPrompt extends ConsumerStatefulWidget {
+  const _CityPickerPrompt();
 
   @override
-  ConsumerState<_RegionPickerPrompt> createState() => _RegionPickerPromptState();
+  ConsumerState<_CityPickerPrompt> createState() => _CityPickerPromptState();
 }
 
-class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
+class _CityPickerPromptState extends ConsumerState<_CityPickerPrompt> {
   bool _isSaving = false;
 
   Future<void> _choose() async {
-    final region = await pickLeagueRegion(context);
-    if (region == null || !mounted) return;
+    final city = await pickLeagueCity(context);
+    if (city == null || !mounted) return;
 
     setState(() => _isSaving = true);
     final userId = ref.read(authRepositoryProvider).currentUser?.id;
     try {
       if (userId != null) {
-        await ref.read(profileRepositoryProvider).updateRegion(userId: userId, region: region);
+        await ref.read(profileRepositoryProvider).updateCity(userId: userId, city: city);
         ref.invalidate(currentProfileProvider);
         ref.invalidate(currentLeagueProvider);
       }
@@ -104,10 +104,10 @@ class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
           children: [
             Icon(Icons.public, size: 40, color: kMutedColor),
             const SizedBox(height: 12),
-            Text('Pick your region', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
+            Text('Pick your city', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
             const SizedBox(height: 8),
             Text(
-              "Leagues run per-region so the leaderboard stays close — pick where you'd like to compete.",
+              "Leagues run per-city so the leaderboard stays close — pick where you'd like to compete.",
               textAlign: TextAlign.center,
               style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
             ),
@@ -130,7 +130,7 @@ class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : Text(
-                        'Choose region',
+                        'Choose city',
                         style: GoogleFonts.chewy(fontSize: 15, color: Colors.white),
                       ),
               ),
@@ -305,7 +305,7 @@ class _ThemeBanner extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                leagueRegionLabel(league.region),
+                league.city,
                 style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF888888)),
               ),
             ],

@@ -7,8 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/app_icons.dart';
 import '../../../shared/app_styles.dart';
 import '../../auth/providers.dart';
-import '../../league/domain/league_region.dart';
-import '../../league/presentation/region_picker_sheet.dart';
+import '../../league/presentation/city_picker_sheet.dart';
 import '../../league/providers.dart';
 import '../data/profile_model.dart';
 import '../data/profile_repository.dart';
@@ -31,7 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
   String? _errorText;
-  late String? _region;
+  late String? _city;
   late String? _avatarUrl;
 
   @override
@@ -40,7 +39,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _displayNameController = TextEditingController(text: widget.profile.displayName);
     _usernameController = TextEditingController(text: widget.profile.username);
     _bioController = TextEditingController(text: widget.profile.bio ?? '');
-    _region = widget.profile.region;
+    _city = widget.profile.city;
     _avatarUrl = widget.profile.avatarUrl;
   }
 
@@ -124,9 +123,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             displayName: displayName,
             bio: bio.isEmpty ? null : bio,
           );
-      final region = _region;
-      if (region != null && region != widget.profile.region) {
-        await ref.read(profileRepositoryProvider).updateRegion(userId: userId, region: region);
+      final city = _city;
+      if (city != null && city != widget.profile.city) {
+        await ref.read(profileRepositoryProvider).updateCity(userId: userId, city: city);
         ref.invalidate(currentLeagueProvider);
       }
       if (password.isNotEmpty) {
@@ -241,10 +240,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 style: appBodyStyle(fontSize: 16),
               ),
               const SizedBox(height: 12),
-              Text('League region', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
+              Text('League city', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
               const SizedBox(height: 4),
               Text(
-                "Which region's weekly league you compete in.",
+                "Which city's weekly league you compete in.",
                 style: appBodyStyle(fontSize: 13, color: const Color(0xFF666666)),
               ),
               const SizedBox(height: 12),
@@ -253,8 +252,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 onTap: _isSaving
                     ? null
                     : () async {
-                        final picked = await pickLeagueRegion(context, current: _region);
-                        if (picked != null) setState(() => _region = picked);
+                        final picked = await pickLeagueCity(context, current: _city);
+                        if (picked != null) setState(() => _city = picked);
                       },
                 child: Container(
                   width: double.infinity,
@@ -267,7 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          _region == null ? 'Not set' : leagueRegionLabel(_region!),
+                          _city ?? 'Not set',
                           style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kInkColor),
                         ),
                       ),

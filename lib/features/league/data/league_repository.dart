@@ -97,13 +97,14 @@ class LeagueRepository {
     );
   }
 
-  /// The winning submission of the most recently *ended* league in [city],
-  /// if there is one yet — used for the "Last Season's Champion" card.
-  /// "Most recently ended" is ambiguous without a city once several
-  /// leagues (one per city) can end in the same week, so this is a
-  /// function rather than a plain view select.
-  Future<LeagueChampion?> fetchLatestChampion(String city) async {
-    final result = await _client.rpc('latest_league_champion', params: {'p_city': city});
+  /// The winning submission of the most recently *ended* league the
+  /// signed-in user was a member of, if there is one yet — used for the
+  /// "Last Season's Champion" card. Matched by league membership rather
+  /// than city, since a city can be split across several capacity-capped
+  /// shards and only membership pins down which shard's champion is
+  /// "theirs" — so this is a function rather than a plain view select.
+  Future<LeagueChampion?> fetchLatestChampion() async {
+    final result = await _client.rpc('latest_league_champion');
     if (result == null) return null;
     return LeagueChampion.fromRow(Map<String, dynamic>.from(result as Map));
   }
@@ -120,24 +121,14 @@ class LeagueRepository {
     return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueTrophy.fromRow(row)];
   }
 
-  /// League ids [userId] has already seen the win-celebration screen for.
-  Future<Set<String>> fetchCelebratedLeagueIds(String userId) async {
-    final rows = await _client
-        .from('league_trophy_celebrations')
-        .select('league_id')
-        .eq('user_id', userId);
-    return {for (final row in List<Map<String, dynamic>>.from(rows)) row['league_id'].toString()};
-  }
-
-  /// Records that [userId] has seen the celebration for winning [leagueId],
-  /// so it isn't shown again. Upserts with `ignoreDuplicates` for the same
-  /// reason achievement unlocks do — a re-check of an already-seen trophy
-  /// should be a silent no-op, not a duplicate-key error.
-  Future<void> markTrophyCelebrated(String userId, String leagueId) async {
-    await _client.from('league_trophy_celebrations').upsert(
-      {'user_id': userId, 'league_id': leagueId},
-      onConflict: 'user_id,league_id',
-      ignoreDuplicates: true,
-    );
+  /// Atomically marks celebrated every trophy the signed-in user has won
+  /// but hasn't seen the celebration for yet, and returns just the ones
+  /// newly claimed by this call — a single insert-and-return round trip
+  /// server-side (`claim_newly_won_trophies()`), so two overlapping calls
+  /// (e.g. a Riverpod rebuild racing an earlier one) can't double-fire the
+  /// celebration the way a separate fetch-then-mark loop could.
+  Future<List<LeagueTrophy>> claimNewlyWonTrophies() async {
+    final rows = await _client.rpc('claim_newly_won_trophies');
+    return [for (final row in List<Map<String, dynamic>>.from(rows)) LeagueTrophy.fromRow(row)];
   }
 }

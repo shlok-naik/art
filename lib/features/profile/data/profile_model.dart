@@ -6,7 +6,7 @@ class Profile {
     required this.visibleStats,
     this.bio,
     this.pinnedPostId,
-    this.region,
+    this.city,
     this.avatarUrl,
   });
 
@@ -22,10 +22,9 @@ class Profile {
   /// profile's post grid.
   final String? pinnedPostId;
 
-  /// Which [leagueRegions] key this user competes in — null until they've
-  /// picked one, which gates entry to the weekly league (see
-  /// NoRegionSelectedException).
-  final String? region;
+  /// Free-text city this user competes in — null until they've picked one,
+  /// which gates entry to the weekly league (see NoCitySelectedException).
+  final String? city;
 
   /// Stat keys (see [StatKey]) this user has chosen to show on their public
   /// Stats page — raw storage keys, not yet resolved against the enum.
@@ -34,7 +33,7 @@ class Profile {
   factory Profile.fromMap(Map<String, dynamic> map) {
     final rawVisibleStats = map['visible_stats'];
     final rawBio = map['bio']?.toString();
-    final rawRegion = map['region']?.toString();
+    final rawCity = map['city']?.toString();
     final rawAvatarUrl = map['avatar_url']?.toString();
     return Profile(
       id: map['id'] as String,
@@ -42,7 +41,7 @@ class Profile {
       displayName: map['display_name'] as String,
       bio: (rawBio == null || rawBio.isEmpty) ? null : rawBio,
       pinnedPostId: map['pinned_post_id']?.toString(),
-      region: (rawRegion == null || rawRegion.isEmpty) ? null : rawRegion,
+      city: (rawCity == null || rawCity.isEmpty) ? null : rawCity,
       avatarUrl: (rawAvatarUrl == null || rawAvatarUrl.isEmpty) ? null : rawAvatarUrl,
       visibleStats: rawVisibleStats is List
           ? rawVisibleStats.map((e) => e.toString()).toList()
