@@ -173,7 +173,7 @@ class _SessionMusicPlayerState extends ConsumerState<SessionMusicPlayer> with Wi
                   ? Image.memory(state.art!, fit: BoxFit.cover)
                   : Container(
                       color: kHairlineColor,
-                      child: const AppIcon(AppIcons.musicNote, size: 18, color: kMutedColor),
+                      child: AppIcon(AppIcons.musicNote, size: 18, color: kMutedColor),
                     ),
             ),
           ),
@@ -200,7 +200,7 @@ class _SessionMusicPlayerState extends ConsumerState<SessionMusicPlayer> with Wi
           ),
           IconButton(
             onPressed: service.skipPrevious,
-            icon: const AppIcon(AppIcons.skipPrevious, size: 20, color: kInkColor),
+            icon: AppIcon(AppIcons.skipPrevious, size: 20, color: kInkColor),
           ),
           IconButton(
             onPressed: () => state.isPlaying ? service.pause() : service.play(),
@@ -212,7 +212,7 @@ class _SessionMusicPlayerState extends ConsumerState<SessionMusicPlayer> with Wi
           ),
           IconButton(
             onPressed: service.skipNext,
-            icon: const AppIcon(AppIcons.skipNext, size: 20, color: kInkColor),
+            icon: AppIcon(AppIcons.skipNext, size: 20, color: kInkColor),
           ),
         ],
       ),

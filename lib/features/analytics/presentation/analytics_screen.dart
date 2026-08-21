@@ -20,9 +20,8 @@ class AnalyticsScreen extends ConsumerWidget {
     final isPro = ref.watch(isProProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Analytics'),
         body: SafeArea(
           child: SingleChildScrollView(

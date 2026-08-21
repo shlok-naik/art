@@ -24,8 +24,8 @@ class AppBottomNav extends StatelessWidget {
           Container(
             height: 104,
             padding: const EdgeInsets.symmetric(vertical: 6),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: kSurfaceColor,
               border: Border(top: BorderSide(color: kBorderColor, width: kBorderWidth)),
             ),
             child: Row(
@@ -99,7 +99,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? kAccentColor : Colors.black;
+    final color = isActive ? kAccentColor : kInkColor;
     final child = CircleAvatar(
       radius: 16,
       backgroundColor: Colors.transparent,

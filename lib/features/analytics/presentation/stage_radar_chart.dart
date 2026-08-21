@@ -85,7 +85,7 @@ class StageRadarChart extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kSurfaceColor,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -167,7 +167,7 @@ class _RadarChartPainter extends CustomPainter {
     if (count < 3) return;
 
     final gridPaint = Paint()
-      ..color = Colors.black12
+      ..color = kHairlineColor
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -198,10 +198,10 @@ class _RadarChartPainter extends CustomPainter {
     final compare = compareStages;
     if (compare != null) {
       final comparePaint = Paint()
-        ..color = Colors.black26
+        ..color = kInkColor.withValues(alpha: 0.26)
         ..style = PaintingStyle.fill;
       final compareStroke = Paint()
-        ..color = Colors.black45
+        ..color = kInkColor.withValues(alpha: 0.45)
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke;
       final comparePath = _polygonPath(compare, center, radius, count);

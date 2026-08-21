@@ -136,18 +136,19 @@ class AppIcon extends StatelessWidget {
     this.icon, {
     super.key,
     this.size = 20,
-    this.color = kInkColor,
+    this.color,
     this.strokeWidth = 1.8,
   });
 
   final String icon;
   final double size;
-  final Color color;
+  final Color? color;
   final double strokeWidth;
 
   @override
   Widget build(BuildContext context) {
-    final hex = '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+    final resolvedColor = color ?? kInkColor;
+    final hex = '#${resolvedColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
     final svg =
         '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
         '${icon.replaceAll('{{c}}', hex).replaceAll('{{w}}', '$strokeWidth')}'
@@ -179,7 +180,7 @@ class AppInitialsAvatar extends StatelessWidget {
   /// initials remain the fallback while it loads or if it fails to load.
   final String? imageUrl;
 
-  static const _palette = [kNavyColor, kAccentColor, kMutedColor];
+  static List<Color> get _palette => [kNavyColor, kAccentColor, kMutedColor];
 
   static String initialsOf(String name) {
     final cleaned = name.replaceAll(RegExp(r'[@_]'), ' ').trim();
@@ -238,8 +239,8 @@ class AppScreenHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: kSurfaceColor,
         border: Border(bottom: BorderSide(color: kHairlineColor, width: 1)),
       ),
       padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
@@ -252,7 +253,7 @@ class AppScreenHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: const Padding(
                 padding: EdgeInsets.all(2),
-                child: AppIcon(AppIcons.back, color: kInkColor, strokeWidth: 2),
+                child: AppIcon(AppIcons.back, strokeWidth: 2),
               ),
             ),
             const SizedBox(width: 12),

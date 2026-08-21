@@ -31,7 +31,6 @@ class StatsScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileByIdProvider(userId));
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Stats'),
       body: SafeArea(
         child: profileAsync.when(
@@ -39,7 +38,7 @@ class StatsScreen extends ConsumerWidget {
             if (profile == null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: kInkColor)),
               );
             }
             final visibleKeys = statKeysFromStorage(profile.visibleStats);
@@ -54,7 +53,7 @@ class StatsScreen extends ConsumerWidget {
                     style: GoogleFonts.rubikMonoOne(fontSize: 16, color: kAccentColor),
                   ),
                   const SizedBox(height: 2),
-                  Text(profile.displayName, style: GoogleFonts.chewy(fontSize: 22, color: Colors.black)),
+                  Text(profile.displayName, style: GoogleFonts.chewy(fontSize: 22, color: kInkColor)),
                   const SizedBox(height: 20),
                   if (visibleKeys.isEmpty)
                     Container(
@@ -163,7 +162,7 @@ class _StatTile extends ConsumerWidget {
               style: appBodyStyle(
                 fontSize: isBadge ? 15 : 20,
                 fontWeight: FontWeight.w900,
-                color: Colors.black,
+                color: kInkColor,
               ),
             ),
           ),
@@ -194,7 +193,7 @@ class _StageBreakdownChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Time per stage', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Time per stage', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -237,7 +236,7 @@ class _StageBar extends StatelessWidget {
           width: 92,
           child: Text(
             stage.stage,
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -276,7 +275,7 @@ class _StageBar extends StatelessWidget {
             style: appBodyStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: stage.totalMinutes == 0 ? Colors.black38 : kAccentColor,
+              color: stage.totalMinutes == 0 ? kMutedColor : kAccentColor,
             ),
           ),
         ),
@@ -301,7 +300,7 @@ class _DifficultySpreadChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Difficulty spread', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Difficulty spread', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -375,7 +374,7 @@ class _ProjectStatusChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Project status', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Project status', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -426,7 +425,7 @@ class _StatusBar extends StatelessWidget {
           width: 92,
           child: Text(
             label,
-            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black),
+            style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
         ),

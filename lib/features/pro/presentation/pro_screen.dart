@@ -62,7 +62,6 @@ class ProScreen extends ConsumerWidget {
     final offeringAsync = ref.watch(currentOfferingProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Go Pro'),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -161,7 +160,7 @@ class _FeatureCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: GoogleFonts.chewy(fontSize: 17, color: Colors.black)),
+                Text(title, style: GoogleFonts.chewy(fontSize: 17, color: kInkColor)),
                 const SizedBox(height: 2),
                 Text(description, style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF555555))),
               ],
@@ -193,7 +192,7 @@ class _ArtWrappedCard extends StatelessWidget {
                   const Text('✨', style: TextStyle(fontSize: 26)),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Art Wrapped', style: GoogleFonts.chewy(fontSize: 19, color: Colors.black)),
+                    child: Text('Art Wrapped', style: GoogleFonts.chewy(fontSize: 19, color: kInkColor)),
                   ),
                 ],
               ),
@@ -210,7 +209,7 @@ class _ArtWrappedCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   'Your Year in Art',
-                  style: GoogleFonts.chewy(fontSize: 16, color: Colors.black38),
+                  style: GoogleFonts.chewy(fontSize: 16, color: kMutedColor),
                 ),
               ),
               const SizedBox(height: 10),
@@ -300,7 +299,7 @@ class _PriceRow extends StatelessWidget {
           Text(label, style: appBodyStyle(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF666666))),
           Text(
             package.storeProduct.priceString,
-            style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+            style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kInkColor),
           ),
         ],
       ),
@@ -351,13 +350,13 @@ class _ManageSubscriptionButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kSurfaceColor,
           border: Border.all(color: kBorderColor, width: kBorderWidth),
           borderRadius: BorderRadius.circular(24),
           boxShadow: hardShadow(offset: 4),
         ),
         alignment: Alignment.center,
-        child: Text('Manage subscription', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        child: Text('Manage subscription', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
       ),
     );
   }

@@ -36,7 +36,7 @@ class PhotoSourcePicker extends StatelessWidget {
             Text(
               'Capture or upload a photo to finish this session.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+              style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
             ),
             const SizedBox(height: 28),
             AppPrimaryButton(label: 'Take Photo', onPressed: onTakePhoto),
@@ -74,8 +74,8 @@ class _SourceButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           shape: const StadiumBorder(),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-          foregroundColor: Colors.black,
+          side: BorderSide(color: kBorderColor, width: kBorderWidth),
+          foregroundColor: kInkColor,
           padding: const EdgeInsets.symmetric(vertical: 14),
           textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 18),
         ),
@@ -242,7 +242,7 @@ class SessionPhotoReview extends StatelessWidget {
                 onPressed: isSubmitting ? null : onRetake,
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
-                  side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                  side: BorderSide(color: kBorderColor, width: kBorderWidth),
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

@@ -36,7 +36,7 @@ class LeagueTrophyChip extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: kInkColor),
               ),
             ],
           ),
@@ -101,7 +101,7 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
                 Text(
                   trophy.themeTitle,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                  style: GoogleFonts.chewy(fontSize: 22, color: kInkColor),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -159,7 +159,7 @@ class _LeagueTrophyDetailDialogState extends State<_LeagueTrophyDetailDialog> {
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white,
+                color: kSurfaceColor,
                 border: Border.all(color: kBorderColor, width: kBorderWidth),
               ),
               alignment: Alignment.center,

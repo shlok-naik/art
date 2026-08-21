@@ -6,40 +6,46 @@ import 'app_styles.dart';
 
 export 'app_spacing.dart';
 
-/// Root [ThemeData] for the app: comic-panel color scheme (white surface,
-/// black hard borders, [kAccentColor] deep-orange reserved for CTAs/active
+/// Root [ThemeData] for the app: comic-panel color scheme (white/black
+/// surface, hard borders, [kAccentColor] deep-orange reserved for CTAs/active
 /// states) and component defaults so a bare [Text]/[TextField]/[AppBar]/
 /// button/etc. already matches the hand-styled helpers in `app_styles.dart`
 /// instead of falling back to Material defaults. Screen-level code should
 /// keep preferring the helpers below for anything bespoke — this is the
 /// floor everything else inherits from.
-ThemeData buildAppTheme() {
-  final base = ThemeData.light(useMaterial3: true);
+///
+/// Built for a specific [brightness] (rather than reading the mutable
+/// [appBrightness] global) because `MaterialApp` builds both `theme` and
+/// `darkTheme` up front, independent of which one is active.
+ThemeData buildAppTheme(Brightness brightness) {
+  final palette = paletteFor(brightness);
+  final isDark = brightness == Brightness.dark;
+  final base = isDark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true);
   final textTheme = GoogleFonts.nunitoTextTheme(base.textTheme).apply(
-    bodyColor: kInkColor,
-    displayColor: kInkColor,
+    bodyColor: palette.ink,
+    displayColor: palette.ink,
   );
 
-  final colorScheme = const ColorScheme.light().copyWith(
-    brightness: Brightness.light,
+  final colorScheme = (isDark ? const ColorScheme.dark() : const ColorScheme.light()).copyWith(
+    brightness: brightness,
     primary: kAccentColor,
     onPrimary: Colors.white,
-    secondary: kNavyColor,
+    secondary: palette.border,
     onSecondary: Colors.white,
     tertiary: kGoldColor,
-    onTertiary: kInkColor,
-    surface: Colors.white,
-    onSurface: kInkColor,
-    surfaceContainerHighest: kSurfaceColor,
-    error: Colors.red.shade700,
+    onTertiary: palette.ink,
+    surface: palette.surface,
+    onSurface: palette.ink,
+    surfaceContainerHighest: palette.surface,
+    error: isDark ? Colors.red.shade300 : Colors.red.shade700,
     onError: Colors.white,
-    outline: kCardBorderColor,
-    outlineVariant: kHairlineColor,
+    outline: palette.border,
+    outlineVariant: palette.hairline,
   );
 
   return base.copyWith(
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: isDark ? Colors.black : Colors.white,
     splashFactory: InkRipple.splashFactory,
     visualDensity: VisualDensity.standard,
     textTheme: textTheme.copyWith(
@@ -50,27 +56,27 @@ ThemeData buildAppTheme() {
       titleSmall: textTheme.titleSmall?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
       bodyLarge: textTheme.bodyLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
       bodyMedium: textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
-      bodySmall: textTheme.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: kMutedColor),
+      bodySmall: textTheme.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: palette.muted),
       labelLarge: textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
       labelMedium: textTheme.labelMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w700),
-      labelSmall: textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: kMutedColor),
+      labelSmall: textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: palette.muted),
     ),
-    iconTheme: const IconThemeData(color: kInkColor),
-    dividerTheme: const DividerThemeData(color: kHairlineColor, thickness: 1, space: 1),
+    iconTheme: IconThemeData(color: palette.ink),
+    dividerTheme: DividerThemeData(color: palette.hairline, thickness: 1, space: 1),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
+      backgroundColor: palette.surface,
+      surfaceTintColor: palette.surface,
       elevation: 0,
-      foregroundColor: kInkColor,
-      iconTheme: const IconThemeData(color: kInkColor),
-      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24, color: kInkColor),
+      foregroundColor: palette.ink,
+      iconTheme: IconThemeData(color: palette.ink),
+      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 24, color: palette.ink),
     ),
     cardTheme: CardThemeData(
-      color: Colors.white,
+      color: palette.surface,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        side: BorderSide(color: palette.border, width: kBorderWidth),
         borderRadius: BorderRadius.circular(kCardRadius),
       ),
     ),
@@ -97,8 +103,8 @@ ThemeData buildAppTheme() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: kInkColor,
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        foregroundColor: palette.ink,
+        side: BorderSide(color: palette.border, width: kBorderWidth),
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
         shape: const StadiumBorder(),
         textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
@@ -114,20 +120,20 @@ ThemeData buildAppTheme() {
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        foregroundColor: kInkColor,
+        foregroundColor: palette.ink,
         minimumSize: const Size(kMinTouchTarget, kMinTouchTarget),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      labelStyle: GoogleFonts.chewy(color: Colors.black54, fontSize: 16),
+      labelStyle: GoogleFonts.chewy(color: palette.muted, fontSize: 16),
       filled: false,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(kCardRadius),
-        borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        borderSide: BorderSide(color: palette.border, width: kBorderWidth),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(kCardRadius),
-        borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        borderSide: BorderSide(color: palette.border, width: kBorderWidth),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(kCardRadius),
@@ -136,23 +142,23 @@ ThemeData buildAppTheme() {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: Colors.white,
+      backgroundColor: palette.surface,
       shape: RoundedRectangleBorder(
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        side: BorderSide(color: palette.border, width: kBorderWidth),
         borderRadius: BorderRadius.circular(AppSpacing.space16),
       ),
-      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20, color: kInkColor),
-      contentTextStyle: GoogleFonts.nunito(fontWeight: FontWeight.w600, fontSize: 14, color: kInkColor),
+      titleTextStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 20, color: palette.ink),
+      contentTextStyle: GoogleFonts.nunito(fontWeight: FontWeight.w600, fontSize: 14, color: palette.ink),
     ),
-    bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: palette.surface,
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.space24)),
       ),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: kInkColor,
-      contentTextStyle: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+      backgroundColor: palette.ink,
+      contentTextStyle: GoogleFonts.nunito(color: palette.surface, fontWeight: FontWeight.w600, fontSize: 14),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.space8)),
     ),
@@ -164,8 +170,19 @@ ThemeData buildAppTheme() {
     ),
     switchTheme: SwitchThemeData(
       materialTapTargetSize: MaterialTapTargetSize.padded,
+      // The thumb needs to read as a distinct circle against the track, not
+      // blend into it — a black thumb (fixed, not theme-flipped) always
+      // shows up clearly against the orange "on" track; the ink-colored
+      // thumb when "off" stays visible against the neutral track in both
+      // themes.
       thumbColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? kAccentColor : null,
+        (states) => states.contains(WidgetState.selected) ? Colors.black : palette.ink,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? kAccentColor : palette.hairline,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? Colors.transparent : palette.border,
       ),
     ),
     radioTheme: RadioThemeData(
@@ -264,7 +281,7 @@ class AppSkeletonCircle extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(color: kSurfaceColor, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: kSurfaceColor, shape: BoxShape.circle),
       ),
     );
   }

@@ -242,7 +242,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         const SizedBox(height: 8),
         Text(
           formatDurationHms(_elapsed),
-          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: Colors.black),
+          style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 64, color: kInkColor),
         ),
         const SizedBox(height: 32),
         Row(
@@ -252,8 +252,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               onPressed: _togglePause,
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
-                side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                foregroundColor: Colors.black,
+                side: BorderSide(color: kBorderColor, width: kBorderWidth),
+                foregroundColor: kInkColor,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 textStyle: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 16),
               ),
@@ -297,7 +297,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
+                Icon(Icons.check_circle, color: kSuccessTextColor, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -334,7 +334,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 return Center(
                   child: Text(
                     'No sessions logged yet.',
-                    style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                    style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
                   ),
                 );
               }
@@ -399,12 +399,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                 ),
                                 Text(
                                   'Logged: ${formatDateValue(session['created_at'])} · ${formatDurationHms(Duration(seconds: durationSeconds))}',
-                                  style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                                  style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
                                 ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: Colors.black38),
+                          Icon(Icons.chevron_right, color: kMutedColor),
                         ],
                       ),
                     ),
@@ -476,9 +476,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     }
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, title),
         body: SafeArea(child: body),
         bottomNavigationBar: AppBottomNav(

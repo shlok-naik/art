@@ -16,14 +16,13 @@ class FollowedScreen extends ConsumerWidget {
     final suggestedAsync = ref.watch(suggestedArtistsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: Colors.black)),
+              Text('Followed', style: GoogleFonts.chewy(fontSize: 24, color: kInkColor)),
               const SizedBox(height: 20),
               followingAsync.when(
                 data: (following) => following.isEmpty
@@ -36,7 +35,7 @@ class FollowedScreen extends ConsumerWidget {
                           children: [
                             Image.asset('assets/branding/mascot.png', height: 80),
                             const SizedBox(height: 10),
-                            Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                            Text('Nobody here yet', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
                             const SizedBox(height: 4),
                             Text(
                               'Follow other artists to see their posts here.',
@@ -71,7 +70,7 @@ class FollowedScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Suggested artists', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+              Text('Suggested artists', style: GoogleFonts.chewy(fontSize: 16, color: kInkColor)),
               const SizedBox(height: 10),
               suggestedAsync.when(
                 data: (suggested) => suggested.isEmpty
@@ -147,15 +146,15 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
       builder: (context) => AlertDialog(
         title: Text(
           _isFollowing ? 'Unfollow @${widget.handle}?' : 'Follow @${widget.handle}?',
-          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+          style: GoogleFonts.chewy(fontSize: 18, color: kInkColor),
         ),
         content: Text(
           'Are you sure you want to ${_isFollowing ? 'unfollow' : 'follow'} @${widget.handle}?',
-          style: appBodyStyle(fontSize: 13, color: const Color(0xFF444444)),
+          style: appBodyStyle(fontSize: 13, color: kMutedColor),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+          side: BorderSide(color: kBorderColor, width: kBorderWidth),
         ),
         actions: [
           TextButton(
@@ -233,7 +232,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: Colors.black), overflow: TextOverflow.ellipsis),
+                  Text('@${widget.handle}', style: GoogleFonts.chewy(fontSize: 15, color: kInkColor), overflow: TextOverflow.ellipsis),
                   if (widget.subtitle.isNotEmpty)
                     Text(widget.subtitle, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF888888))),
                 ],
@@ -251,7 +250,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
                 ),
                 child: Text(
                   _isFollowing ? 'Unfollow' : 'Follow',
-                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black),
+                  style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kInkColor),
                 ),
               ),
             ),

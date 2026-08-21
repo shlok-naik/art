@@ -31,7 +31,7 @@ Future<void> showCommentsSheet(
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: kSurfaceColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -135,7 +135,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     final currentUserId = ref.watch(currentProfileProvider).value?.id;
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: FractionallySizedBox(
@@ -166,7 +166,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           child: Text(
                             'No comments yet — be the first to say something.',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.chewy(fontSize: 15, color: Colors.black54),
+                            style: GoogleFonts.chewy(fontSize: 15, color: kMutedColor),
                           ),
                         );
                       }
@@ -206,14 +206,14 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                           maxLength: 500,
                           minLines: 1,
                           maxLines: 4,
-                          style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 15, color: kInkColor),
                           decoration: InputDecoration(
                             hintText: 'Add a comment...',
-                            hintStyle: GoogleFonts.chewy(color: Colors.black38, fontSize: 15),
+                            hintStyle: GoogleFonts.chewy(color: kMutedColor, fontSize: 15),
                             counterText: '',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
-                              borderSide: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                              borderSide: BorderSide(color: kBorderColor, width: kBorderWidth),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           ),
@@ -274,7 +274,7 @@ class _CommentTile extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     _formatCommentTime(comment.createdAt),
-                    style: GoogleFonts.chewy(fontSize: 12, color: Colors.black45),
+                    style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor),
                   ),
                 ],
               ),
@@ -284,7 +284,7 @@ class _CommentTile extends StatelessWidget {
           ),
         ),
         PopupMenuButton<void>(
-          icon: const Icon(Icons.more_horiz, size: 18, color: Colors.black45),
+          icon: Icon(Icons.more_horiz, size: 18, color: kMutedColor),
           padding: EdgeInsets.zero,
           itemBuilder: (context) => [
             if (canDelete)

@@ -1,11 +1,12 @@
 // Dev-only tool: fast-forwards the current league's phase boundaries so you
 // can watch submissions -> voting -> closed without waiting for the real
-// weekly schedule. Requires the `debug_set_league_window` SQL function,
-// granted to `anon` (see the migration snippet shared alongside this file) —
-// this talks to Supabase with the app's own anon key, gated by a local
+// weekly schedule. Requires the `debug_get_or_create_current_league` and
+// `debug_set_league_window` SQL functions (see
+// supabase/add_debug_league_functions.sql), both granted to `anon` — this
+// talks to Supabase with the app's own anon key, gated by a local
 // passphrase rather than a real account login.
 //
-// Run with: dart run tool/simulate_league.dart [submissionMinutes] [votingMinutes]
+// Run with: dart run tool/simulate_league.dart [submissionMinutes] [votingMinutes] [region]
 // Then press `l` to fast-forward the current league, `q` to quit (restores
 // the original schedule first if a simulation is active).
 import 'dart:async';
@@ -26,6 +27,7 @@ void main(List<String> args) async {
 
   final submissionMinutes = args.isNotEmpty ? int.parse(args[0]) : 2;
   final votingMinutes = args.length > 1 ? int.parse(args[1]) : 2;
+  final region = args.length > 2 ? args[2] : 'north_america';
 
   stdout.write('Password: ');
   final entered = _readPassword();
@@ -91,7 +93,7 @@ void main(List<String> args) async {
       }
 
       stdout.writeln('\nFetching current league...');
-      final league = await _rpc('get_or_create_current_league', const {});
+      final league = await _rpc('debug_get_or_create_current_league', {'p_region': region});
       leagueId = league['id'] as String;
       original = {
         'submissions_close_at': league['submissions_close_at'],

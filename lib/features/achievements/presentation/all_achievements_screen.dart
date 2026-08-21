@@ -23,7 +23,6 @@ class AllAchievementsScreen extends ConsumerWidget {
     final unlockedAsync = ref.watch(unlockedAchievementsProvider(userId));
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Achievements'),
       body: unlockedAsync.when(
         data: (unlocked) => GridView.builder(
@@ -77,7 +76,7 @@ class _AchievementTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: kInkColor),
               ),
             ],
           ),
@@ -144,7 +143,7 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
                 Text(
                   achievement.title,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                  style: GoogleFonts.chewy(fontSize: 22, color: kInkColor),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -195,7 +194,7 @@ class _AchievementDetailDialogState extends State<_AchievementDetailDialog> {
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white,
+                color: kSurfaceColor,
                 border: Border.all(color: kBorderColor, width: kBorderWidth),
               ),
               alignment: Alignment.center,

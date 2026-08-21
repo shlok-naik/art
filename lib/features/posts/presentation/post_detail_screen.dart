@@ -213,7 +213,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     height: 260,
                     color: Colors.grey.shade200,
                     alignment: Alignment.center,
-                    child: const Icon(Icons.image_not_supported, size: 64, color: Colors.black38),
+                    child: Icon(Icons.image_not_supported, size: 64, color: kMutedColor),
                   )
                 : CachedNetworkImage(
                     imageUrl: _photoUrl!,
@@ -231,8 +231,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     onPressed: () => setState(() => _stage = _Stage.photoSource),
                     style: OutlinedButton.styleFrom(
                       shape: const StadiumBorder(),
-                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                      foregroundColor: Colors.black,
+                      side: BorderSide(color: kBorderColor, width: kBorderWidth),
+                      foregroundColor: kInkColor,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     icon: const Icon(Icons.edit),
@@ -245,8 +245,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     onPressed: () => setState(() => _stage = _Stage.editingDetails),
                     style: OutlinedButton.styleFrom(
                       shape: const StadiumBorder(),
-                      side: const BorderSide(color: kBorderColor, width: kBorderWidth),
-                      foregroundColor: Colors.black,
+                      side: BorderSide(color: kBorderColor, width: kBorderWidth),
+                      foregroundColor: kInkColor,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     icon: const Icon(Icons.tune),
@@ -295,7 +295,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           Text('Tools Used', style: GoogleFonts.chewy(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
           if (_toolsUsed.isEmpty)
-            Text('None recorded', style: GoogleFonts.chewy(fontSize: 14, color: Colors.black54))
+            Text('None recorded', style: GoogleFonts.chewy(fontSize: 14, color: kMutedColor))
           else
             Wrap(
               spacing: 8,
@@ -390,9 +390,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Post'),
         body: SafeArea(child: body),
         bottomNavigationBar: AppBottomNav(

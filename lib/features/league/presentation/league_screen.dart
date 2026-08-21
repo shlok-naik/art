@@ -28,7 +28,6 @@ class LeagueScreen extends ConsumerWidget {
     final league = leagueAsync.value;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(
         context,
         'League',
@@ -39,7 +38,7 @@ class LeagueScreen extends ConsumerWidget {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => LeagueChatScreen(leagueId: league.id)),
                   ),
-                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.black),
+                  icon: Icon(Icons.chat_bubble_outline, color: kInkColor),
                 ),
               ],
       ),
@@ -103,9 +102,9 @@ class _RegionPickerPromptState extends ConsumerState<_RegionPickerPrompt> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.public, size: 40, color: Colors.black54),
+            Icon(Icons.public, size: 40, color: kMutedColor),
             const SizedBox(height: 12),
-            Text('Pick your region', style: GoogleFonts.chewy(fontSize: 20, color: Colors.black)),
+            Text('Pick your region', style: GoogleFonts.chewy(fontSize: 20, color: kInkColor)),
             const SizedBox(height: 8),
             Text(
               "Leagues run per-region so the leaderboard stays close — pick where you'd like to compete.",
@@ -185,7 +184,7 @@ class _LeagueBodyState extends ConsumerState<_LeagueBody> {
             const SizedBox(height: 20),
             Row(
               children: [
-                Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+                Text('Submissions', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
                 const Spacer(),
                 if (league.isSubmissionOpen)
                   InkWell(
@@ -363,11 +362,11 @@ class _CountdownTimerState extends State<_CountdownTimer> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.timer_off_outlined, color: Colors.black54, size: 18),
+            Icon(Icons.timer_off_outlined, color: kMutedColor, size: 18),
             const SizedBox(width: 8),
             Text(
               'Voting closed',
-              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black54),
+              style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w800, color: kMutedColor),
             ),
           ],
         ),
@@ -418,7 +417,7 @@ class _CountdownUnit extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value.toString().padLeft(2, '0'), style: GoogleFonts.chewy(fontSize: 26, color: Colors.black)),
+        Text(value.toString().padLeft(2, '0'), style: GoogleFonts.chewy(fontSize: 26, color: kInkColor)),
         const SizedBox(height: 2),
         Text(
           label,
@@ -466,7 +465,7 @@ class _Leaderboard extends StatelessWidget {
             children: [
               const Icon(Icons.leaderboard, color: kAccentColor, size: 20),
               const SizedBox(width: 6),
-              Text('Current Standings', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+              Text('Current Standings', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
             ],
           ),
           const SizedBox(height: 12),
@@ -476,7 +475,7 @@ class _Leaderboard extends StatelessWidget {
           ],
           if (myRank >= 0 && !myRowShownInTop) ...[
             const SizedBox(height: 12),
-            const Divider(color: kBorderColor, height: 1, thickness: kBorderWidth),
+            Divider(color: kBorderColor, height: 1, thickness: kBorderWidth),
             const SizedBox(height: 10),
             Text(
               'YOUR RANK',
@@ -542,7 +541,7 @@ class _LeaderboardRow extends StatelessWidget {
             Expanded(
               child: Text(
                 isMe ? 'You (@${submission.artistUsername})' : '@${submission.artistUsername}',
-                style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+                style: GoogleFonts.chewy(fontSize: 14, color: kInkColor),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -579,7 +578,7 @@ class _PastChampionCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                Text("Last Season's Champion", style: GoogleFonts.chewy(fontSize: 16, color: kInkColor)),
                 Text(
                   '@${champion.artistUsername} — ⭐ ${champion.stars}',
                   style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF555555)),
@@ -616,10 +615,10 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: kSurfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+          side: BorderSide(color: kBorderColor, width: kBorderWidth),
         ),
         title: Text('Pulling "${widget.submission.projectTitle}"?', style: GoogleFonts.chewy(fontSize: 20)),
         content: Text(
@@ -630,7 +629,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Never mind, keep it', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+            child: Text('Never mind, keep it', style: GoogleFonts.chewy(color: kInkColor, fontSize: 15)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -707,8 +706,8 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                       onTap: _isUnsubmitting ? null : _confirmUnsubmit,
                       child: Container(
                         padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: kSurfaceColor,
                           shape: BoxShape.circle,
                           border: Border.fromBorderSide(BorderSide(color: kBorderColor, width: kBorderWidth)),
                         ),
@@ -728,7 +727,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
           const SizedBox(height: 8),
           Text(
             '@${submission.artistUsername}',
-            style: GoogleFonts.chewy(fontSize: 14, color: Colors.black),
+            style: GoogleFonts.chewy(fontSize: 14, color: kInkColor),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
@@ -746,7 +745,7 @@ class _SubmissionCardState extends ConsumerState<_SubmissionCard> {
                 const SizedBox(width: 5),
                 Text(
                   '${submission.stars}',
-                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kInkColor),
                 ),
               ],
             ),

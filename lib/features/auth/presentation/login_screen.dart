@@ -52,9 +52,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -70,14 +69,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _emailController,
                     decoration: appInputDecoration('Email'),
                     keyboardType: TextInputType.emailAddress,
-                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                   ),
                   const SizedBox(height: 14),
                   TextField(
                     controller: _passwordController,
                     decoration: appInputDecoration('Password'),
                     obscureText: true,
-                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                   ),
                   const SizedBox(height: 20),
                   if (_errorText != null) ...[
@@ -100,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                     child: Text(
                       "Don't have an account? Sign up",
-                      style: GoogleFonts.chewy(fontSize: 15, color: Colors.black),
+                      style: GoogleFonts.chewy(fontSize: 15, color: kInkColor),
                     ),
                   ),
                 ],

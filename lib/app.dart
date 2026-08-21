@@ -14,6 +14,7 @@ import 'shared/app_theme.dart';
 import 'shared/joke_notification_service.dart';
 import 'shared/revenue_cat_service.dart';
 import 'shared/splash_screen.dart';
+import 'shared/theme_providers.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -59,16 +60,36 @@ class _AppState extends ConsumerState<App> {
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, _syncRevenueCatIdentity);
 
+    final isDarkMode = ref.watch(darkModeProvider);
+    final brightness = isDarkMode ? Brightness.dark : Brightness.light;
+    // Read by the `kInkColor`/`kSurfaceColor`/etc. tokens in app_styles.dart
+    // so plain field-style color reads throughout the app resolve against
+    // the current theme without threading BuildContext everywhere. Set here,
+    // synchronously before the tree below is (re)built, and paired with the
+    // ValueKey below so toggling dark mode fully remounts every screen and
+    // picks up the new value instead of leaving stale colors painted.
+    appBrightness = brightness;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark.copyWith(
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: isDarkMode
+          ? SystemUiOverlayStyle.light.copyWith(
+              systemNavigationBarColor: Colors.black,
+              systemNavigationBarIconBrightness: Brightness.light,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              systemNavigationBarColor: Colors.white,
+              systemNavigationBarIconBrightness: Brightness.dark,
+            ),
       child: MaterialApp(
         navigatorKey: _navigatorKey,
         title: 'Unfinished',
-        theme: buildAppTheme(),
-        home: const AuthGate(),
+        theme: buildAppTheme(Brightness.light),
+        darkTheme: buildAppTheme(Brightness.dark),
+        themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+        home: KeyedSubtree(
+          key: ValueKey(brightness),
+          child: const AuthGate(),
+        ),
       ),
     );
   }

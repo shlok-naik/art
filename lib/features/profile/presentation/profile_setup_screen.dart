@@ -61,9 +61,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -78,13 +77,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   TextField(
                     controller: _displayNameController,
                     decoration: appInputDecoration('Display name'),
-                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                   ),
                   const SizedBox(height: 14),
                   TextField(
                     controller: _usernameController,
                     decoration: appInputDecoration('Username'),
-                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                   ),
                   const SizedBox(height: 20),
                   if (_errorText != null) ...[

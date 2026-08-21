@@ -32,7 +32,7 @@ class AchievementChip extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.black),
+                style: appBodyStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: kInkColor),
               ),
             ],
           ),

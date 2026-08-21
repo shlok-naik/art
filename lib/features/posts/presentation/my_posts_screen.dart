@@ -25,9 +25,8 @@ class MyPostsScreen extends ConsumerWidget {
     final isGrid = ref.watch(_isGridViewProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(
           context,
           'My Posts',
@@ -50,7 +49,7 @@ class MyPostsScreen extends ConsumerWidget {
                     child: Text(
                       'No posts yet — finish a session to see it here.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.chewy(fontSize: 16, color: Colors.black54),
+                      style: GoogleFonts.chewy(fontSize: 16, color: kMutedColor),
                     ),
                   ),
                 );
@@ -146,7 +145,7 @@ class _PostTile extends ConsumerWidget {
                     ? Container(
                         color: Colors.grey.shade200,
                         alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
+                        child: Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -156,7 +155,7 @@ class _PostTile extends ConsumerWidget {
                           errorWidget: (context, url, error) => Container(
                             color: Colors.grey.shade200,
                             alignment: Alignment.center,
-                            child: const Icon(Icons.image_not_supported, size: 40, color: Colors.black38),
+                            child: Icon(Icons.image_not_supported, size: 40, color: kMutedColor),
                           ),
                         ),
                       ),
@@ -178,7 +177,7 @@ class _PostTile extends ConsumerWidget {
               const SizedBox(width: 4),
               Text(
                 '${formatCount(total)} reactions',
-                style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
               ),
             ],
           ),

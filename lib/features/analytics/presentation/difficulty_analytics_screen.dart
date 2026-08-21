@@ -18,9 +18,8 @@ class DifficultyAnalyticsScreen extends ConsumerWidget {
     final timeAsync = ref.watch(timeAnalyticsProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Difficulty'),
         body: SafeArea(
           child: analyticsAsync.when(
@@ -234,7 +233,7 @@ class _ProjectDifficultyRow extends StatelessWidget {
                   ),
                   Text(
                     '${project.sessionCount} session${project.sessionCount == 1 ? '' : 's'}',
-                    style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                    style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
                   ),
                 ],
               ),
@@ -313,7 +312,7 @@ class _StageBarRow extends StatelessWidget {
             style: GoogleFonts.chewy(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: average == null ? Colors.black38 : kAccentColor,
+              color: average == null ? kMutedColor : kAccentColor,
             ),
           ),
         ),
@@ -418,7 +417,7 @@ class _DifficultyHistogram extends StatelessWidget {
                   child: Text(
                     '$i',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.chewy(fontSize: 11, color: Colors.black45),
+                    style: GoogleFonts.chewy(fontSize: 11, color: kMutedColor),
                   ),
                 ),
             ],

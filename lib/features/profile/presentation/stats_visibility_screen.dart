@@ -54,7 +54,6 @@ class _StatsVisibilityScreenState extends ConsumerState<StatsVisibilityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appThemedAppBar(context, 'Choose stats to show'),
       body: SafeArea(
         child: ListView(
@@ -108,7 +107,7 @@ class _StatToggleTile extends StatelessWidget {
           Icon(statKey.icon, size: 20, color: kAccentColor),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(statKey.label, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black)),
+            child: Text(statKey.label, style: appBodyStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kInkColor)),
           ),
           Switch(
             value: isVisible,

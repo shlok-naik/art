@@ -53,9 +53,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Sign up'),
         body: SafeArea(
           child: Center(
@@ -67,7 +66,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       children: [
                         Text(
                           'Check your email to confirm your account.',
-                          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 18, color: kInkColor),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
@@ -86,14 +85,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           controller: _emailController,
                           decoration: appInputDecoration('Email'),
                           keyboardType: TextInputType.emailAddress,
-                          style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                         ),
                         const SizedBox(height: 14),
                         TextField(
                           controller: _passwordController,
                           decoration: appInputDecoration('Password'),
                           obscureText: true,
-                          style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                         ),
                         const SizedBox(height: 20),
                         if (_errorText != null) ...[

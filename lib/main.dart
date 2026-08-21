@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'shared/ads_service.dart';
 import 'shared/revenue_cat_service.dart';
+import 'shared/theme_providers.dart';
+import 'shared/theme_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,5 +21,12 @@ Future<void> main() async {
   await RevenueCatService().initialize();
   await AdsService().initialize();
 
-  runApp(const ProviderScope(child: App()));
+  final isDarkMode = await ThemeStore().getIsDarkMode();
+
+  runApp(
+    ProviderScope(
+      overrides: [initialDarkModeProvider.overrideWithValue(isDarkMode)],
+      child: const App(),
+    ),
+  );
 }

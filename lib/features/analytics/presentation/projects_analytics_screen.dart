@@ -36,9 +36,8 @@ class ProjectsAnalyticsScreen extends ConsumerWidget {
     final overviewAsync = ref.watch(projectsOverviewProvider);
 
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: appThemedAppBar(context, 'Projects'),
         body: SafeArea(
           child: overviewAsync.when(
@@ -221,7 +220,7 @@ class _FastestFinishCard extends StatelessWidget {
               children: [
                 Text(
                   'Fastest finish',
-                  style: GoogleFonts.chewy(fontSize: 12, color: Colors.black54),
+                  style: GoogleFonts.chewy(fontSize: 12, color: kMutedColor),
                 ),
                 Text(
                   '${fastestFinish.title} · ${fastestFinish.days} day${fastestFinish.days == 1 ? '' : 's'}',
@@ -331,7 +330,7 @@ class _ProjectStatsRow extends StatelessWidget {
                         ? 'No sessions yet'
                         : '${stats.sessionCount} session${stats.sessionCount == 1 ? '' : 's'} · '
                             'last active ${_formatDate(stats.lastActiveAt)}',
-                    style: GoogleFonts.chewy(fontSize: 13, color: Colors.black54),
+                    style: GoogleFonts.chewy(fontSize: 13, color: kMutedColor),
                   ),
                 ],
               ),

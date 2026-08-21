@@ -66,7 +66,7 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: kSurfaceColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Text('Profanity detected', style: appBodyStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             content: Text(
@@ -128,7 +128,6 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -168,7 +167,7 @@ class _LeagueChatScreenState extends ConsumerState<LeagueChatScreen> {
                 ),
               ),
             ),
-            const Divider(color: kHairlineColor, height: 1, thickness: 1),
+            Divider(color: kHairlineColor, height: 1, thickness: 1),
             Padding(
               padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + MediaQuery.of(context).viewInsets.bottom),
               child: Row(
@@ -258,7 +257,7 @@ class _MessageTile extends StatelessWidget {
           ),
         ),
         PopupMenuButton<void>(
-          icon: const Icon(Icons.more_horiz, size: 18, color: kMutedColor),
+          icon: Icon(Icons.more_horiz, size: 18, color: kMutedColor),
           padding: EdgeInsets.zero,
           itemBuilder: (context) => [
             if (canDelete)

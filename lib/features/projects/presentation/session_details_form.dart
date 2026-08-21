@@ -109,7 +109,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: GoogleFonts.chewy(color: Colors.black),
+      style: GoogleFonts.chewy(color: kInkColor),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -128,7 +128,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
               decoration: appInputDecoration('e.g. Sunset Mountains — Session 3').copyWith(
                 errorText: _nameError,
               ),
-              style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+              style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
               onChanged: (_) {
                 if (_nameError != null) setState(() => _nameError = null);
               },
@@ -160,8 +160,8 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                       Chip(
                         label: Text(tool, style: GoogleFonts.chewy(fontSize: 14)),
                         onDeleted: widget.isSubmitting ? null : () => _removeTool(tool),
-                        backgroundColor: Colors.grey.shade100,
-                        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+                        backgroundColor: kSurfaceColor,
+                        side: BorderSide(color: kBorderColor, width: kBorderWidth),
                       ),
                   ],
                 ),
@@ -173,7 +173,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
                     controller: _toolController,
                     enabled: !widget.isSubmitting,
                     decoration: appInputDecoration('Add a tool (e.g. Procreate)'),
-                    style: GoogleFonts.chewy(fontSize: 16, color: Colors.black),
+                    style: GoogleFonts.chewy(fontSize: 16, color: kInkColor),
                     onSubmitted: (_) => _addTool(),
                   ),
                 ),
@@ -280,7 +280,7 @@ class _SessionDetailsFillOutScreenState extends State<SessionDetailsFillOutScree
             const SizedBox(height: 12),
             TextButton(
               onPressed: widget.isSubmitting ? null : widget.onBack,
-              child: Text('Back', style: GoogleFonts.chewy(color: Colors.black, fontSize: 15)),
+              child: Text('Back', style: GoogleFonts.chewy(color: kInkColor, fontSize: 15)),
             ),
           ],
         ),

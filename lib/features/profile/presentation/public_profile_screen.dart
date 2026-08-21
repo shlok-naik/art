@@ -35,14 +35,13 @@ class PublicProfileScreen extends ConsumerWidget {
     final isOwnProfile = userId == myUserId;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {
             if (profile == null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: Colors.black)),
+                child: Text('Profile not found.', style: GoogleFonts.chewy(fontSize: 16, color: kInkColor)),
               );
             }
             final postsAsync = ref.watch(userPostsProvider(userId));
@@ -67,14 +66,14 @@ class PublicProfileScreen extends ConsumerWidget {
                             border: Border.all(color: kBorderColor, width: kBorderWidth),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(Icons.arrow_back, size: 18, color: Colors.black),
+                          child: Icon(Icons.arrow_back, size: 18, color: kInkColor),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           '@${profile.username}',
-                          style: GoogleFonts.chewy(fontSize: 20, color: Colors.black),
+                          style: GoogleFonts.chewy(fontSize: 20, color: kInkColor),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -91,7 +90,7 @@ class PublicProfileScreen extends ConsumerWidget {
                               border: Border.all(color: kBorderColor, width: kBorderWidth),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.edit, size: 18, color: Colors.black),
+                            child: Icon(Icons.edit, size: 18, color: kInkColor),
                           ),
                         ),
                       ],
@@ -128,7 +127,7 @@ class PublicProfileScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     profile.displayName,
-                                    style: GoogleFonts.chewy(fontSize: 22, color: Colors.black),
+                                    style: GoogleFonts.chewy(fontSize: 22, color: kInkColor),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
@@ -195,11 +194,11 @@ class PublicProfileScreen extends ConsumerWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.bar_chart, size: 18, color: Colors.black),
+                                Icon(Icons.bar_chart, size: 18, color: kInkColor),
                                 const SizedBox(width: 6),
                                 Text(
                                   'View stats',
-                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
+                                  style: appBodyStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kInkColor),
                                 ),
                               ],
                             ),
@@ -305,7 +304,7 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
             style: appBodyStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: isFollowing ? Colors.black : Colors.white,
+              color: isFollowing ? kInkColor : Colors.white,
             ),
           ),
         ),
@@ -331,7 +330,7 @@ class _ProjectsRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Projects', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+        Text('Projects', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
         const SizedBox(height: 10),
         SizedBox(
           height: 100,
@@ -408,7 +407,7 @@ class _ProjectCircle extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black),
+              style: appBodyStyle(fontSize: 11, fontWeight: FontWeight.w700, color: kInkColor),
             ),
           ],
         ),
@@ -434,7 +433,7 @@ class _AchievementsRow extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Achievements', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
             const SizedBox(width: 8),
             Text(
               '${unlockedAchievements?.length ?? 0}/${achievementCatalog.length}',
@@ -535,7 +534,7 @@ class _PinnedPostCard extends StatelessWidget {
           children: [
             const Icon(Icons.push_pin, size: 16, color: kAccentColor),
             const SizedBox(width: 6),
-            Text('Pinned', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Pinned', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
           ],
         ),
         const SizedBox(height: 8),
@@ -630,7 +629,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       builder: (context) => AlertDialog(
         title: Text(
           isPinned ? 'Unpin this post?' : 'Pin this post?',
-          style: GoogleFonts.chewy(fontSize: 18, color: Colors.black),
+          style: GoogleFonts.chewy(fontSize: 18, color: kInkColor),
         ),
         content: Text(
           isPinned
@@ -671,7 +670,7 @@ class _PostsSectionState extends ConsumerState<_PostsSection> {
       children: [
         Row(
           children: [
-            Text('Posts', style: GoogleFonts.chewy(fontSize: 18, color: Colors.black)),
+            Text('Posts', style: GoogleFonts.chewy(fontSize: 18, color: kInkColor)),
             const Spacer(),
             if (projectTitles.length > 1)
               _ThemedMenuButton<String?>(
@@ -824,11 +823,11 @@ class _ThemedMenuButton<T> extends StatelessWidget {
       initialValue: value,
       onSelected: onSelected,
       position: PopupMenuPosition.under,
-      color: Colors.white,
+      color: kSurfaceColor,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: kBorderColor, width: kBorderWidth),
+        side: BorderSide(color: kBorderColor, width: kBorderWidth),
       ),
       itemBuilder: (context) => [
         for (final item in items)
@@ -841,7 +840,7 @@ class _ThemedMenuButton<T> extends StatelessWidget {
                     item.label,
                     style: GoogleFonts.chewy(
                       fontSize: 15,
-                      color: item.value == value ? kAccentColor : Colors.black,
+                      color: item.value == value ? kAccentColor : kInkColor,
                     ),
                   ),
                 ),
@@ -859,9 +858,9 @@ class _ThemedMenuButton<T> extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: Colors.black),
+            Icon(icon, size: 15, color: kInkColor),
             const SizedBox(width: 4),
-            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+            Text(label, style: appBodyStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kInkColor)),
           ],
         ),
       ),
