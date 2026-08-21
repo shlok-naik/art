@@ -28,10 +28,12 @@ create table public.profiles (
   avatar_url text,
   visible_stats text[] not null default '{}',
   pinned_post_id uuid,
-  region text check (region in (
-    'north_america', 'south_america', 'europe', 'middle_east_africa',
-    'south_asia', 'east_asia', 'southeast_asia_oceania'
-  )),
+  -- Free-text city (normalized client-side — trimmed, single-spaced,
+  -- title-cased — before it ever reaches here) users are matched into a
+  -- weekly league by. Unlike the old fixed-region list, any city string is
+  -- valid; get_or_create_current_league() groups people who typed the same
+  -- one into shared (capacity-capped) league shards.
+  city text check (char_length(city) between 1 and 80),
   created_at timestamptz not null default now(),
   unique (username)
 );
@@ -122,14 +124,16 @@ create table public.user_achievements (
   primary key (user_id, achievement_key)
 );
 
--- Regional weekly league ----------------------------------------------------
+-- City-matched weekly league -------------------------------------------------
+-- A (period_index, city) pair can span several "shard" rows once a city's
+-- population outgrows one league — get_or_create_current_league() fills
+-- shard 1 to the 10-person cap (see league_members below) before opening
+-- shard 2, and so on, so no single league ever seats more than 10 people.
 create table public.leagues (
   id uuid primary key default gen_random_uuid(),
   period_index integer not null,
-  region text not null check (region in (
-    'north_america', 'south_america', 'europe', 'middle_east_africa',
-    'south_asia', 'east_asia', 'southeast_asia_oceania'
-  )),
+  city text not null check (char_length(city) between 1 and 80),
+  shard integer not null default 1 check (shard > 0),
   theme_title text not null,
   theme_description text not null,
   starts_at timestamptz not null,
@@ -137,9 +141,22 @@ create table public.leagues (
   submissions_close_at timestamptz not null,
   voting_closes_at timestamptz not null,
   created_at timestamptz not null default now(),
-  unique (period_index, region),
+  unique (period_index, city, shard),
   check (starts_at < submissions_close_at and submissions_close_at < voting_closes_at and voting_closes_at <= ends_at)
 );
+
+-- Sticky per-week membership: which league (shard) a user was matched into
+-- for a given period. This is what actually caps a league at 10 people and
+-- what submission/rating policies check, rather than just comparing city
+-- strings — a city with 23 players this week becomes three shards, not one
+-- overcrowded league.
+create table public.league_members (
+  league_id uuid not null references public.leagues(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  joined_at timestamptz not null default now(),
+  primary key (league_id, user_id)
+);
+create index league_members_user_id_idx on public.league_members (user_id);
 
 create table public.league_submissions (
   id uuid primary key default gen_random_uuid(),
@@ -216,54 +233,108 @@ create view public.league_trophies as
   join public.leagues l on l.id = c.league_id;
 
 -- Functions used by LeagueRepository ---------------------------------------
-create or replace function public.get_or_create_current_league(p_region text)
+-- Matches the signed-in user into a league for [p_city] this week: reuses
+-- their existing membership if they already joined one this period,
+-- otherwise seats them in the first shard with room (< 10 members) or
+-- opens a new shard. An advisory lock keyed on (period, city) serializes
+-- concurrent joiners so two people can't both land in seat 10 of the same
+-- shard, or both spawn a redundant new shard, in a race.
+create or replace function public.get_or_create_current_league(p_city text)
 returns public.leagues
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
+  v_user_id uuid := auth.uid();
   v_starts_at timestamptz;
   v_period_index integer;
   v_theme_title text;
   v_theme_description text;
   v_league public.leagues%rowtype;
+  v_shard integer;
+  v_lock_key bigint;
 begin
-  if auth.uid() is null then
+  if v_user_id is null then
     raise exception 'Authentication required';
   end if;
-  if p_region not in ('north_america', 'south_america', 'europe', 'middle_east_africa', 'south_asia', 'east_asia', 'southeast_asia_oceania') then
-    raise exception 'Unknown league region';
+  if p_city is null or char_length(trim(p_city)) = 0 then
+    raise exception 'City is required';
   end if;
 
   v_starts_at := date_trunc('week', timezone('Europe/London', now())) at time zone 'Europe/London';
   v_period_index := floor((v_starts_at::date - date '2024-01-01') / 7.0)::integer;
-  case mod(v_period_index, 8)
-    when 0 then v_theme_title := 'Small Wonders'; v_theme_description := 'Make something inspired by an overlooked detail.';
-    when 1 then v_theme_title := 'After Dark'; v_theme_description := 'Create a piece shaped by the night.';
-    when 2 then v_theme_title := 'In Motion'; v_theme_description := 'Capture movement, change, or momentum.';
-    when 3 then v_theme_title := 'A Place Remembered'; v_theme_description := 'Turn a meaningful place into art.';
-    when 4 then v_theme_title := 'Colour Study'; v_theme_description := 'Let one colour lead the work.';
-    when 5 then v_theme_title := 'Made by Hand'; v_theme_description := 'Celebrate texture, process, and craft.';
-    when 6 then v_theme_title := 'Future Relic'; v_theme_description := 'Imagine an object found years from now.';
-    when 7 then v_theme_title := 'Open Edition'; v_theme_description := 'Make anything you want this week.';
-  end case;
 
-  insert into public.leagues (
-    period_index, region, theme_title, theme_description,
-    starts_at, ends_at, submissions_close_at, voting_closes_at
-  ) values (
-    v_period_index, p_region, v_theme_title, v_theme_description,
-    v_starts_at, v_starts_at + interval '7 days',
-    v_starts_at + interval '4 days 14 hours', v_starts_at + interval '7 days'
-  )
-  on conflict (period_index, region) do update set region = excluded.region
-  returning * into v_league;
+  select l.* into v_league
+  from public.league_members m
+  join public.leagues l on l.id = m.league_id
+  where m.user_id = v_user_id and l.period_index = v_period_index and l.city = p_city
+  limit 1;
+  if found then
+    return v_league;
+  end if;
+
+  v_lock_key := hashtextextended(v_period_index || ':' || p_city, 0);
+  perform pg_advisory_xact_lock(v_lock_key);
+
+  -- Re-check after the lock in case a concurrent call for this same user
+  -- (or one that just filled/created the shard we're about to pick) beat
+  -- us to it.
+  select l.* into v_league
+  from public.league_members m
+  join public.leagues l on l.id = m.league_id
+  where m.user_id = v_user_id and l.period_index = v_period_index and l.city = p_city
+  limit 1;
+  if found then
+    return v_league;
+  end if;
+
+  select l.* into v_league
+  from public.leagues l
+  where l.period_index = v_period_index and l.city = p_city
+    and (select count(*) from public.league_members lm where lm.league_id = l.id) < 10
+  order by l.shard asc
+  limit 1;
+
+  if not found then
+    select coalesce(max(shard), 0) + 1 into v_shard
+    from public.leagues
+    where period_index = v_period_index and city = p_city;
+
+    case mod(v_period_index, 8)
+      when 0 then v_theme_title := 'Small Wonders'; v_theme_description := 'Make something inspired by an overlooked detail.';
+      when 1 then v_theme_title := 'After Dark'; v_theme_description := 'Create a piece shaped by the night.';
+      when 2 then v_theme_title := 'In Motion'; v_theme_description := 'Capture movement, change, or momentum.';
+      when 3 then v_theme_title := 'A Place Remembered'; v_theme_description := 'Turn a meaningful place into art.';
+      when 4 then v_theme_title := 'Colour Study'; v_theme_description := 'Let one colour lead the work.';
+      when 5 then v_theme_title := 'Made by Hand'; v_theme_description := 'Celebrate texture, process, and craft.';
+      when 6 then v_theme_title := 'Future Relic'; v_theme_description := 'Imagine an object found years from now.';
+      when 7 then v_theme_title := 'Open Edition'; v_theme_description := 'Make anything you want this week.';
+    end case;
+
+    insert into public.leagues (
+      period_index, city, shard, theme_title, theme_description,
+      starts_at, ends_at, submissions_close_at, voting_closes_at
+    ) values (
+      v_period_index, p_city, v_shard, v_theme_title, v_theme_description,
+      v_starts_at, v_starts_at + interval '7 days',
+      v_starts_at + interval '4 days 14 hours', v_starts_at + interval '7 days'
+    )
+    returning * into v_league;
+  end if;
+
+  insert into public.league_members (league_id, user_id) values (v_league.id, v_user_id)
+  on conflict do nothing;
+
   return v_league;
 end;
 $$;
 
-create or replace function public.latest_league_champion(p_region text)
+-- The most recently ended league the signed-in user was actually matched
+-- into (their specific shard), not just "any league in their city" — a
+-- popular city can have several shards ending the same week with
+-- different champions.
+create or replace function public.latest_league_champion()
 returns public.league_champions
 language sql
 stable
@@ -273,7 +344,8 @@ as $$
   select c.*
   from public.league_champions c
   join public.leagues l on l.id = c.league_id
-  where l.region = p_region
+  join public.league_members m on m.league_id = l.id and m.user_id = auth.uid()
+  where l.ends_at <= now()
   order by l.ends_at desc
   limit 1;
 $$;

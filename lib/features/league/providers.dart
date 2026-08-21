@@ -7,7 +7,7 @@ import 'data/league_chat_repository.dart';
 import 'data/league_repository.dart';
 import 'domain/league.dart';
 import 'domain/league_chat_message.dart';
-import 'domain/league_region.dart';
+import 'domain/league_city.dart';
 
 final leagueRepositoryProvider = Provider<LeagueRepository>((ref) {
   return LeagueRepository(ref.watch(supabaseClientProvider));

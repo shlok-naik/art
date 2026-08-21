@@ -11,7 +11,7 @@
 class League {
   const League({
     required this.id,
-    required this.region,
+    required this.city,
     required this.periodIndex,
     required this.themeTitle,
     required this.themeDescription,
@@ -24,7 +24,7 @@ class League {
   factory League.fromRow(Map<String, dynamic> row) {
     return League(
       id: row['id'].toString(),
-      region: row['region']?.toString() ?? '',
+      city: row['city']?.toString() ?? '',
       periodIndex: int.tryParse(row['period_index']?.toString() ?? '') ?? 0,
       themeTitle: row['theme_title']?.toString() ?? '',
       themeDescription: row['theme_description']?.toString() ?? '',
@@ -36,7 +36,7 @@ class League {
   }
 
   final String id;
-  final String region;
+  final String city;
   final int periodIndex;
   final String themeTitle;
   final String themeDescription;
